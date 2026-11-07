@@ -1,0 +1,10 @@
+{
+  "session_id": "fx-InstructionsLoaded-2",
+  "transcript_path": "/home/user/.claude/projects/p/fx-InstructionsLoaded-2.jsonl",
+  "cwd": "/tmp/work",
+  "hook_event_name": "InstructionsLoaded",
+  "file_path": "/tmp/work/sub/inc.md",
+  "memory_type": "Project",
+  "load_reason": "include",
+  "parent_file_path": "/tmp/work/CLAUDE.md"
+}

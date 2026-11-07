@@ -1,0 +1,23 @@
+{
+  "session_id": "fx-PostToolBatch-3",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PostToolBatch-3.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "default",
+  "agent_id": "ab6dc56369d23de44",
+  "agent_type": "general-purpose",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolBatch",
+  "tool_calls": [
+    {
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "/tmp/work/f3.txt"
+      },
+      "tool_use_id": "toolu_013cWKeQBk7VBGGeJSsxLZfF",
+      "tool_response": "1\thello 3\n2\t"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "status": 200,
+  "body": {
+    "hookSpecificOutput": {
+      "hookEventName": "SubagentStart",
+      "additionalContext": "Subagent rules (harness-hooks server):\n- Return a short, structured result; honour any word limit in your brief.\n- Read file ranges, not whole files. Stay inside the tool-call budget in your brief and stop when done.\n- Do not consult the advisor unless blocked, and at most once before finishing: each call re-reads your whole transcript at Opus rates.\n- Do not spawn further agents unless the brief says so."
+    }
+  }
+}

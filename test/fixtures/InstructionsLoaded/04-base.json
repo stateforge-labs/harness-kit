@@ -1,0 +1,18 @@
+{
+  "session_id": "fx-InstructionsLoaded-4",
+  "transcript_path": "/home/user/.claude/projects/p/fx-InstructionsLoaded-4.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "InstructionsLoaded",
+  "file_path": "/tmp/work/.claude/rules/txt.md",
+  "memory_type": "Project",
+  "load_reason": "path_glob_match",
+  "globs": [
+    "sub/**/*.txt",
+    "*.ts"
+  ],
+  "trigger_file_path": "/tmp/work/sub/a.txt"
+}

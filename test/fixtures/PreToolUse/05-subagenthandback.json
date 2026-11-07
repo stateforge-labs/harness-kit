@@ -1,0 +1,18 @@
+{
+  "session_id": "fx-PreToolUse-5",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PreToolUse-5.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "auto",
+  "agent_id": "a708ce592686b783d",
+  "agent_type": "general-purpose",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "SubagentHandback",
+  "tool_input": {
+    "message": "PLACEHOLDER-message"
+  },
+  "tool_use_id": "toolu_019gf5h88z8vnYTf456CUFfP"
+}

@@ -1,0 +1,16 @@
+{
+  "session_id": "fx-PreToolUse-6",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PreToolUse-6.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "acceptEdits",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Read",
+  "tool_input": {
+    "file_path": "/tmp/work/a.txt"
+  },
+  "tool_use_id": "toolu_0139qeDoMBHLtYewKXd5pD9b"
+}

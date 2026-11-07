@@ -1,0 +1,19 @@
+{
+  "session_id": "fx-PreToolUse-4",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PreToolUse-4.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "auto",
+  "agent_id": "a708ce592686b783d",
+  "agent_type": "general-purpose",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "rm -rf ./decoy-build-dir",
+    "description": "PLACEHOLDER-description"
+  },
+  "tool_use_id": "toolu_01TZoCw7uxMVB41H5nrJrEnn"
+}

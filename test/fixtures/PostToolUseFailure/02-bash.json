@@ -1,0 +1,20 @@
+{
+  "session_id": "fx-PostToolUseFailure-2",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PostToolUseFailure-2.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUseFailure",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "ls ./nonexistent_dir",
+    "description": "PLACEHOLDER-description"
+  },
+  "tool_use_id": "toolu_01UqoNxN8oYJwk3HRks9b4KE",
+  "error": "Exit code 2\nls: cannot access './nonexistent_dir': No such file or directory",
+  "is_interrupt": false,
+  "duration_ms": 63
+}

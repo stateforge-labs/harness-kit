@@ -1,0 +1,12 @@
+{
+  "session_id": "fx-Elicitation-2",
+  "transcript_path": "/home/user/.claude/projects/p/fx-Elicitation-2.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "hook_event_name": "Elicitation",
+  "mcp_server_name": "elicit",
+  "message": "PLACEHOLDER-message",
+  "mode": "url",
+  "url": "https://auth.example.com/login",
+  "elicitation_id": "el-123"
+}

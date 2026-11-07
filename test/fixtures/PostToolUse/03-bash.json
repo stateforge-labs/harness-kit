@@ -1,0 +1,25 @@
+{
+  "session_id": "fx-PostToolUse-3",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PostToolUse-3.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "echo hi",
+    "description": "PLACEHOLDER-description"
+  },
+  "tool_response": {
+    "stdout": "PLACEHOLDER-stdout",
+    "stderr": "PLACEHOLDER-stderr",
+    "interrupted": false,
+    "isImage": false,
+    "noOutputExpected": false
+  },
+  "tool_use_id": "toolu_01JDSDWv1HU7fp4jFLK1A4Kx",
+  "duration_ms": 53
+}

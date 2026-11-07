@@ -1,0 +1,27 @@
+{
+  "session_id": "fx-Elicitation-1",
+  "transcript_path": "/home/user/.claude/projects/p/fx-Elicitation-1.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "hook_event_name": "Elicitation",
+  "mcp_server_name": "elicit",
+  "message": "PLACEHOLDER-message",
+  "mode": "form",
+  "requested_schema": {
+    "type": "object",
+    "properties": {
+      "project_key": {
+        "type": "string",
+        "title": "PLACEHOLDER-title"
+      },
+      "count": {
+        "type": "number",
+        "minimum": 1,
+        "maximum": 5
+      }
+    },
+    "required": [
+      "project_key"
+    ]
+  }
+}

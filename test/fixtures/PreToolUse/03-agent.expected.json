@@ -1,0 +1,9 @@
+{
+  "status": 200,
+  "body": {
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "additionalContext": "Advisory: this Agent brief sets no return format or word limit, so ask for a short structured result."
+    }
+  }
+}

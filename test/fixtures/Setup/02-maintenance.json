@@ -1,0 +1,7 @@
+{
+  "session_id": "fx-Setup-2",
+  "transcript_path": "/home/user/.claude/projects/p/fx-Setup-2.jsonl",
+  "cwd": "/tmp/work",
+  "hook_event_name": "Setup",
+  "trigger": "maintenance"
+}

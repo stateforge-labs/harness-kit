@@ -1,0 +1,7 @@
+{
+  "session_id": "fx-WorktreeCreate-1",
+  "transcript_path": "/home/user/.claude/projects/p/fx-WorktreeCreate-1.jsonl",
+  "cwd": "/tmp/work/repo",
+  "hook_event_name": "WorktreeCreate",
+  "name": "myfeat"
+}

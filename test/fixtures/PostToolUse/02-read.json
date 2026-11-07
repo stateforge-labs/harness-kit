@@ -1,0 +1,27 @@
+{
+  "session_id": "fx-PostToolUse-2",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PostToolUse-2.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Read",
+  "tool_input": {
+    "file_path": "/tmp/work/f1.txt"
+  },
+  "tool_response": {
+    "type": "text",
+    "file": {
+      "filePath": "/tmp/work/f1.txt",
+      "content": "PLACEHOLDER-content",
+      "numLines": 2,
+      "startLine": 1,
+      "totalLines": 2
+    }
+  },
+  "tool_use_id": "toolu_01PMqNArWiMPfNhrJTec9LeR",
+  "duration_ms": 5
+}

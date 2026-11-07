@@ -1,0 +1,10 @@
+{
+  "session_id": "fx-TaskCreated-1",
+  "transcript_path": "/home/user/.claude/projects/p/fx-TaskCreated-1.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "hook_event_name": "TaskCreated",
+  "task_id": "1",
+  "task_subject": "Write hello",
+  "task_description": "say hello"
+}

@@ -1,0 +1,14 @@
+{
+  "session_id": "fx-InstructionsLoaded-3",
+  "transcript_path": "/home/user/.claude/projects/p/fx-InstructionsLoaded-3.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "InstructionsLoaded",
+  "file_path": "/tmp/work/sub/CLAUDE.md",
+  "memory_type": "Project",
+  "load_reason": "nested_traversal",
+  "trigger_file_path": "/tmp/work/sub/a.txt"
+}

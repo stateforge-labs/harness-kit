@@ -1,0 +1,16 @@
+{
+  "session_id": "fx-PreModelSwitch-1",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PreModelSwitch-1.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "hook_event_name": "PreModelSwitch",
+  "from_model": "claude-haiku-5-5",
+  "to_model": "claude-opus-5-5",
+  "requested_model": "opus",
+  "source": "command",
+  "context_tokens": 0,
+  "prompt_cache_warm": false,
+  "cache_ttl": "1h",
+  "estimated_cache_write_usd": 0,
+  "pricing": "catalog"
+}

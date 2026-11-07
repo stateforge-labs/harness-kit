@@ -1,0 +1,26 @@
+{
+  "session_id": "fx-PostToolUse-4",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PostToolUse-4.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "acceptEdits",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/tmp/work/b.txt",
+    "content": "PLACEHOLDER-content"
+  },
+  "tool_response": {
+    "type": "create",
+    "filePath": "/tmp/work/b.txt",
+    "content": "PLACEHOLDER-content",
+    "structuredPatch": [],
+    "originalFile": null,
+    "userModified": false
+  },
+  "tool_use_id": "toolu_014mfAfW6hNTMAYwFkz4bjYE",
+  "duration_ms": 4
+}

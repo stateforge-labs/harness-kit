@@ -1,0 +1,9 @@
+{
+  "session_id": "fx-ConfigChange-3",
+  "transcript_path": "/home/user/.claude/projects/p/fx-ConfigChange-3.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "hook_event_name": "ConfigChange",
+  "source": "skills",
+  "file_path": "/tmp/work/.claude/skills/demo/SKILL.md"
+}

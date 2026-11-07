@@ -1,0 +1,21 @@
+{
+  "session_id": "fx-PostToolBatch-2",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PostToolBatch-2.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolBatch",
+  "tool_calls": [
+    {
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "/tmp/work/f1.txt"
+      },
+      "tool_use_id": "toolu_012UkUMYEtNGCJLcUf1BBU17",
+      "tool_response": "1\thello 1\n2\t"
+    }
+  ]
+}

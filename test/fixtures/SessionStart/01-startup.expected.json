@@ -1,0 +1,9 @@
+{
+  "status": 200,
+  "body": {
+    "hookSpecificOutput": {
+      "hookEventName": "SessionStart",
+      "additionalContext": "Delegation rules (harness-hooks server):\n- Delegate to a subagent, model haiku (ask the user before using any other model), when: you only need the conclusion of a web/docs fetch or search; a task needs 3+ reads of files you don't already know; or output is likely >5K tokens. Do trivial lookups yourself.\n- Launch independent lookups in parallel, in one message.\n- Brief = goal, exact paths, return format with a word limit, tool-call budget, stop condition. Never paste conversation history. Put shared instructions first and the per-item part last, so fan-outs share the prompt cache.\n- Use a fork only when the task needs most of this conversation's context."
+    }
+  }
+}

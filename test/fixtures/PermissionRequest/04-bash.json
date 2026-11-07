@@ -1,0 +1,35 @@
+{
+  "session_id": "fx-PermissionRequest-4",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PermissionRequest-4.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "default",
+  "agent_id": "a1f0d62939ed8e9d7",
+  "agent_type": "general-purpose",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PermissionRequest",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "touch s.txt; echo \"exit status: $?\"; ls -l /tmp/work/s.txt",
+    "description": "PLACEHOLDER-description"
+  },
+  "permission_suggestions": [
+    {
+      "type": "addRules",
+      "rules": [
+        {
+          "toolName": "Bash",
+          "ruleContent": "touch s.txt"
+        },
+        {
+          "toolName": "Bash",
+          "ruleContent": "echo \"exit status: $?\""
+        }
+      ],
+      "behavior": "allow",
+      "destination": "localSettings"
+    }
+  ]
+}

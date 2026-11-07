@@ -1,0 +1,24 @@
+{
+  "session_id": "fx-PermissionRequest-3",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PermissionRequest-3.jsonl",
+  "cwd": "/tmp/work",
+  "scratchpad_dir": "/home/user/.cache/claude-tmp/claude-1000/-tmp-work/fx-PermissionRequest-3/scratchpad",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PermissionRequest",
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/tmp/work/y.txt",
+    "content": "PLACEHOLDER-content"
+  },
+  "permission_suggestions": [
+    {
+      "type": "setMode",
+      "mode": "acceptEdits",
+      "destination": "session"
+    }
+  ]
+}

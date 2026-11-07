@@ -1,0 +1,11 @@
+{
+  "session_id": "fx-ElicitationResult-2",
+  "transcript_path": "/home/user/.claude/projects/p/fx-ElicitationResult-2.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "hook_event_name": "ElicitationResult",
+  "mcp_server_name": "elic",
+  "elicitation_id": "eid-123",
+  "mode": "url",
+  "action": "cancel"
+}

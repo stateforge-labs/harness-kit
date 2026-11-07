@@ -1,0 +1,8 @@
+{
+  "session_id": "fx-DirectoryAdded-1",
+  "transcript_path": "/home/user/.claude/projects/p/fx-DirectoryAdded-1.jsonl",
+  "cwd": "/tmp/work",
+  "hook_event_name": "DirectoryAdded",
+  "directory": "/tmp/work/sub1",
+  "source": "register_repo_root"
+}

@@ -1,0 +1,21 @@
+{
+  "session_id": "fx-PostToolUseFailure-3",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PostToolUseFailure-3.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "default",
+  "agent_id": "af7c09f68917c6e48",
+  "agent_type": "general-purpose",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUseFailure",
+  "tool_name": "Read",
+  "tool_input": {
+    "file_path": "/tmp/work/gone.txt"
+  },
+  "tool_use_id": "toolu_01HJvrtTjFk8xYfo9neYhvDC",
+  "error": "File does not exist. Note: your current working directory is /tmp/work.",
+  "is_interrupt": false,
+  "duration_ms": 10
+}

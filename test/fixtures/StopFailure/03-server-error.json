@@ -1,0 +1,12 @@
+{
+  "session_id": "fx-StopFailure-3",
+  "transcript_path": "/home/user/.claude/projects/p/fx-StopFailure-3.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "StopFailure",
+  "error": "server_error",
+  "last_assistant_message": "PLACEHOLDER-last_assistant_message"
+}

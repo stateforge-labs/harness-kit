@@ -1,0 +1,21 @@
+{
+  "session_id": "fx-PostToolUseFailure-4",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PostToolUseFailure-4.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUseFailure",
+  "tool_name": "mcp__badsrv__fail",
+  "tool_input": {},
+  "tool_use_id": "toolu_019nhWwVMsryk3fRiR912MXw",
+  "error": "SIMULATED MCP FAILURE boom",
+  "is_interrupt": false,
+  "duration_ms": 6,
+  "mcp_server": {
+    "name": "badsrv",
+    "source": "dynamic"
+  }
+}

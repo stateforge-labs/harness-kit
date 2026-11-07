@@ -1,0 +1,12 @@
+{
+  "session_id": "fx-StopFailure-1",
+  "transcript_path": "/home/user/.claude/projects/p/fx-StopFailure-1.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "effort": {
+    "level": "xhigh"
+  },
+  "hook_event_name": "StopFailure",
+  "error": "model_not_found",
+  "last_assistant_message": "PLACEHOLDER-last_assistant_message"
+}

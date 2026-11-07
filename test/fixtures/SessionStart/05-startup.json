@@ -1,0 +1,8 @@
+{
+  "session_id": "fx-SessionStart-5",
+  "transcript_path": "/home/user/.claude/projects/p/fx-SessionStart-5.jsonl",
+  "cwd": "/tmp/work",
+  "hook_event_name": "SessionStart",
+  "source": "startup",
+  "session_title": "PLACEHOLDER-session_title"
+}

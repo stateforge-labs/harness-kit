@@ -1,0 +1,9 @@
+{
+  "session_id": "fx-UserPromptSubmit-2",
+  "transcript_path": "/home/user/.claude/projects/p/fx-UserPromptSubmit-2.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "default",
+  "hook_event_name": "UserPromptSubmit",
+  "prompt": "PLACEHOLDER-prompt"
+}

@@ -1,0 +1,17 @@
+{
+  "session_id": "fx-SubagentStop-1",
+  "transcript_path": "/home/user/.claude/projects/p/fx-SubagentStop-1.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "auto",
+  "agent_id": "a708ce592686b783d",
+  "agent_type": "general-purpose",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "SubagentStop",
+  "stop_hook_active": false,
+  "agent_transcript_path": "/home/user/.claude/projects/p/fx-SubagentStop-1/subagents/agent-a708ce592686b783d.jsonl",
+  "background_tasks": [],
+  "session_crons": []
+}

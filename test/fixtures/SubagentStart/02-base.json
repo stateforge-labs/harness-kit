@@ -1,0 +1,10 @@
+{
+  "session_id": "fx-SubagentStart-2",
+  "transcript_path": "/home/user/.claude/projects/p/fx-SubagentStart-2.jsonl",
+  "cwd": "/tmp/work",
+  "scratchpad_dir": "/home/user/.cache/claude-tmp/claude-1000/-tmp-work/fx-SubagentStart-2/scratchpad",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "agent_id": "aresearcher-071a9e0a4ead0b0a",
+  "agent_type": "researcher",
+  "hook_event_name": "SubagentStart"
+}
