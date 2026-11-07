@@ -43,7 +43,7 @@ one layer that wraps its `SnapshotHookEngine`.
 
 1. **Failure mode: per-layer `onFault`**, with deny-wins composition. (Chosen from the offered options.)
 2. **Stock layers: the library ships them.** (Chosen from the offered options.)
-3. **Endpoint.** The owner's words: "We need to make easy for the StateForge to serve this from the harness-hooks repo." Neither offered option was picked. **My reading, to confirm:** the serving code lives in harness-hooks as an embeddable endpoint (a web-standard handler plus thin Node and Bun binders, TCP and unix socket), and StateForge starts it with its pipeline. Whether anything may listen inside an agent sandbox stays StateForge's decision (no rule covers it today).
+3. **Endpoint.** The owner's words: "We need to make easy for the StateForge to serve this from the harness-hooks repo." Neither offered option was picked. **Reading confirmed by the owner (2026-11-07):** the serving code lives in harness-hooks as an embeddable endpoint (a web-standard handler plus thin Node and Bun binders, TCP and unix socket), and StateForge starts it with its pipeline. Whether anything may listen inside an agent sandbox stays StateForge's decision (no rule covers it today).
 
 ### Consequences
 
@@ -65,6 +65,5 @@ The contract is real when: a Codex and an OpenCode run against a local MCP serve
 
 ### Still open
 
-- Owner: confirm the reading of decision 3.
 - StateForge: package delivery (registry, git tag), the ADR-0181 exception, in-sandbox listeners.
 - Captures: Codex deny and stop-block, OpenCode deny and prompt-submit context, MCP tool names and failed-call hooks.

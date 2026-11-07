@@ -9,7 +9,7 @@ edited from here; StateForge-side steps are listed at the end for its own change
 
 - Rename the folder `~/Projects/homelab/harness-hooks` to `harness-kit` (done 2026-11-07); `package.json` name `harness-kit` (workspace root).
 - Update what points at the old path: the printed Claude/Codex config blocks (`scripts/install.ts`), the unit template, docs, memory notes. The installed OpenCode plugin is a copy and needs no change.
-- Create the GitLab remote (HTTPS push route) once the owner names the group.
+- Create the GitLab remote (HTTPS push route) in the `homelab` group (owner, 2026-11-07).
 
 ## Phase 1. Feasibility capture (gate for phases 5–6)
 
@@ -32,6 +32,9 @@ One study (new R-id), same isolation rules as R-2026-11-07-08, Codex 0.167.0 and
 - Hooks package runtime-neutral: builds to `dist` for Node (`rewriteRelativeImportExtensions`), no Bun APIs; shim runnable under Node.
 
 ## Phase 3. Contract v1 (ADR 0001)
+
+Starts after phase 1 (owner, 2026-11-07), so the deny/continue encoders land for every harness phase 1 allows, in one change.
+
 
 - Event: `session`, `tool { name, callId }`.
 - Reply: `deny { reason, hint? }`, `continue { missing[] }`; deny wins in composition.
@@ -69,4 +72,4 @@ a `snapshotLayer` plus prompt/refusal/pricing inputs; Runner drops rows 1–4 an
 
 ## Open
 
-GitLab group for the remote; registry choice; whether resume is feasible for Codex/OpenCode; the in-sandbox endpoint rule.
+Registry choice; whether resume is feasible for Codex/OpenCode; the in-sandbox endpoint rule.
