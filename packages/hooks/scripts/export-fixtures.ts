@@ -1,5 +1,5 @@
 // Turns the real captured hook payloads into scrubbed, de-duplicated test fixtures.
-// Usage: bun scripts/export-fixtures.ts [captures-dir] [out-dir]   (defaults: the Claude captures, test/fixtures/claude;
+// Usage: bun scripts/export-fixtures.ts [captures-dir] [out-dir]   (defaults: the Claude captures, fixtures/claude;
 // for Codex pass the R-2026-11-07-08 captures folder and test/fixtures/codex)
 // Reads captures/*/events.jsonl, keeps one payload per distinct (event, key set, discriminating values),
 // scrubs paths, ids and free text, and writes test/fixtures/claude/<Event>/<nn>-<label>.json.
@@ -11,9 +11,9 @@ import { join } from "node:path";
 
 const root = join(import.meta.dir, "..");
 const capturesDir =
-  process.argv[2] ?? join(root, "docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures");
+  process.argv[2] ?? join(root, "..", "..", "docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures");
 // Claude Code only: other harnesses have their own folders under test/fixtures, which this script must never clear.
-const outDir = process.argv[3] ?? join(root, "test/fixtures/claude");
+const outDir = process.argv[3] ?? join(root, "fixtures/claude");
 
 /** Keys whose string values are free text typed by a person or produced by a model. */
 const FREE_TEXT = new Set([

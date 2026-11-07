@@ -6,7 +6,7 @@
     "typecheck": "tsc --noEmit",
     "gen": "bun --filter @homelab/harness-hooks gen",
     "gen:check": "bun --filter @homelab/harness-hooks gen:check",
-    "start": "bun src/server.ts",
+    "start": "bun --filter @homelab/harness-hooks-server start",
     "test": "bun test"
   },
   "devDependencies": {
@@ -14,11 +14,6 @@
   },
   "peerDependencies": {
     "typescript": "^7"
-  },
-  "dependencies": {
-    "ipaddr.js": "2.5.0",
-    "@homelab/harness-hooks": "workspace:*",
-    "zod": "4.6.7"
   },
   "workspaces": [
     "packages/*"

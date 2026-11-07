@@ -1,0 +1,16 @@
+{
+  "name": "@homelab/harness-hooks-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The developer hook server: one HTTP endpoint for Claude Code, Codex and OpenCode hooks on a machine, plus the client installers.",
+  "scripts": {
+    "start": "bun src/server.ts",
+    "install-clients": "bun scripts/install.ts"
+  },
+  "dependencies": {
+    "@homelab/harness-hooks": "workspace:*",
+    "ipaddr.js": "2.5.0",
+    "zod": "4.6.7"
+  }
+}

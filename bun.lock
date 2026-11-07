@@ -4,16 +4,18 @@
   "workspaces": {
     "": {
       "name": "claude-hooks",
-      "dependencies": {
-        "@homelab/harness-hooks": "workspace:*",
-        "ipaddr.js": "2.5.0",
-        "zod": "4.6.7",
-      },
       "devDependencies": {
         "@types/bun": "1.4.4",
       },
       "peerDependencies": {
         "typescript": "^7",
+      },
+    },
+    "packages/adapters": {
+      "name": "@homelab/harness-adapters",
+      "version": "0.1.0",
+      "dependencies": {
+        "@homelab/harness-hooks": "workspace:*",
       },
     },
     "packages/hooks": {
@@ -23,9 +25,22 @@
         "zod": "4.6.7",
       },
     },
+    "packages/hooks-server": {
+      "name": "@homelab/harness-hooks-server",
+      "version": "0.1.0",
+      "dependencies": {
+        "@homelab/harness-hooks": "workspace:*",
+        "ipaddr.js": "2.5.0",
+        "zod": "4.6.7",
+      },
+    },
   },
   "packages": {
+    "@homelab/harness-adapters": ["@homelab/harness-adapters@workspace:packages/adapters"],
+
     "@homelab/harness-hooks": ["@homelab/harness-hooks@workspace:packages/hooks"],
+
+    "@homelab/harness-hooks-server": ["@homelab/harness-hooks-server@workspace:packages/hooks-server"],
 
     "@types/bun": ["@types/bun@1.4.4", "", { "dependencies": { "bun-types": "1.4.4" } }, "sha512-9wkRDXUXK124pEnAutE6n/l18j+i9GC5IAHK8TmX/2nlySETmky0OU6yL5U8pW1AoKh++AN9auDCr647BfurjQ=="],
 

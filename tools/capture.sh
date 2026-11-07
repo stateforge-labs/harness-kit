@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run a real headless Claude Code session with http hooks pointed at a throwaway capture server,
 # then print what the server received. Resolves "unknown property / does it fire" questions by observation.
-#   scripts/capture.sh <OutName> "<prompt>" [claude args...]
+#   tools/capture.sh <OutName> "<prompt>" [claude args...]
 # Env: CAPTURE_EVENTS=Event1,Event2 (events to hook; default: all http-capable ones + SessionStart via curl shim)
 #      CAPTURE_RESPONSE='{json}'   (what the hook replies; default {})
 #      CAPTURE_MATCHER=<matcher>   (optional matcher for every hook)
@@ -15,7 +15,7 @@ OUT="$ROOT/docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/ca
 mkdir -p "$OUT"; : > "$OUT/events.jsonl"
 TOKEN="$(head -c 18 /dev/urandom | base64 | tr -d '/+=')"
 export CAPTURE_LOG="$OUT/events.jsonl" CAPTURE_TOKEN="$TOKEN"
-bun "$ROOT/scripts/capture-server.ts" > "$OUT/server.out" 2>&1 & SRV=$!
+bun "$ROOT/tools/capture-server.ts" > "$OUT/server.out" 2>&1 & SRV=$!
 trap 'kill $SRV 2>/dev/null' EXIT
 for _ in $(seq 50); do PORT=$(sed -n 's/.*listening on :\([0-9]*\).*/\1/p' "$OUT/server.out"); [ -n "$PORT" ] && break; sleep 0.1; done
 [ -n "${PORT:-}" ] || { echo "capture server failed" >&2; exit 1; }

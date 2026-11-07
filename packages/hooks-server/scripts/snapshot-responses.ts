@@ -1,13 +1,14 @@
 // Records, for every fixture, what the server answers (<name>.expected.json: status and body) and what it logs
 // (<name>.log.json: the log line without its timestamp), next to the fixture.
-// Usage: bun scripts/snapshot-responses.ts [harness ...]   (default: every folder under test/fixtures)
+// Usage: bun scripts/snapshot-responses.ts [harness ...]   (default: every harness folder under @homelab/harness-hooks fixtures)
 // Run it on code you trust: the contract suite later asserts the server still answers exactly this,
 // so a schema or refactor change cannot alter a response without a visible diff here.
 import { readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { fixturesDir } from "@homelab/harness-hooks";
 import { eventually, startServer } from "../test/e2e/harness.ts";
 
-const root = join(import.meta.dir, "..", "test", "fixtures");
+const root = fixturesDir;
 const harnesses = process.argv.slice(2).length ? process.argv.slice(2) : readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort();
 const srv = await startServer();
 let n = 0;

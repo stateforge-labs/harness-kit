@@ -1,5 +1,5 @@
 // Measures what each hook payload really looks like, from the captured events.
-// Usage: bun scripts/infer-fields.ts [captures-dir] > observed-fields.json
+// Usage: bun tools/infer-fields.ts [captures-dir] > observed-fields.json
 // Reads every captures/*/events.jsonl, groups payloads by hook_event_name and reports, for each key:
 // the JSON types seen, in how many payloads it appeared, and (for objects) the same one level down.
 import { readdirSync, readFileSync, existsSync } from "node:fs";
