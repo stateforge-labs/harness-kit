@@ -34,7 +34,7 @@ Every event passes through a pipeline between decode and encode. A layer is `(ct
   twice runs the layers below once. `mergeReplies` joins two contexts with a blank line; `onKinds(kinds, mw)` limits a layer to some events.
 - **Fault isolation (fail-open).** A layer that throws, rejects or exceeds `HOOK_MIDDLEWARE_TIMEOUT_MS` (2000) is skipped and the answer
   is what the layers below decided; the fault goes to stderr. A broken layer never stops an agent. A layer that must *refuse* on failure
-  is not expressible yet (R-2026-11-07-09 F7).
+  is not expressible yet (R-2026-11-07-09 F8).
 - **Two ways in.** In code: `new HookServerBuilder().use(mw)`. In a running server: `HOOK_MIDDLEWARE=/abs/a.ts,/abs/b.ts`, each module's
   default export a `Middleware` or an array of them; a module that fails to import is a start-up error (exit 2). Module loading runs
   arbitrary code and is a service feature only (R-2026-11-07-09).
@@ -118,7 +118,7 @@ against the real server (OpenCode cannot be started in the suite without a model
 | Codex spawn: can a model be requested, under which key | Capture with a prompt that names a subagent model |
 | Codex hook timeout, merge order, failure modes; `hookEventName` mandatory in output | Timed runs; a run that answers with context |
 | The Codex context-answer path on a real run (no built-in policy produces one; the middleware tests exercise the encoder). OpenCode has no answer path | Rules wording decided, then a real run |
-| Per-layer failure mode (fail-closed for a gate) and neutral deny / continue replies, tool and session on the neutral event | R-2026-11-07-09 F7; an owner decision, then captures of the deny and stop effects |
+| Per-layer failure mode (fail-closed for a gate) and neutral deny / continue replies, tool and session on the neutral event | R-2026-11-07-09 F8; an owner decision, then captures of the deny and stop effects |
 | Library/service split (exports map, `.ts` import extensions for other builds) and how StateForge would consume it | R-2026-11-07-09 follow-ups |
 | OpenCode root `session.created`, compaction hook and events, `deny`/`ask` effects, failed tool status | See R-2026-11-07-08, Open questions |
 | Rules wording for Codex and OpenCode | The user |
