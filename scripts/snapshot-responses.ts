@@ -29,7 +29,8 @@ try {
           const text = (await f2.exists()) ? await f2.text() : "";
           const lines = text.split("\n");
           if (!text.endsWith("\n")) lines.pop();
-          return lines.find((l) => l.includes(`"session_id":"${id}"`));
+          // fixture ids repeat across harnesses (fx-PreToolUse-1), so the harness is part of the match
+          return lines.find((l) => l.includes(`"harness":"${harness}"`) && l.includes(`"session_id":"${id}"`));
         });
         const { ts: _ts, ...entry } = JSON.parse(line) as Record<string, unknown>;
         writeFileSync(join(dir, ev, f.replace(/\.json$/, ".log.json")), JSON.stringify(entry, null, 2) + "\n");

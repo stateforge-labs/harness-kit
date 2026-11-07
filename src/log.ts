@@ -14,6 +14,9 @@ export function flushLog(): Promise<void> {
 const MAX_FIELD_CHARS = 256;
 const MAX_KEYS = 100;
 
+/** A common field is logged only when it is a string: an object or array there (a damaged or hostile payload) would otherwise be written whole. */
+const label = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
+
 function clip(v: unknown): unknown {
   if (typeof v === "string") return v.length > MAX_FIELD_CHARS ? `${v.slice(0, MAX_FIELD_CHARS)}...[${v.length} chars]` : v;
   if (Array.isArray(v)) return v.slice(0, MAX_KEYS).map(clip);
@@ -55,11 +58,11 @@ function lineFor(payload: Record<string, unknown>, handled: Handled, full: boole
   const line: Record<string, unknown> = {
     ts,
     harness: handled.harness,
-    event: common.event,
-    session_id: common.session_id,
-    agent_id: common.agent_id,
-    agent_type: common.agent_type,
-    tool_name: common.tool_name,
+    event: label(common.event),
+    session_id: label(common.session_id),
+    agent_id: label(common.agent_id),
+    agent_type: label(common.agent_type),
+    tool_name: label(common.tool_name),
     keys: Object.keys(payload).sort(),
     known: decoded.known,
     missing: decoded.missing,

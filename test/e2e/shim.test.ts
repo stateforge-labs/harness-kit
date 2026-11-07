@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { fixture as fixtureOf, variant } from "./kit.ts";
-import { startServer, type RunningServer } from "./harness.ts";
+import { eventually, startServer, type RunningServer } from "./harness.ts";
 
 const SHIM = join(import.meta.dir, "..", "..", "clients", "shim", "hook-shim.ts");
 const SECRET = "tok-shim-never-print-me";
@@ -56,9 +56,12 @@ describe("e2e: the command-hook shim", () => {
     const r = await runShim({ args: ["--harness", "codex"], stdin: JSON.stringify(body), env: { HOOK_URL: open.base } });
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toEqual({});
-    const log = await Bun.file(open.logFile).text();
-    expect(log).toContain(`"harness":"codex"`);
-    expect(log).toContain(body.session_id);
+    // the server writes its log line after answering, so wait for it
+    const line = await eventually(async () => {
+      const f = Bun.file(open.logFile);
+      return ((await f.exists()) ? await f.text() : "").split("\n").find((l) => l.includes(body.session_id));
+    });
+    expect(line).toContain(`"harness":"codex"`);
   });
 
   test("prints the server's answer and exits 0", async () => {

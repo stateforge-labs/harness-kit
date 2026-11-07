@@ -98,6 +98,5 @@ against the real server (OpenCode cannot be started in the suite without a model
 | Codex hook timeout, merge order, failure modes; `hookEventName` mandatory in output | Timed runs; a run that answers with context |
 | The Codex and OpenCode context-answer path (no policy produces one; an encoder mutation survives) | Rules wording decided, then a real run |
 | OpenCode root `session.created`, compaction hook and events, `deny`/`ask` effects, failed tool status | See R-2026-11-07-08, Open questions |
-| OpenCode behaviour on the ChatGPT login (captures used OpenCode Go) | A run on that login |
 | Rules wording for Codex and OpenCode | The user |
 | Shim fail-closed variants | A policy that needs to block |

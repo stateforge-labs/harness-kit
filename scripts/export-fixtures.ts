@@ -4,6 +4,8 @@
 // Reads captures/*/events.jsonl, keeps one payload per distinct (event, key set, discriminating values),
 // scrubs paths, ids and free text, and writes test/fixtures/claude/<Event>/<nn>-<label>.json.
 // Re-running replaces the fixtures, so the output is reproducible from the captures.
+// NOTE: the committed Claude and Codex fixtures were exported before `tool_response` and `command` joined FREE_TEXT, so re-exporting them
+// would replace those two kinds of text with placeholders (and nothing else). OpenCode's fixtures were exported with the final rules.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -20,9 +22,12 @@ const FREE_TEXT = new Set([
   "result", "text", "title", "session_title", "expanded_prompt", "command_args", "args",
   "tool_response", // Codex: the tool's output as a string
   "resources", // OpenCode permission.evaluate: the command or path being asked about
+  "command", // a shell command can carry a secret (an inline token, a URL with credentials); a short one was passed through before
 ]);
 /** Values that pick a variant of an event; two payloads that differ here are both kept. */
-const DISCRIMINATORS = ["trigger", "source", "notification_type", "command_source", "error", "reason", "tool_name", "mode", "memory_type", "load_reason", "tool", "delivery", "status", "action"];
+const DISCRIMINATORS = ["trigger", "source", "notification_type", "command_source", "error", "reason", "tool_name", "mode", "memory_type", "load_reason"];
+// OpenCode: its bodies use these keys as short labels that pick a variant. Claude/Codex payloads do not, and adding them there regroups their fixtures.
+const OPENCODE_DISCRIMINATORS = ["tool", "delivery", "status", "action"];
 const MAX_PER_EVENT = 8;
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
@@ -70,7 +75,7 @@ for (const name of readdirSync(capturesDir).sort()) {
     const p = (JSON.parse(line) as { payload?: Payload }).payload;
     const ev = p?.hook_event_name;
     if (!p || typeof ev !== "string") continue;
-    const disc = DISCRIMINATORS.filter((k) => k !== "error" || ev === "StopFailure")
+    const disc = [...DISCRIMINATORS, ...("sessionID" in p ? OPENCODE_DISCRIMINATORS : [])].filter((k) => k !== "error" || ev === "StopFailure")
       .map((k) => (typeof p[k] === "string" ? `${k}=${p[k]}` : "")).join("|");
     const key = `${Object.keys(p).sort().join(",")}#${disc}`;
     const g = groups.get(ev) ?? new Map();
@@ -95,7 +100,7 @@ for (const [ev, g] of [...groups].sort()) {
     if (n >= MAX_PER_EVENT) break;
     n++;
     const id = `fx-${ev}-${n}`;
-    const label = String([p.tool_name, p.tool, p.delivery, p.action, p.trigger, p.source, p.notification_type, p.command_source, p.error].find((x) => typeof x === "string") ?? "base")
+    const label = String([p.tool_name, ...("sessionID" in p ? [p.tool, p.delivery, p.action] : []), p.trigger, p.source, p.notification_type, p.command_source, p.error].find((x) => typeof x === "string") ?? "base")
       .toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 24);
     const fixture = scrub(p, "", id) as Payload;
     writeFileSync(join(outDir, ev, `${String(n).padStart(2, "0")}-${label}.json`), JSON.stringify(fixture, null, 2) + "\n");

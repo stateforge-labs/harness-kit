@@ -5,7 +5,8 @@
   "messageID": "PLACEHOLDER-messageID",
   "id": "PLACEHOLDER-id",
   "input": {
-    "command": "touch made-by-agent.txt"
+    "command": "PLACEHOLDER-command",
+    "workdir": "/tmp/oc-capture/work"
   },
   "status": "completed",
   "result": {

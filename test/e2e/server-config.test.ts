@@ -29,18 +29,29 @@ describe("e2e: PORT", () => {
 });
 
 describe("e2e: bind address", () => {
-  test("by default the server listens on loopback only", async () => {
+  /** Non-internal IPv4 addresses of this machine; empty on a host with only loopback. */
+  const otherAddresses = (): string[] =>
+    Object.values(require("node:os").networkInterfaces() as Record<string, { address: string; family: string; internal: boolean }[]>)
+      .flat()
+      .filter((a) => a && !a.internal && a.family === "IPv4")
+      .map((a) => a.address);
+
+  test("by default the server binds to 127.0.0.1", async () => {
     const srv = await startServer();
     try {
       expect(srv.host).toBe("127.0.0.1");
-      const port = srv.port;
-      // Any other address of this machine must not reach it: it would answer if the server were bound to all interfaces.
-      const others = Object.values(require("node:os").networkInterfaces() as Record<string, { address: string; family: string; internal: boolean }[]>)
-        .flat()
-        .filter((a) => a && !a.internal && a.family === "IPv4")
-        .map((a) => a.address);
-      for (const addr of others) {
-        const res = await fetch(`http://${addr}:${port}/healthz`, { signal: AbortSignal.timeout(1500) }).catch(() => null);
+    } finally {
+      await srv.stop();
+    }
+  });
+
+  // Skipped (not passed) on a machine with no other IPv4 address, where there is nothing to reach the server on.
+  test.skipIf(otherAddresses().length === 0)("another address of this machine does not reach a default server", async () => {
+    const srv = await startServer();
+    try {
+      // It would answer if the server were bound to all interfaces.
+      for (const addr of otherAddresses()) {
+        const res = await fetch(`http://${addr}:${srv.port}/healthz`, { signal: AbortSignal.timeout(1500) }).catch(() => null);
         expect(res).toBeNull();
       }
     } finally {

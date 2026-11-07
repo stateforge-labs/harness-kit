@@ -110,18 +110,28 @@ for (const [harness, adapter] of adapters) {
       return Object.keys(props).filter((k) => Array.isArray(props[k]!.enum));
     };
     test.each(events.map((e) => [e] as const))("%s: an unlisted value is logged as invalid_value without the value, and the answer stays 200", async (event) => {
-      const f = fixtures(harness, event)[0]!;
-      for (const key of enumKeys(event).filter((k) => k in f.payload)) {
-        const body = variant(f, { [key]: "SECRET-NOT-IN-THE-SET" }, `enum-${event}-${key}`);
-        const res = await hook.post(body);
-        expect(res.status).toBe(200);
-        expectNeverBlocks(await res.json());
-        const { entry } = await hook.logFor(body.session_id);
-        // The report names the path and the problem, never the value. (A handler may still log a short label field's value as
-        // metadata; the privacy tests below decide which fields may do that.)
-        expect(entry.wrong_type).toEqual([`${key}: invalid_value`]);
-        expect(entry.missing).toEqual([]);
+      // Every fixture of the event, and every enum key present in any of them (an optional key may be absent from the first fixture).
+      const seenKeys = new Set<string>();
+      for (const f of fixtures(harness, event)) {
+        for (const key of enumKeys(event).filter((k) => k in f.payload && !seenKeys.has(k))) {
+          seenKeys.add(key);
+          const bad = `SECRET-NOT-IN-THE-SET-${key}`;
+          const body = variant(f, { [key]: bad }, `enum-${event}-${key}`);
+          const res = await hook.post(body);
+          expect(res.status).toBe(200);
+          expectNeverBlocks(await res.json());
+          const { entry } = await hook.logFor(body.session_id);
+          expect(entry.wrong_type).toEqual([`${key}: invalid_value`]);
+          expect(entry.missing).toEqual([]);
+          // The report is the path and the problem. A handler may log the value as a short label field of its own (under the key's name
+          // or another, e.g. FileChanged logs `event` as `change`); the privacy tests below decide which. It must not appear anywhere else.
+          const rest = Object.fromEntries(Object.entries(entry).filter(([, v]) => v !== bad));
+          expect(JSON.stringify(rest)).not.toContain(bad);
+        }
       }
+      // Guard against a vacuous pass: an event whose schema has an enum key must have been exercised at least once.
+      const withEnum = enumKeys(event).filter((k) => fixtures(harness, event).some((f) => k in f.payload));
+      expect([...seenKeys].sort()).toEqual(withEnum.sort());
     });
   });
 
