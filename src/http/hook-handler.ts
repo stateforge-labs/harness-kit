@@ -1,7 +1,5 @@
-import type { HarnessAdapter } from "../port.ts";
 import type { ServerConfig } from "../config.ts";
-import { handle } from "../app.ts";
-import type { Pipeline } from "../core/pipeline.ts";
+import { handle, type HarnessAdapter, type Pipeline } from "@homelab/harness-hooks";
 import { logEvent } from "../log.ts";
 import { Admission } from "./admission.ts";
 

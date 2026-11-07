@@ -1,0 +1,21 @@
+{
+  "name": "@homelab/harness-hooks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Neutral hook events and replies, per-harness decode/encode for Claude Code, Codex and OpenCode, and the middleware pipeline.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./shim": "./clients/shim/hook-shim.ts",
+    "./opencode-plugin": "./clients/opencode/plugin.ts",
+    "./fixtures/*": "./fixtures/*",
+    "./schemas/*": "./schemas/*"
+  },
+  "scripts": {
+    "gen": "bun scripts/gen-registry.ts && bun scripts/gen-json-schema.ts",
+    "gen:check": "bun scripts/gen-registry.ts --check && bun scripts/gen-json-schema.ts --check"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  }
+}

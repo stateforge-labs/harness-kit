@@ -8,6 +8,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll } from "bun:test";
+import { fixturesDir } from "@homelab/harness-hooks";
 import { eventually, startServer, type RunningServer } from "./harness.ts";
 
 export type Payload = Record<string, unknown> & { hook_event_name: string; session_id: string };
@@ -25,7 +26,7 @@ export interface Fixture {
   log: Record<string, unknown>;
 }
 
-const FIXTURES = join(import.meta.dir, "..", "fixtures");
+const FIXTURES = fixturesDir;
 
 /** Fixture provenance of one harness: a default, and an override per `<Event>/<name>`. */
 function provenanceOf(harness: string): (event: string, name: string) => string {

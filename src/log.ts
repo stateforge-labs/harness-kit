@@ -1,6 +1,6 @@
 import { appendFile, mkdir, rename, stat } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { Handled } from "./app.ts";
+import type { Handled } from "@homelab/harness-hooks";
 
 /** Every write goes through this chain, so appends never overlap and a rotation never races an append. */
 let queue: Promise<void> = Promise.resolve();

@@ -1,9 +1,10 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
+import { shimPath } from "@homelab/harness-hooks";
 import { fixture as fixtureOf, variant } from "./kit.ts";
 import { eventually, startServer, type RunningServer } from "./harness.ts";
 
-const SHIM = join(import.meta.dir, "..", "..", "clients", "shim", "hook-shim.ts");
+const SHIM = shimPath;
 const SECRET = "tok-shim-never-print-me";
 
 interface ShimRun {

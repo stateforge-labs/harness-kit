@@ -2,8 +2,9 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { opencodePluginPath } from "@homelab/harness-hooks";
 import { join } from "node:path";
-import { adapters } from "../../src/adapters/index.ts";
+import { adapters } from "@homelab/harness-hooks";
 
 const repo = join(import.meta.dir, "..", "..");
 let dir: string;
@@ -66,7 +67,7 @@ describe("e2e: scripts/install.ts", () => {
     expect(dry.stdout).toContain("would copy");
     expect(await Bun.file(join(cfg, "plugins/harness-hooks.ts")).exists()).toBe(false);
     expect((await install(["opencode", "--apply", "--config-dir", cfg])).code).toBe(0);
-    expect(await readFile(join(cfg, "plugins/harness-hooks.ts"), "utf8")).toBe(await readFile(join(repo, "clients/opencode/plugin.ts"), "utf8"));
+    expect(await readFile(join(cfg, "plugins/harness-hooks.ts"), "utf8")).toBe(await readFile(opencodePluginPath, "utf8"));
     expect((await install(["opencode", "--apply", "--config-dir", cfg])).code).toBe(0);
   });
 

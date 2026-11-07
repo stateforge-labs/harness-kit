@@ -1,4 +1,4 @@
-// Writes JSON Schema for every hook event of every harness to docs/schemas/<harness>/, plus a README table of keys for each.
+// Writes JSON Schema for every hook event of every harness to schemas/<harness>/, plus a README table of keys for each.
 // Usage: bun scripts/gen-json-schema.ts [--check] [--root <dir>]
 // The schemas under src/adapters/<harness>/events/ are the source; these files are documentation only.
 // Claude's per-tool `tool_input` checks are code, not JSON Schema, so they are listed in src/adapters/claude/tool-input.ts.
@@ -44,7 +44,7 @@ let total = 0;
 for (const [id, adapter] of adapters) {
   const h = HARNESSES[id];
   if (!h) throw new Error(`gen-json-schema.ts has no entry for harness "${id}"`);
-  const out = join(root, "docs", "schemas", id);
+  const out = join(root, "schemas", id);
   owned.push(out);
   const common = new Set(h.common);
   const rows: string[] = [];
@@ -74,5 +74,5 @@ for (const [id, adapter] of adapters) {
 }
 
 const code = emit(files, check, owned, root);
-if (!check && code === 0) console.log(`wrote ${total} schemas for ${adapters.size} harnesses under ${join(root, "docs", "schemas")}`);
+if (!check && code === 0) console.log(`wrote ${total} schemas for ${adapters.size} harnesses under ${join(root, "schemas")}`);
 process.exit(code);

@@ -5,7 +5,7 @@
 // events. Everything after the plugin (HTTP, admission, adapter, log) is the real server. The real OpenCode run is covered by the
 // capture step (docs/research/studies/2026-11-07-codex-opencode-real-hook-payloads, captures-opencode/) and the fixtures it produced.
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import plugin from "../../clients/opencode/plugin.ts";
+import plugin from "@homelab/harness-hooks/opencode-plugin";
 import { eventually, startServer, type RunningServer } from "./harness.ts";
 
 type Hook = (input: unknown) => Promise<void>;

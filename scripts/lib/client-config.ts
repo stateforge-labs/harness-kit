@@ -1,5 +1,5 @@
 // Pure renderers for the configuration each harness needs to talk to the server. No file or process is touched here.
-import { adapters } from "../../src/adapters/index.ts";
+import { adapters, shimPath } from "@homelab/harness-hooks";
 
 export interface RenderOptions {
   /** Base URL of the server, no trailing slash. */
@@ -14,7 +14,7 @@ export interface RenderOptions {
 const CLAUDE_COMMAND_ONLY: ReadonlySet<string> = new Set(["SessionStart", "Setup"]);
 
 const events = (harness: string): string[] => Object.keys(adapters.get(harness)!.jsonSchemas()).sort();
-const shim = (o: RenderOptions, harness: string) => `${o.bun} ${o.repo}/clients/shim/hook-shim.ts --harness ${harness}`;
+const shim = (o: RenderOptions, harness: string) => `${o.bun} ${shimPath} --harness ${harness}`;
 
 /**
  * The `hooks` block for Claude Code's settings.json: every event the adapter knows. `http` hooks POST straight to the server

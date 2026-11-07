@@ -2,7 +2,7 @@
 // Each registered adapter that has fixtures gets the whole suite; event files under test/e2e/events/<harness>/
 // hold only what is special about one event.
 import { describe, expect, test } from "bun:test";
-import { adapters } from "../../src/adapters/index.ts";
+import { adapters } from "@homelab/harness-hooks";
 import { fixtures, hookServer, variant, type Fixture } from "./kit.ts";
 
 /** Keys whose values the server may log, because they are short identifiers or enumerations, never typed text. */

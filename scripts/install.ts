@@ -9,6 +9,7 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
+import { opencodePluginPath } from "@homelab/harness-hooks";
 import { claudeHooks, codexHooks, systemdUnit, type RenderOptions } from "./lib/client-config.ts";
 
 const repo = resolve(import.meta.dir, "..");
@@ -47,7 +48,7 @@ function writeNew(path: string, content: string): void {
 switch (target) {
   case "opencode": {
     const dir = value("--config-dir") ?? join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"), "opencode");
-    const from = join(repo, "clients/opencode/plugin.ts");
+    const from = opencodePluginPath;
     const to = join(dir, "plugins", "harness-hooks.ts");
     if (url !== "http://127.0.0.1:8787") console.error("note: the plugin reads HOOK_URL from OpenCode's environment; --url is not baked into it");
     if (!apply) {

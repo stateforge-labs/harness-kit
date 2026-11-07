@@ -3,7 +3,7 @@ import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const repo = join(import.meta.dir, "..", "..");
+const repo = join(import.meta.dir, "..");
 let copy: string;
 
 /** Runs a generator script as a real process and returns what it did. */
@@ -17,7 +17,7 @@ async function run(script: string, args: string[]) {
 beforeAll(async () => {
   copy = await mkdtemp(join(tmpdir(), "harness-hooks-gen-"));
   for (const h of ["claude", "codex", "opencode"]) {
-    for (const d of [`src/adapters/${h}/handlers`, `src/adapters/${h}/events`, `docs/schemas/${h}`]) await cp(join(repo, d), join(copy, d), { recursive: true });
+    for (const d of [`src/adapters/${h}/handlers`, `src/adapters/${h}/events`, `schemas/${h}`]) await cp(join(repo, d), join(copy, d), { recursive: true });
     await cp(join(repo, `src/adapters/${h}/schemas.ts`), join(copy, `src/adapters/${h}/schemas.ts`));
   }
 });
@@ -65,7 +65,7 @@ describe("e2e: generated files are current", () => {
   });
 
   test("a stale, a missing and a leftover schema document are each reported, and nothing is deleted by --check", async () => {
-    const dir = join(copy, "docs/schemas/claude");
+    const dir = join(copy, "schemas/claude");
     const stale = join(dir, "Stop.json");
     const original = await readFile(stale, "utf8");
     await writeFile(stale, original.replace("{", '{ "stale": true,'));
@@ -81,7 +81,7 @@ describe("e2e: generated files are current", () => {
     } finally {
       await writeFile(stale, original);
       await rm(join(dir, "Removed.json"));
-      await cp(join(repo, "docs/schemas/claude/SessionEnd.json"), join(dir, "SessionEnd.json"));
+      await cp(join(repo, "schemas/claude/SessionEnd.json"), join(dir, "SessionEnd.json"));
     }
   });
 
@@ -107,7 +107,7 @@ describe("e2e: generated files are current", () => {
   });
 
   test("without --check the generator rewrites the copy and the check passes again", async () => {
-    const dir = join(copy, "docs/schemas/claude");
+    const dir = join(copy, "schemas/claude");
     await writeFile(join(dir, "Removed.json"), "{}\n");
     const w = await run("gen-json-schema.ts", ["--root", copy]);
     expect(w.code).toBe(0);

@@ -1,10 +1,8 @@
 // The hook server. `bun src/server.ts` reads the environment (see config.ts), builds the server and runs it until a signal.
-import { adapters as allAdapters } from "./adapters/index.ts";
 import { ConfigError, ServerConfig } from "./config.ts";
-import { Pipeline, policyLayer, type Middleware } from "./core/pipeline.ts";
+import { adapters as allAdapters, Pipeline, policyLayer, type HarnessAdapter, type Middleware } from "@homelab/harness-hooks";
 import { loadMiddleware } from "./middleware-loader.ts";
 import { HookHandler } from "./http/hook-handler.ts";
-import type { HarnessAdapter } from "./port.ts";
 import { installGracefulShutdown } from "./shutdown.ts";
 
 /** Collects what a server needs, then `build()` makes it. Both inputs are required, so a half-configured server cannot be built. */

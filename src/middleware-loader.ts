@@ -1,5 +1,5 @@
 import { ConfigError } from "./config.ts";
-import type { Middleware } from "./core/pipeline.ts";
+import type { Middleware } from "@homelab/harness-hooks";
 
 /**
  * Loads the modules named in HOOK_MIDDLEWARE. Each default-exports a Middleware or an array of them. A module that cannot be

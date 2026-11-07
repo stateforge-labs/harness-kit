@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "gen": "bun scripts/gen-registry.ts && bun scripts/gen-json-schema.ts",
-    "gen:check": "bun scripts/gen-registry.ts --check && bun scripts/gen-json-schema.ts --check",
+    "gen": "bun --filter @homelab/harness-hooks gen",
+    "gen:check": "bun --filter @homelab/harness-hooks gen:check",
     "start": "bun src/server.ts",
     "test": "bun test"
   },
@@ -17,6 +17,10 @@
   },
   "dependencies": {
     "ipaddr.js": "2.5.0",
+    "@homelab/harness-hooks": "workspace:*",
     "zod": "4.6.7"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }
