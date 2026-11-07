@@ -25,7 +25,7 @@ One study (new R-id), same isolation rules as R-2026-11-07-08, Codex 0.167.0 and
 
 **Gate:** if 1 or 2 fails for a harness, that harness has no non-interactive adapter under ADR-0420; the package starts with Claude only.
 
-## Phase 2. Workspace split, no behaviour change
+## Phase 2. Workspace split, no behaviour change (done 2026-11-07, `99e9e14`..`d83505d`)
 
 - Bun workspace: `packages/hooks` (core, adapters for hook payloads, pipeline, clients), `packages/hooks-server` (server, config, http, middleware loader, installers). Tests move with their package; same count, same results.
 - `exports` maps; a script that fails the build when a package imports outside its allowed list.

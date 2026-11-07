@@ -29,5 +29,7 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
-  "include": ["packages", "tools"]
+  "include": ["packages", "tools"],
+  // Built output is checked by packages/hooks/tsconfig.build.json, not here.
+  "exclude": ["**/node_modules", "**/dist"]
 }

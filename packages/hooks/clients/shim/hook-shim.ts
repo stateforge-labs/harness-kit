@@ -1,5 +1,6 @@
 // Command-hook shim: reads one hook payload on stdin, POSTs it to the harness-hooks server, prints the answer.
-//   bun hook-shim.ts --harness codex      (or: node hook-shim.ts ..., Node 22.18+ runs it as is; it uses no Bun API)
+//   bun hook-shim.ts --harness codex      (it uses no Bun API: Node 22.18+ runs this file from a checkout; an installed copy
+//   runs dist/clients/shim/hook-shim.js, because Node does not strip types under node_modules. `shimPath` picks the right one.)
 // For harnesses whose hooks are commands (Codex, and Claude Code's SessionStart and Setup, which cannot be http).
 //
 // Environment: HOOK_URL (default http://127.0.0.1:8787), HOOK_TOKEN (sent as a bearer token, never printed),

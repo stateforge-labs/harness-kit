@@ -60,6 +60,18 @@ describe("the Node build", () => {
     for (const { exists } of Object.values(result.paths)) expect(exists).toBe(true);
   });
 
+  test("the built shim runs under node and fails open with {} when nothing listens", async () => {
+    const proc = Bun.spawn(["node", result.paths.shimPath!.p, "--harness", "codex"], {
+      env: { PATH: process.env.PATH ?? "", HOOK_URL: "http://127.0.0.1:9", HOOK_SHIM_TIMEOUT_MS: "1500" },
+      stdin: new Blob(["{}"]),
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const stdout = await new Response(proc.stdout).text();
+    expect(await proc.exited).toBe(0);
+    expect(stdout.trim()).toBe("{}");
+  });
+
   test("every fixture answers its snapshot under Node", () => {
     expect(result.checked).toBeGreaterThan(80);
     expect(result.mismatches).toEqual([]);
