@@ -3,7 +3,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "typecheck": "bun check",
+    "typecheck": "tsc --noEmit",
+    "gen": "bun scripts/gen-registry.ts && bun scripts/gen-json-schema.ts",
+    "gen:check": "bun scripts/gen-registry.ts --check && bun scripts/gen-json-schema.ts --check",
     "start": "bun src/server.ts",
     "test": "bun test"
   },

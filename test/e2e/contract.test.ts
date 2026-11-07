@@ -46,7 +46,11 @@ describe("contract: a bad payload is reported, never rejected", () => {
       if (key === "session_id") continue;
       const res = await hook.post(body);
       expect(res.status).toBe(200);
-      expect(typeof (await res.json())).toBe("object");
+      // A damaged payload must never turn into a block: the answer may differ from the recorded one, but it never stops the agent.
+      const answer = (await res.json()) as Record<string, unknown>;
+      expect(typeof answer).toBe("object");
+      expect(answer.decision).not.toBe("block");
+      expect(answer.continue).not.toBe(false);
       const { entry } = await hook.logFor(body.session_id);
       expect(entry.missing).toEqual([key]);
       expect(entry.wrong_type).toEqual([]);
