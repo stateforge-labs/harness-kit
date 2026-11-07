@@ -1,15 +1,20 @@
 // Shared pieces for the e2e tests, so a test file only says what is special about its event.
-//   const hook = hookServer();                          // boots the real server for this file
+//   const { fixture, hookServer } = forHarness("claude");   // per-event files import this bound form from ./kit.ts next to them
+//   const hook = hookServer();                              // boots the real server for this file
 //   const res = await hook.post(variant(fixture("PreCompact"), { trigger: "auto" }));
 //   const { entry, text } = await hook.logFor(sessionIdOfThatPayload);
-// Fixtures are real captured payloads (scrubbed) under test/fixtures; see scripts/export-fixtures.ts.
-import { readdirSync, readFileSync } from "node:fs";
+// Fixtures live under test/fixtures/<harness>/<Event>/. Each harness has a provenance.json saying whether its
+// fixtures are real captures or synthetic (built from a source schema); see scripts/export-fixtures.ts.
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll } from "bun:test";
 import { eventually, startServer, type RunningServer } from "./harness.ts";
 
 export type Payload = Record<string, unknown> & { hook_event_name: string; session_id: string };
 export interface Fixture {
+  harness: string;
+  /** "captured" for a payload recorded from the real harness, otherwise "synthetic (...)" saying where it came from. */
+  provenance: string;
   event: string;
   /** File name without `.json`, for example `02-bash`. */
   name: string;
@@ -22,26 +27,37 @@ export interface Fixture {
 
 const FIXTURES = join(import.meta.dir, "..", "fixtures");
 
-export function fixtures(event?: string): Fixture[] {
-  return readdirSync(FIXTURES)
-    .filter((e) => !event || e === event)
+/** Fixture provenance of one harness: a default, and an override per `<Event>/<name>`. */
+function provenanceOf(harness: string): (event: string, name: string) => string {
+  const file = join(FIXTURES, harness, "provenance.json");
+  const p = JSON.parse(readFileSync(file, "utf8")) as { default: string; overrides: Record<string, string> };
+  return (event, name) => p.overrides[`${event}/${name}`] ?? p.default;
+}
+
+export function fixtures(harness: string, event?: string): Fixture[] {
+  const root = join(FIXTURES, harness);
+  if (!existsSync(root)) return [];
+  const provenance = provenanceOf(harness);
+  return readdirSync(root, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && (!event || d.name === event))
+    .map((d) => d.name)
     .sort()
     .flatMap((e) =>
-      readdirSync(join(FIXTURES, e))
+      readdirSync(join(root, e))
         .filter((f) => f.endsWith(".json") && !f.endsWith(".expected.json") && !f.endsWith(".log.json"))
         .sort()
         .map((f) => {
           const name = f.slice(0, -5);
-          const read = (file: string) => JSON.parse(readFileSync(join(FIXTURES, e, file), "utf8"));
-          return { event: e, name, payload: read(f), expected: read(`${name}.expected.json`), log: read(`${name}.log.json`) } as Fixture;
+          const read = (file: string) => JSON.parse(readFileSync(join(root, e, file), "utf8"));
+          return { harness, provenance: provenance(e, name), event: e, name, payload: read(f), expected: read(`${name}.expected.json`), log: read(`${name}.log.json`) } as Fixture;
         }),
     );
 }
 
 /** One fixture of an event: by name fragment (`"bash"`) or the first one. */
-export function fixture(event: string, nameFragment = ""): Fixture {
-  const f = fixtures(event).find((x) => x.name.includes(nameFragment));
-  if (!f) throw new Error(`no fixture for ${event} matching "${nameFragment}"`);
+export function fixture(harness: string, event: string, nameFragment = ""): Fixture {
+  const f = fixtures(harness, event).find((x) => x.name.includes(nameFragment));
+  if (!f) throw new Error(`no ${harness} fixture for ${event} matching "${nameFragment}"`);
   return f;
 }
 
@@ -69,7 +85,7 @@ export interface Hook {
 }
 
 /** Starts the real server once for the surrounding describe block / file and stops it afterwards. */
-export function hookServer(env: Record<string, string> = {}): Hook {
+export function hookServer(harness: string, env: Record<string, string> = {}): Hook {
   let srv: RunningServer;
   beforeAll(async () => {
     srv = await startServer(env);
@@ -85,7 +101,7 @@ export function hookServer(env: Record<string, string> = {}): Hook {
       return srv.base;
     },
     post: (body, init) =>
-      fetch(`${srv.base}/hook`, {
+      fetch(`${srv.base}/hook/${harness}`, {
         method: "POST",
         headers: { "content-type": "application/json", ...(init?.token ? { authorization: `Bearer ${init.token}` } : {}) },
         body: JSON.stringify(body),
@@ -100,5 +116,14 @@ export function hookServer(env: Record<string, string> = {}): Hook {
         return line ? { entry: JSON.parse(line), text: line } : undefined;
       }),
     logText,
+  };
+}
+
+/** The kit bound to one harness, so a per-event file does not repeat the harness name in every call. */
+export function forHarness(harness: string) {
+  return {
+    fixtures: (event?: string) => fixtures(harness, event),
+    fixture: (event: string, nameFragment = "") => fixture(harness, event, nameFragment),
+    hookServer: (env: Record<string, string> = {}) => hookServer(harness, env),
   };
 }

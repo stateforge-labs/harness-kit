@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { eventually, startServer } from "./harness.ts";
-import { fixture, variant } from "./kit.ts";
+import { fixture as fixtureOf, variant } from "./kit.ts";
+
+const fixture = (event: string, fragment = "") => fixtureOf("claude", event, fragment);
 
 const JSON_HEADERS = { "content-type": "application/json" };
 const send = (base: string, path: string, body: unknown, headers: Record<string, string> = JSON_HEADERS, method = "POST") =>
