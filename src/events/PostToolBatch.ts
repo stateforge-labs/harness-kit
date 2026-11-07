@@ -7,7 +7,6 @@ const callsOf = (p: HookPayload): Record<string, unknown>[] =>
 
 export const handler: EventHandler = {
   event: "PostToolBatch",
-  required: ["tool_calls"],
   meta: (p) => {
     const calls = callsOf(p);
     const names = [...new Set(calls.map((c) => (typeof c.tool_name === "string" ? c.tool_name : "unknown")))];

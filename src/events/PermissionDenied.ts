@@ -6,7 +6,6 @@ import type { EventHandler } from "./types.ts";
  */
 export const handler: EventHandler = {
   event: "PermissionDenied",
-  required: ["tool_name", "tool_input", "tool_use_id", "reason"],
   meta: (p) => ({
     tool_name: typeof p.tool_name === "string" ? p.tool_name : null,
     reason: typeof p.reason === "string" ? p.reason : null,

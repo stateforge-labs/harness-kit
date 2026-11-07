@@ -4,7 +4,6 @@ import type { EventHandler } from "./types.ts";
 
 export const handler: EventHandler = {
   event: "Notification",
-  required: ["message", "notification_type"],
   meta: (p) => ({
     notification_type: typeof p.notification_type === "string" ? p.notification_type : null,
   }),

@@ -3,7 +3,6 @@ import type { EventHandler } from "./types.ts";
 
 export const handler: EventHandler = {
   event: "Setup",
-  required: ["trigger"],
   meta: (p) => ({ trigger: typeof p.trigger === "string" ? p.trigger : null }),
   respond: () => ({}),
 };

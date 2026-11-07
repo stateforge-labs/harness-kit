@@ -3,7 +3,6 @@ import type { EventHandler } from "./types.ts";
 
 export const handler: EventHandler = {
   event: "Elicitation",
-  required: ["mcp_server_name", "message"],
   meta: (p) => ({
     mcp_server_name: typeof p.mcp_server_name === "string" ? p.mcp_server_name : null,
     mode: typeof p.mode === "string" ? p.mode : null,

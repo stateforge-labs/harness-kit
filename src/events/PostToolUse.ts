@@ -6,7 +6,6 @@ import type { EventHandler } from "./types.ts";
  */
 export const handler: EventHandler = {
   event: "PostToolUse",
-  required: ["tool_name", "tool_input", "tool_response", "tool_use_id"],
   meta: (p) => {
     const mcp = p.mcp_server;
     const mcpName = typeof mcp === "object" && mcp !== null && "name" in mcp && typeof mcp.name === "string" ? mcp.name : null;

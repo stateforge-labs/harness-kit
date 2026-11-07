@@ -5,7 +5,6 @@ const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
   event: "TaskCreated",
-  required: ["task_id", "task_subject"],
   meta: (p: HookPayload) => ({
     task_id: str(p.task_id),
     teammate_name: str(p.teammate_name),

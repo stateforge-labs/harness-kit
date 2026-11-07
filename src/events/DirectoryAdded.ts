@@ -5,7 +5,6 @@ const str = (v: unknown) => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
   event: "DirectoryAdded",
-  required: ["directory", "source"],
   // How the directory was added only. The directory path itself is not logged.
   meta: (p) => ({ source: str(p.source) }),
   respond: () => ({}),

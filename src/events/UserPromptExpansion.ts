@@ -8,7 +8,6 @@ const str = (v: unknown): MetaValue => (typeof v === "string" ? v : null);
 // A hook reply of hookSpecificOutput.additionalContext is injected (UserPromptExpansion-8); top-level additionalContext is not echoed (UserPromptExpansion-9).
 export const handler: EventHandler = {
   event: "UserPromptExpansion",
-  required: ["expansion_type", "command_name", "command_args", "command_source", "prompt"],
   meta: (p) => ({
     expansion_type: str(p.expansion_type),
     command_name: str(p.command_name),

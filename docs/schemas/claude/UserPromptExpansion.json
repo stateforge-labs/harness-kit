@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string"
+    },
+    "transcript_path": {
+      "type": "string"
+    },
+    "cwd": {
+      "type": "string"
+    },
+    "hook_event_name": {
+      "type": "string",
+      "const": "UserPromptExpansion"
+    },
+    "prompt_id": {
+      "type": "string"
+    },
+    "scratchpad_dir": {
+      "type": "string"
+    },
+    "permission_mode": {
+      "type": "string"
+    },
+    "effort": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "level"
+      ],
+      "additionalProperties": {}
+    },
+    "agent_id": {
+      "type": "string"
+    },
+    "agent_type": {
+      "type": "string"
+    },
+    "expansion_type": {
+      "type": "string"
+    },
+    "command_name": {
+      "type": "string"
+    },
+    "command_args": {
+      "type": "string"
+    },
+    "command_source": {
+      "type": "string"
+    },
+    "prompt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "session_id",
+    "transcript_path",
+    "cwd",
+    "hook_event_name",
+    "expansion_type",
+    "command_name",
+    "command_args",
+    "command_source",
+    "prompt"
+  ],
+  "additionalProperties": {}
+}

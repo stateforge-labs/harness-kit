@@ -12,7 +12,6 @@ const exitCode = (error: unknown): number | null => {
 
 export const handler: EventHandler = {
   event: "PostToolUseFailure",
-  required: ["tool_name", "tool_input", "tool_use_id", "error"],
   // Tool name, abort flag, duration, MCP server name and source, exit code. Never tool_input, error text or tool_use_id.
   meta: (p) => {
     const server = typeof p.mcp_server === "object" && p.mcp_server !== null ? (p.mcp_server as Record<string, unknown>) : {};

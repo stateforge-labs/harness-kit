@@ -6,17 +6,6 @@ const bool = (v: unknown): boolean | null => (typeof v === "boolean" ? v : null)
 
 export const handler: EventHandler = {
   event: "PreModelSwitch",
-  required: [
-    "from_model",
-    "to_model",
-    "requested_model",
-    "source",
-    "context_tokens",
-    "prompt_cache_warm",
-    "cache_ttl",
-    "estimated_cache_write_usd",
-    "pricing",
-  ],
   meta: (p: HookPayload): Record<string, MetaValue> => ({
     source: str(p.source),
     from_model: str(p.from_model),

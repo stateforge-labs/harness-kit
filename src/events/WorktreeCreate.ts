@@ -3,7 +3,6 @@ import type { EventHandler } from "./types.ts";
 
 export const handler: EventHandler = {
   event: "WorktreeCreate",
-  required: ["name"],
   meta: (p) => ({ name: typeof p.name === "string" ? p.name : null }),
   respond: () => ({}),
 };

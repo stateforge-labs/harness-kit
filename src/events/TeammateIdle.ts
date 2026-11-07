@@ -5,7 +5,6 @@ import type { EventHandler } from "./types.ts";
 // team_name is documented as deprecated, so it is logged when present but never required.
 export const handler: EventHandler = {
   event: "TeammateIdle",
-  required: ["teammate_name"],
   meta: (p) => ({
     teammate_name: typeof p.teammate_name === "string" ? p.teammate_name : null,
     team_name: typeof p.team_name === "string" ? p.team_name : null,

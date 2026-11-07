@@ -6,7 +6,6 @@ const str = (v: unknown) => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
   event: "SessionStart",
-  required: ["source"],
   // Session start type and model names only. No session_title, prompts or transcript paths.
   meta: (p) => ({
     source: str(p.source),

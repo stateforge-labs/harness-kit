@@ -70,13 +70,21 @@ describe("e2e: SubagentStop", () => {
   });
 
   test("a payload missing a required key is still answered 200 and logged with it in missing", async () => {
-    const { last_assistant_message: _omit, ...rest } = subagentFields("a3");
+    const { agent_transcript_path: _omit, ...rest } = subagentFields("a3");
     const res = await post({ ...common("ss-3"), ...rest });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({});
     const { line } = await logLineFor("ss-3");
     expect(line.known).toBe(true);
-    expect(line.missing).toEqual(["last_assistant_message"]);
+    expect(line.missing).toEqual(["agent_transcript_path"]);
+    expect(line.wrong_type).toEqual([]);
+  });
+
+  test("a payload without last_assistant_message is complete: a real subagent stop was captured without it", async () => {
+    const { last_assistant_message: _omit, ...rest } = subagentFields("a3b");
+    await post({ ...common("ss-3b"), ...rest });
+    const { line } = await logLineFor("ss-3b");
+    expect(line.missing).toEqual([]);
   });
 
   test("never returns a decision, a block or context, even when stop_hook_active is true", async () => {

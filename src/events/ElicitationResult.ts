@@ -7,7 +7,6 @@ const scalar = (v: unknown): MetaValue | undefined =>
 
 export const handler: EventHandler = {
   event: "ElicitationResult",
-  required: ["mcp_server_name", "action"],
   meta: (p) => {
     const out: Record<string, MetaValue> = {};
     for (const k of ["mcp_server_name", "action", "mode", "elicitation_id"]) {

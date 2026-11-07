@@ -3,7 +3,6 @@ import type { EventHandler } from "./types.ts";
 
 export const handler: EventHandler = {
   event: "ConfigChange",
-  required: ["source"],
   meta: (p) => ({ source: typeof p.source === "string" ? p.source : null }),
   respond: () => ({}),
 };

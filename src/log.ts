@@ -16,7 +16,7 @@ export async function logEvent(
 ): Promise<void> {
   const info = describe(payload);
   const line = full
-    ? { ts, payload, known: info.known, missing: info.missing }
+    ? { ts, payload, known: info.known, missing: info.missing, wrong_type: info.wrong_type }
     : {
         ts,
         event: payload.hook_event_name,
@@ -27,6 +27,7 @@ export async function logEvent(
         keys: Object.keys(payload).sort(),
         known: info.known,
         missing: info.missing,
+        wrong_type: info.wrong_type,
         ...info.meta,
       };
   try {

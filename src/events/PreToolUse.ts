@@ -25,7 +25,6 @@ function advice(p: HookPayload): string | null {
 
 export const handler: EventHandler = {
   event: "PreToolUse",
-  required: ["tool_name", "tool_input", "tool_use_id"],
   // Tool name, permission mode, subagent type, model alias and whether advice was given. Never prompt, command or tool_input contents.
   meta: (p) => {
     const input = (p.tool_input ?? {}) as Record<string, unknown>;

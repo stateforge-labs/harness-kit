@@ -6,7 +6,6 @@ import type { EventHandler } from "./types.ts";
 // the model; continue:false does not stop the subagent. This handler returns neither. Strings over 10,000 chars are spilled, not truncated.
 export const handler: EventHandler = {
   event: "SubagentStart",
-  required: ["agent_id", "agent_type"],
   meta: (p) => ({ agent_type: typeof p.agent_type === "string" ? p.agent_type : null }),
   respond: () => ({
     hookSpecificOutput: { hookEventName: "SubagentStart", additionalContext: SUBAGENT_START_RULES },

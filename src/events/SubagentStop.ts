@@ -6,7 +6,6 @@ import type { EventHandler } from "./types.ts";
  */
 export const handler: EventHandler = {
   event: "SubagentStop",
-  required: ["stop_hook_active", "agent_id", "agent_type", "agent_transcript_path", "last_assistant_message"],
   meta: (p) => {
     const effort = typeof p.effort === "object" && p.effort !== null && "level" in p.effort ? p.effort.level : null;
     return {

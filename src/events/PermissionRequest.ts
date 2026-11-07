@@ -5,7 +5,6 @@ const str = (v: unknown) => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
   event: "PermissionRequest",
-  required: ["tool_name", "tool_input"],
   // Tool name and permission mode only. No tool_input, prompts, mcp_server or permission_suggestions.
   meta: (p) => ({
     tool_name: str(p.tool_name),

@@ -5,7 +5,6 @@ const str = (v: unknown) => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
   event: "MessageDisplay",
-  required: ["turn_id", "message_id", "index", "final", "delta"],
   // Structural identifiers only. `delta` is assistant message text and is never logged.
   meta: (p) => ({
     index: typeof p.index === "number" ? p.index : null,
