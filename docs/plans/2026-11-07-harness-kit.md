@@ -7,7 +7,7 @@ edited from here; StateForge-side steps are listed at the end for its own change
 
 ## Phase 0. Rename and record (small)
 
-- Rename the folder `~/Projects/homelab/harness-hooks` to `harness-kit`; `package.json` name `harness-kit` (workspace root).
+- Rename the folder `~/Projects/homelab/harness-hooks` to `harness-kit` (done 2026-11-07); `package.json` name `harness-kit` (workspace root).
 - Update what points at the old path: the printed Claude/Codex config blocks (`scripts/install.ts`), the unit template, docs, memory notes. The installed OpenCode plugin is a copy and needs no change.
 - Create the GitLab remote (HTTPS push route) once the owner names the group.
 

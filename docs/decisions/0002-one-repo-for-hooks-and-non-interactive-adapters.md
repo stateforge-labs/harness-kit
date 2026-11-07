@@ -20,7 +20,7 @@ Chosen option 3, because the Codex and OpenCode adapters are mostly hook knowled
 hermetic home, the shim and plugin) plus a launcher, they depend directly on the hook package, and two repositories would turn every
 neutral-type change into two releases and a StateForge bump for a single maintainer.
 
-- **Name: `harness-kit`.** The repository holds more than hooks; the hook server becomes one binary in it.
+- **Name: `harness-kit`, scope `@homelab`** (owner, 2026-11-07: not `@stateforge/*`, which in StateForge means a package inside its monorepo and would hide an external dependency). The repository holds more than hooks; the hook server becomes one binary in it.
 - **Packages, with enforced import rules:**
 
   | Package | Job | May import |
