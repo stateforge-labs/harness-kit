@@ -49,7 +49,7 @@ describe("e2e: bind address", () => {
   });
 
   test("a non-loopback host with an empty token is refused", async () => {
-    for (const host of ["0.0.0.0", "::", "192.168.1.10", "example.test"]) {
+    for (const host of ["0.0.0.0", "::", "192.168.1.10", "example.test", "127.999.0.1", "127.0.0.1.evil.test"]) {
       const r = await refusesToStart({ HOOK_HOST: host });
       expect(r.code).toBe(2);
       expect(r.stderr).toContain("HOOK_TOKEN is empty");
@@ -73,8 +73,15 @@ describe("e2e: bind address", () => {
     } finally {
       await srv.stop();
     }
-    const bad = await refusesToStart({ HOOK_HOST: "0.0.0.0", HOOK_TOKEN: "", PORT: "abc" });
-    expect(bad.stderr).not.toContain(secret);
+  });
+
+  test("no refusal message prints the token, even when the token is set next to a bad value", async () => {
+    const secret = "tok-never-print-me";
+    for (const env of <Record<string, string>[]>[{ PORT: "abc" }, { HOOK_LOG_MAX_BYTES: "abc" }, { HOOK_MAX_BODY_BYTES: "0" }, { HOOK_SHUTDOWN_GRACE_MS: "x" }, { HOOK_HOST: "" }]) {
+      const r = await refusesToStart({ ...env, HOOK_TOKEN: secret });
+      expect(r.code).toBe(2);
+      expect(r.stderr + r.stdout).not.toContain(secret);
+    }
   });
 
   test("an explicit loopback host with an empty token starts", async () => {
@@ -86,6 +93,71 @@ describe("e2e: bind address", () => {
       } finally {
         await srv.stop();
       }
+    }
+  });
+});
+
+describe("e2e: a server with no token only answers loopback JSON posts", () => {
+  const body = JSON.stringify({ hook_event_name: "Stop", session_id: "guard-1" });
+  const post = (base: string, headers: Record<string, string>) => fetch(`${base}/hook`, { method: "POST", headers, body });
+
+  test("a foreign Host header is refused (DNS rebinding), a loopback one is answered", async () => {
+    const srv = await startServer();
+    try {
+      expect((await post(srv.base, { "content-type": "application/json", host: "evil.example" })).status).toBe(403);
+      expect((await post(srv.base, { "content-type": "application/json", host: "127.0.0.1.evil.example" })).status).toBe(403);
+      expect((await post(srv.base, { "content-type": "application/json", host: `localhost:${srv.port}` })).status).toBe(200);
+      expect((await post(srv.base, { "content-type": "application/json", host: `127.0.0.1:${srv.port}` })).status).toBe(200);
+    } finally {
+      await srv.stop();
+    }
+  });
+
+  test("a body that is not declared JSON is refused (a cross-site form or no-cors fetch cannot send JSON)", async () => {
+    const srv = await startServer();
+    try {
+      expect((await post(srv.base, { "content-type": "text/plain" })).status).toBe(415);
+      expect((await post(srv.base, {})).status).toBe(415);
+      expect((await post(srv.base, { "content-type": "application/x-www-form-urlencoded" })).status).toBe(415);
+      expect((await post(srv.base, { "content-type": "application/json; charset=utf-8" })).status).toBe(200);
+    } finally {
+      await srv.stop();
+    }
+  });
+
+  test("a refused post is not logged", async () => {
+    const srv = await startServer();
+    try {
+      await post(srv.base, { "content-type": "text/plain" });
+      await post(srv.base, { "content-type": "application/json", host: "evil.example" });
+      await Bun.sleep(150);
+      expect(await Bun.file(srv.logFile).exists()).toBe(false);
+    } finally {
+      await srv.stop();
+    }
+  });
+
+  test("with a token, the Authorization header is the check and the content type is not", async () => {
+    const srv = await startServer({ HOOK_TOKEN: "t0k3n" });
+    try {
+      expect((await post(srv.base, { authorization: "Bearer t0k3n" })).status).toBe(200);
+      expect((await post(srv.base, { "content-type": "application/json" })).status).toBe(401);
+    } finally {
+      await srv.stop();
+    }
+  });
+});
+
+describe("e2e: the body size cap", () => {
+  test("a body over HOOK_MAX_BODY_BYTES is refused with 413 and an ordinary one is answered", async () => {
+    const srv = await startServer({ HOOK_MAX_BODY_BYTES: "2000" });
+    try {
+      const send = (extra: string) =>
+        fetch(`${srv.base}/hook`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ hook_event_name: "Stop", session_id: "cap-body", pad: extra }) });
+      expect((await send("x".repeat(100))).status).toBe(200);
+      expect((await send("x".repeat(5000))).status).toBe(413);
+    } finally {
+      await srv.stop();
     }
   });
 });

@@ -83,6 +83,27 @@ describe("e2e: generated files are current", () => {
     }
   });
 
+  test("--root=<dir> works like --root <dir>, and a flag the script does not know is an error that writes nothing", async () => {
+    const file = join(copy, "src/events/index.ts");
+    const original = await readFile(file, "utf8");
+    await writeFile(file, original + "// stale\n");
+    try {
+      // If the form were ignored, the check would run against the real tree and pass.
+      const r = await run("gen-registry.ts", ["--check", `--root=${copy}`]);
+      expect(r.code).toBe(1);
+      expect(r.stderr).toContain("src/events/index.ts (differs)");
+      for (const args of [["--rot", copy], ["--root"], ["--root="], ["--chek"]]) {
+        const bad = await run("gen-registry.ts", args);
+        expect(bad.code).not.toBe(0);
+        expect(bad.stderr).toMatch(/unknown argument|--root needs a directory/);
+      }
+      // A bad flag next to a root that is stale must not have rewritten it.
+      expect(await readFile(file, "utf8")).toBe(original + "// stale\n");
+    } finally {
+      await writeFile(file, original);
+    }
+  });
+
   test("without --check the generator rewrites the copy and the check passes again", async () => {
     const dir = join(copy, "docs/schemas/claude");
     await writeFile(join(dir, "Removed.json"), "{}\n");

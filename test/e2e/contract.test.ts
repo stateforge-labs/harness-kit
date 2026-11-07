@@ -37,7 +37,26 @@ describe("contract: every fixture", () => {
   });
 });
 
+/** A damaged payload may change the answer, but never into one that stops the agent or denies the action. */
+function expectNeverBlocks(answer: unknown): void {
+  expect(answer).not.toBeNull();
+  expect(typeof answer).toBe("object");
+  const a = answer as { decision?: unknown; continue?: unknown; hookSpecificOutput?: { permissionDecision?: unknown; decision?: unknown } };
+  expect(a.decision).not.toBe("block");
+  expect(a.continue).not.toBe(false);
+  expect(a.hookSpecificOutput?.permissionDecision).not.toBe("deny");
+  expect(a.hookSpecificOutput?.decision).not.toBe("deny");
+}
+
 describe("contract: a bad payload is reported, never rejected", () => {
+  test.each(events.map((e) => [e] as const))("%s: a payload with no session_id is still answered 200 and never blocks", async (event) => {
+    const f = fixtures(event)[0]!;
+    const { session_id: _gone, ...rest } = f.payload;
+    const res = await hook.post(rest);
+    expect(res.status).toBe(200);
+    expectNeverBlocks(await res.json());
+  });
+
   test.each(events.map((e) => [e] as const))("%s: each required key removed is logged as missing, and the answer stays 200", async (event) => {
     const f = fixtures(event)[0]!;
     for (const key of requiredKeys(event)) {
@@ -47,10 +66,7 @@ describe("contract: a bad payload is reported, never rejected", () => {
       const res = await hook.post(body);
       expect(res.status).toBe(200);
       // A damaged payload must never turn into a block: the answer may differ from the recorded one, but it never stops the agent.
-      const answer = (await res.json()) as Record<string, unknown>;
-      expect(typeof answer).toBe("object");
-      expect(answer.decision).not.toBe("block");
-      expect(answer.continue).not.toBe(false);
+      expectNeverBlocks(await res.json());
       const { entry } = await hook.logFor(body.session_id);
       expect(entry.missing).toEqual([key]);
       expect(entry.wrong_type).toEqual([]);

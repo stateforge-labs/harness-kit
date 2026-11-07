@@ -10,11 +10,23 @@ export function flushLog(): Promise<void> {
   return queue;
 }
 
+/** The longest string the metadata log keeps from a request; longer values are cut so one request cannot make a huge line. */
+const MAX_FIELD_CHARS = 256;
+const MAX_KEYS = 100;
+
+function clip(v: unknown): unknown {
+  if (typeof v === "string") return v.length > MAX_FIELD_CHARS ? `${v.slice(0, MAX_FIELD_CHARS)}...[${v.length} chars]` : v;
+  if (Array.isArray(v)) return v.slice(0, MAX_KEYS).map(clip);
+  return v;
+}
+
 /**
  * One JSONL line per event. By default only metadata (no prompts, no
  * tool_input), enough to count events per session/agent. HOOK_LOG_PAYLOAD=1
  * stores the full body so real payload shapes can be studied before building a
  * call review. Failures never reach the hook response.
+ *
+ * The line is built here, before it is queued, so the queue holds small strings and not request bodies.
  */
 export function logEvent(
   file: string,
@@ -23,10 +35,36 @@ export function logEvent(
   ts: string,
   maxBytes: number,
 ): Promise<void> {
+  let text: string;
+  try {
+    text = JSON.stringify(lineFor(payload, full, ts)) + "\n";
+  } catch (err) {
+    console.error("log line failed:", err);
+    return queue;
+  }
   // One failed write must not break the chain for the writes behind it.
-  const next = queue.then(() => write(file, payload, full, ts, maxBytes)).catch((err) => console.error("log write failed:", err));
+  const next = queue.then(() => write(file, text, maxBytes)).catch((err) => console.error("log write failed:", err));
   queue = next;
   return next;
+}
+
+function lineFor(payload: HookPayload, full: boolean, ts: string): Record<string, unknown> {
+  const info = describe(payload);
+  if (full) return { ts, payload, known: info.known, missing: info.missing, wrong_type: info.wrong_type };
+  const line: Record<string, unknown> = {
+    ts,
+    event: payload.hook_event_name,
+    session_id: payload.session_id,
+    agent_id: payload.agent_id,
+    agent_type: payload.agent_type,
+    tool_name: payload.tool_name,
+    keys: Object.keys(payload).sort(),
+    known: info.known,
+    missing: info.missing,
+    wrong_type: info.wrong_type,
+    ...info.meta,
+  };
+  return Object.fromEntries(Object.entries(line).map(([k, v]) => [k, clip(v)]));
 }
 
 async function sizeOf(file: string): Promise<number> {
@@ -37,30 +75,22 @@ async function sizeOf(file: string): Promise<number> {
   }
 }
 
-async function write(file: string, payload: HookPayload, full: boolean, ts: string, maxBytes: number): Promise<void> {
-  const info = describe(payload);
-  const line = full
-    ? { ts, payload, known: info.known, missing: info.missing, wrong_type: info.wrong_type }
-    : {
-        ts,
-        event: payload.hook_event_name,
-        session_id: payload.session_id,
-        agent_id: payload.agent_id,
-        agent_type: payload.agent_type,
-        tool_name: payload.tool_name,
-        keys: Object.keys(payload).sort(),
-        known: info.known,
-        missing: info.missing,
-        wrong_type: info.wrong_type,
-        ...info.meta,
-      };
+/** The log can hold prompts (HOOK_LOG_PAYLOAD=1), so what this process creates is readable by its owner only. */
+async function write(file: string, text: string, maxBytes: number): Promise<void> {
   try {
-    const text = JSON.stringify(line) + "\n";
-    await mkdir(dirname(file), { recursive: true });
-    // Keep one old generation: the file never grows past maxBytes, so disk use stays near twice the cap.
+    await mkdir(dirname(file), { recursive: true, mode: 0o700 });
+    // Keep one old generation: the file stays under maxBytes (except one line that is bigger on its own),
+    // so disk use stays near twice the cap.
     const size = await sizeOf(file);
-    if (size > 0 && size + Buffer.byteLength(text) > maxBytes) await rename(file, `${file}.1`);
-    await appendFile(file, text);
+    if (size > 0 && size + Buffer.byteLength(text) > maxBytes) {
+      try {
+        await rename(file, `${file}.1`);
+      } catch (err) {
+        // A broken rotation must not stop the log: keep appending and say so.
+        console.error("log rotation failed, appending past the cap:", err);
+      }
+    }
+    await appendFile(file, text, { mode: 0o600 });
   } catch (err) {
     console.error("log write failed:", err);
   }

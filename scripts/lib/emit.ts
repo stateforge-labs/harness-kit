@@ -5,12 +5,25 @@ import { dirname, join, relative } from "node:path";
 
 const repoRoot = join(import.meta.dir, "..", "..");
 
-/** `--check` compares instead of writing; `--root <dir>` points the generator at another copy of the tree. */
+/**
+ * `--check` compares instead of writing; `--root <dir>` or `--root=<dir>` points the generator at another copy of the tree.
+ * Anything else is an error: a flag that is silently ignored would make a write run rewrite the real tree.
+ */
 export function parseArgs(argv = process.argv.slice(2)): { check: boolean; root: string } {
-  const i = argv.indexOf("--root");
-  const root = i >= 0 ? argv[i + 1] : undefined;
-  if (i >= 0 && !root) throw new Error("--root needs a directory");
-  return { check: argv.includes("--check"), root: root ?? repoRoot };
+  let check = false;
+  let root: string | undefined;
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i]!;
+    if (a === "--check") check = true;
+    else if (a === "--root") {
+      root = argv[++i];
+      if (!root) throw new Error("--root needs a directory");
+    } else if (a.startsWith("--root=")) {
+      root = a.slice("--root=".length);
+      if (!root) throw new Error("--root needs a directory");
+    } else throw new Error(`unknown argument: ${a}`);
+  }
+  return { check, root: root ?? repoRoot };
 }
 
 function filesUnder(dir: string): string[] {

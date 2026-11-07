@@ -91,10 +91,14 @@ describe("e2e: configuration", () => {
     }
   });
 
-  test("an empty token runs without auth (dev only)", async () => {
+  test("an empty token runs without auth (dev only): no Authorization header is needed, a JSON content type is", async () => {
     const open = await startServer({ HOOK_TOKEN: "" });
     try {
-      const res = await fetch(`${open.base}/hook`, { method: "POST", body: JSON.stringify({ hook_event_name: "SessionStart" }) });
+      const res = await fetch(`${open.base}/hook`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ hook_event_name: "SessionStart" }),
+      });
       expect(res.status).toBe(200);
     } finally {
       await open.stop();
