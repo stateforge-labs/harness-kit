@@ -6,9 +6,9 @@ metadata and answers with the harness's own response format. The core knows no h
 ## Request path
 
 ```text
-harness ──(client)──> POST /hook/<harness> ──> admission ──> adapter.decode ──> policy ──> adapter.encode ──> harness
-                                                  │               │                              │
-                                              401/403/415   validate + log meta          per-harness output rules
+harness ──(client)──> POST /hook/<harness> ──> admission ──> adapter.decode ──> middleware ──> policy ──> adapter.encode ──> harness
+                                                  │               │                  (pipeline)                    │
+                                              401/403/415   validate + log meta                       per-harness output rules
 ```
 
 | Step | Where | What it does |
@@ -16,11 +16,30 @@ harness ──(client)──> POST /hook/<harness> ──> admission ──> ada
 | Route | `src/http/hook-handler.ts` | `POST /hook/<harness>`; `/hook` alone is the Claude route; `/healthz`; anything else 404/405. |
 | Admission | `src/http/admission.ts` | With a token: the bearer must match. Without one: loopback `Host` and a JSON content type (stops DNS rebinding and cross-site posts). Runs **before** the harness lookup, so an unauthenticated caller cannot learn which harnesses exist. |
 | Decode | `adapter.decode(raw)` | Validates the payload with the event's zod schema (reports `missing` and `wrong_type`, never rejects), builds the neutral event and the log metadata. |
+| Middleware | `src/core/pipeline.ts` | The layers registered with `HookServerBuilder.use()` or `HOOK_MIDDLEWARE`; the built-in policy is always the innermost one (see Middleware below). |
 | Policy | `src/core/policy.ts` | Pure: neutral event + the adapter's rules to a neutral reply (`{ context? }`). |
 | Encode | `adapter.encode(reply, raw)` | Turns the reply into the harness's response, following its per-event output rules. |
 | Log | `src/log.ts` | One JSONL line per request: harness, event, session, labels and counts. Never prompt text, tool input or output. |
 
-`src/app.ts handle()` wraps decode, policy and encode: if any of them throws, the answer is `200 {}`. A broken adapter never stops an agent.
+`src/app.ts handle()` wraps decode, the pipeline and encode: if any of them throws, the answer is `200 {}`. A broken adapter never stops an agent.
+
+## Middleware (`src/core/pipeline.ts`)
+
+Every event passes through a pipeline between decode and encode. A layer is `(ctx, next) => NeutralReply`, where `ctx` is the neutral
+`event`, the adapter's `rules` and the native payload `raw` (read-only; it holds prompts and tool input, so never log or forward it whole).
+
+- **Order is outside-in, like Koa.** The first layer registered runs first and wraps the rest; `policyLayer` is added last, so it is
+  always the innermost and every layer can see and change what the policy said.
+- **A layer can** call `next()` and add to its reply, replace it, or not call `next()` and answer alone. `next()` is memoised: calling it
+  twice runs the layers below once. `mergeReplies` joins two contexts with a blank line; `onKinds(kinds, mw)` limits a layer to some events.
+- **Fault isolation (fail-open).** A layer that throws, rejects or exceeds `HOOK_MIDDLEWARE_TIMEOUT_MS` (2000) is skipped and the answer
+  is what the layers below decided; the fault goes to stderr. A broken layer never stops an agent. A layer that must *refuse* on failure
+  is not expressible yet (R-2026-11-07-09 F7).
+- **Two ways in.** In code: `new HookServerBuilder().use(mw)`. In a running server: `HOOK_MIDDLEWARE=/abs/a.ts,/abs/b.ts`, each module's
+  default export a `Middleware` or an array of them; a module that fails to import is a start-up error (exit 2). Module loading runs
+  arbitrary code and is a service feature only (R-2026-11-07-09).
+- **Same layer, every harness.** A layer returns a `NeutralReply`; each adapter encodes it by its own rules, so one layer reaches Claude
+  and Codex (Codex only on the events that take context). OpenCode's `encode` is empty: the plugin only reports.
 
 ## The port (`src/port.ts`)
 
@@ -76,6 +95,8 @@ harness version must never stop an agent. Value sets are zod enums in one `enums
 | `HOOK_LOG_PAYLOAD` | off | `1` also logs the full payload (debugging only) |
 | `HOOK_MAX_BODY_BYTES` | 32 MiB | larger bodies get 413 |
 | `HOOK_SHUTDOWN_GRACE_MS` | 5000 | wait for requests in flight before closing |
+| `HOOK_MIDDLEWARE` | empty | absolute module paths, comma-separated; each exports a `Middleware` or an array |
+| `HOOK_MIDDLEWARE_TIMEOUT_MS` | 2000 | a layer slower than this is skipped |
 
 Loopback is decided by `src/net.ts` with `ipaddr.js` (`range() === "loopback"`) after the URL parser has split `host[:port]`; only canonical spellings are accepted (`localhost`, `127.x.y.z`, `[::1]`), and `127.1`, `user@localhost`, `app.localhost` and `0.0.0.0` are refused. No DNS lookup is ever made.
 `HookServerBuilder` (`src/server.ts`) wires config, adapters and the handler; `src/shutdown.ts` drains the log on SIGTERM/SIGINT.
@@ -96,7 +117,9 @@ against the real server (OpenCode cannot be started in the suite without a model
 | Codex `PermissionRequest` real payload | Interactive Codex session that triggers an approval |
 | Codex spawn: can a model be requested, under which key | Capture with a prompt that names a subagent model |
 | Codex hook timeout, merge order, failure modes; `hookEventName` mandatory in output | Timed runs; a run that answers with context |
-| The Codex and OpenCode context-answer path (no policy produces one; an encoder mutation survives) | Rules wording decided, then a real run |
+| The Codex context-answer path on a real run (no built-in policy produces one; the middleware tests exercise the encoder). OpenCode has no answer path | Rules wording decided, then a real run |
+| Per-layer failure mode (fail-closed for a gate) and neutral deny / continue replies, tool and session on the neutral event | R-2026-11-07-09 F7; an owner decision, then captures of the deny and stop effects |
+| Library/service split (exports map, `.ts` import extensions for other builds) and how StateForge would consume it | R-2026-11-07-09 follow-ups |
 | OpenCode root `session.created`, compaction hook and events, `deny`/`ask` effects, failed tool status | See R-2026-11-07-08, Open questions |
 | Rules wording for Codex and OpenCode | The user |
 | Shim fail-closed variants | A policy that needs to block |
