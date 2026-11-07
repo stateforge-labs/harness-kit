@@ -1,4 +1,4 @@
-// One suite that every event of every harness must pass, driven by the fixtures in test/fixtures/<harness>.
+// One suite that every event of every harness must pass, driven by the fixtures in @homelab/harness-hooks fixtures/<harness>.
 // Each registered adapter that has fixtures gets the whole suite; event files under test/e2e/events/<harness>/
 // hold only what is special about one event.
 import { describe, expect, test } from "bun:test";

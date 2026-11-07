@@ -1,4 +1,8 @@
-# harness-hooks architecture
+# harness-kit architecture
+
+This page spans the packages. Each package's own README says what it exports, its scripts and its tests:
+[`@homelab/harness-hooks`](../packages/hooks/README.md) (library), [`@homelab/harness-hooks-server`](../packages/hooks-server/README.md)
+(the HTTP service), [`@homelab/harness-adapters`](../packages/adapters/README.md) (empty until phase 5). Paths below are from the repo root.
 
 One server receives the hook events of several coding-agent harnesses (Claude Code, Codex, OpenCode), checks what they send, logs
 metadata and answers with the harness's own response format. The core knows no harness; each harness is an adapter plugged into one port.
@@ -13,17 +17,17 @@ harness ──(client)──> POST /hook/<harness> ──> admission ──> ada
 
 | Step | Where | What it does |
 | --- | --- | --- |
-| Route | `src/http/hook-handler.ts` | `POST /hook/<harness>`; `/hook` alone is the Claude route; `/healthz`; anything else 404/405. |
-| Admission | `src/http/admission.ts` | With a token: the bearer must match. Without one: loopback `Host` and a JSON content type (stops DNS rebinding and cross-site posts). Runs **before** the harness lookup, so an unauthenticated caller cannot learn which harnesses exist. |
+| Route | `packages/hooks-server/src/http/hook-handler.ts` | `POST /hook/<harness>`; `/hook` alone is the Claude route; `/healthz`; anything else 404/405. |
+| Admission | `packages/hooks-server/src/http/admission.ts` | With a token: the bearer must match. Without one: loopback `Host` and a JSON content type (stops DNS rebinding and cross-site posts). Runs **before** the harness lookup, so an unauthenticated caller cannot learn which harnesses exist. |
 | Decode | `adapter.decode(raw)` | Validates the payload with the event's zod schema (reports `missing` and `wrong_type`, never rejects), builds the neutral event and the log metadata. |
-| Middleware | `src/core/pipeline.ts` | The layers registered with `HookServerBuilder.use()` or `HOOK_MIDDLEWARE`; the built-in policy is always the innermost one (see Middleware below). |
-| Policy | `src/core/policy.ts` | Pure: neutral event + the adapter's rules to a neutral reply (`{ context? }`). |
+| Middleware | `packages/hooks/src/core/pipeline.ts` | The layers registered with `HookServerBuilder.use()` or `HOOK_MIDDLEWARE`; the built-in policy is always the innermost one (see Middleware below). |
+| Policy | `packages/hooks/src/core/policy.ts` | Pure: neutral event + the adapter's rules to a neutral reply (`{ context? }`). |
 | Encode | `adapter.encode(reply, raw)` | Turns the reply into the harness's response, following its per-event output rules. |
-| Log | `src/log.ts` | One JSONL line per request: harness, event, session, labels and counts. Never prompt text, tool input or output. |
+| Log | `packages/hooks-server/src/log.ts` | One JSONL line per request: harness, event, session, labels and counts. Never prompt text, tool input or output. |
 
-`src/app.ts handle()` wraps decode, the pipeline and encode: if any of them throws, the answer is `200 {}`. A broken adapter never stops an agent.
+`packages/hooks/src/handle.ts` `handle()` wraps decode, the pipeline and encode: if any of them throws, the answer is `200 {}`. A broken adapter never stops an agent.
 
-## Middleware (`src/core/pipeline.ts`)
+## Middleware (`packages/hooks/src/core/pipeline.ts`)
 
 Every event passes through a pipeline between decode and encode. A layer is `(ctx, next) => NeutralReply`, where `ctx` is the neutral
 `event`, the adapter's `rules` and the native payload `raw` (read-only; it holds prompts and tool input, so never log or forward it whole).
@@ -41,7 +45,7 @@ Every event passes through a pipeline between decode and encode. A layer is `(ct
 - **Same layer, every harness.** A layer returns a `NeutralReply`; each adapter encodes it by its own rules, so one layer reaches Claude
   and Codex (Codex only on the events that take context). OpenCode's `encode` is empty: the plugin only reports.
 
-## The port (`src/port.ts`)
+## The port (`packages/hooks/src/port.ts`)
 
 ```ts
 interface HarnessAdapter {
@@ -53,20 +57,20 @@ interface HarnessAdapter {
 }
 ```
 
-Neutral kinds (`src/core/event.ts`): `session-start`, `session-end`, `prompt-submit`, `pre-tool`, `post-tool`, `post-tool-failure`,
+Neutral kinds (`packages/hooks/src/core/event.ts`): `session-start`, `session-end`, `prompt-submit`, `pre-tool`, `post-tool`, `post-tool-failure`,
 `permission-request`, `subagent-start`, `subagent-stop`, `stop`, `pre-compact`, `post-compact`, `other`. A kind comes from the native
 event **name** only, so a damaged payload never changes it. A subagent spawn is a `pre-tool` event with an optional `spawn { brief, model }`.
 A native event with no shared meaning is `other`: it is still validated, logged and answered.
 
 ## Adapters
 
-Each lives in `src/adapters/<harness>/`: `adapter.ts`, `common.ts` (envelope keys), `enums.ts` (every closed value set), `events/<Event>.ts`
-(zod schema), `handlers/<Event>.ts` (log metadata), `neutral.ts` (kind table), `spawn.ts`. `scripts/gen-registry.ts` generates
-`handlers/index.ts` and `schemas.ts`; `scripts/gen-json-schema.ts` writes `docs/schemas/<harness>/`.
+Each lives in `packages/hooks/src/adapters/<harness>/`: `adapter.ts`, `common.ts` (envelope keys), `enums.ts` (every closed value set), `events/<Event>.ts`
+(zod schema), `handlers/<Event>.ts` (log metadata), `neutral.ts` (kind table), `spawn.ts`. `packages/hooks/scripts/gen-registry.ts` generates
+`handlers/index.ts` and `schemas.ts`; `packages/hooks/scripts/gen-json-schema.ts` writes `packages/hooks/schemas/<harness>/`.
 
 | | Claude Code | Codex | OpenCode |
 | --- | --- | --- | --- |
-| Transport | HTTP hooks in settings; `clients/shim` for SessionStart and Setup (cannot be http) | command hooks via `clients/shim/hook-shim.ts --harness codex` | `clients/opencode/plugin.ts` (in-process, POSTs) |
+| Transport | HTTP hooks in settings; `packages/hooks/clients/shim` for SessionStart and Setup (cannot be http) | command hooks via `packages/hooks/clients/shim/hook-shim.ts --harness codex` | `packages/hooks/clients/opencode/plugin.ts` (in-process, POSTs) |
 | Events | 33 | 14 | 14 (5 hooks, 9 lifecycle events) |
 | Event name in the body | `hook_event_name` | `hook_event_name` | `hook_event_name` set by the plugin (`tool.execute.before`) |
 | Spawn tool | `Agent` (`subagent_type`, `model`) | `collaborationspawn_agent` (`message`; model unresolved) | `subagent` (`prompt`, optional `model`) |
@@ -82,7 +86,7 @@ A schema reports; it does not decide. A missing key, a wrong type or a value out
 (`missing`, `wrong_type: ["path: expected string"]`, `["path: invalid_value"]`) and the request is answered as usual, because a new
 harness version must never stop an agent. Value sets are zod enums in one `enums.ts` per harness; a set that was only "seen so far" says so.
 
-## Configuration (`src/config.ts`)
+## Configuration (`packages/hooks-server/src/config.ts`)
 
 `new ServerConfig(process.env)` validates the whole environment and throws `ConfigError` (exit 2, message never contains the token).
 
@@ -98,17 +102,21 @@ harness version must never stop an agent. Value sets are zod enums in one `enums
 | `HOOK_MIDDLEWARE` | empty | absolute module paths, comma-separated; each exports a `Middleware` or an array |
 | `HOOK_MIDDLEWARE_TIMEOUT_MS` | 2000 | a layer slower than this is skipped |
 
-Loopback is decided by `src/net.ts` with `ipaddr.js` (`range() === "loopback"`) after the URL parser has split `host[:port]`; only canonical spellings are accepted (`localhost`, `127.x.y.z`, `[::1]`), and `127.1`, `user@localhost`, `app.localhost` and `0.0.0.0` are refused. No DNS lookup is ever made.
-`HookServerBuilder` (`src/server.ts`) wires config, adapters and the handler; `src/shutdown.ts` drains the log on SIGTERM/SIGINT.
+Loopback is decided by `packages/hooks-server/src/net.ts` with `ipaddr.js` (`range() === "loopback"`) after the URL parser has split `host[:port]`; only canonical spellings are accepted (`localhost`, `127.x.y.z`, `[::1]`), and `127.1`, `user@localhost`, `app.localhost` and `0.0.0.0` are refused. No DNS lookup is ever made.
+`HookServerBuilder` (`packages/hooks-server/src/server.ts`) wires config, adapters and the handler; `packages/hooks-server/src/shutdown.ts` drains the log on SIGTERM/SIGINT.
 
 ## Tests
 
-End-to-end only: the real server over HTTP (`test/e2e/harness.ts`). One fixture folder per harness (`test/fixtures/<harness>/<Event>/NN-label.json`,
-with `.expected.json` and `.log.json` snapshots and a `provenance.json`: `captured` or `synthetic (...)`). `test/e2e/contract.test.ts` loops over the
+Service behaviour is tested end to end only: the real server over HTTP (`packages/hooks-server/test/e2e/harness.ts`). One fixture folder per harness (`packages/hooks/fixtures/<harness>/<Event>/NN-label.json`,
+with `.expected.json` and `.log.json` snapshots and a `provenance.json`: `captured` or `synthetic (...)`). `packages/hooks-server/test/e2e/contract.test.ts` loops over the
 adapter registry, so a new harness gets the same checks for free: answered as recorded, log line byte for byte, every required key reported
-missing, a retyped key reported, a value outside a set reported, no typed text in the log. Per-event files (`test/e2e/events/<harness>/`) hold only what
-is unique to an event. The one deliberate deviation is `test/e2e/opencode-plugin.test.ts`, which drives the plugin with a fake context
+missing, a retyped key reported, a value outside a set reported, no typed text in the log. Per-event files (`packages/hooks-server/test/e2e/events/<harness>/`) hold only what
+is unique to an event. The one deliberate deviation is `packages/hooks-server/test/e2e/opencode-plugin.test.ts`, which drives the plugin with a fake context
 against the real server (OpenCode cannot be started in the suite without a model login).
+
+The library's own tests (`packages/hooks/test/`) run its shipped files under Node: the shim with `node`, and the built `dist/` imported
+by name with every fixture answering its snapshot. `tools/check-boundaries.ts` runs before `bun test` and fails when a package reaches
+into another's files, imports an undeclared package, or (hooks, adapters) uses a Bun API in shipped code.
 
 ## Unresolved (kept, with what would settle each)
 
@@ -119,7 +127,7 @@ against the real server (OpenCode cannot be started in the suite without a model
 | Codex hook timeout, merge order, failure modes; `hookEventName` mandatory in output | Timed runs; a run that answers with context |
 | The Codex context-answer path on a real run (no built-in policy produces one; the middleware tests exercise the encoder). OpenCode has no answer path | Rules wording decided, then a real run |
 | Per-layer failure mode (fail-closed for a gate) and neutral deny / continue replies, tool and session on the neutral event | R-2026-11-07-09 F8; an owner decision, then captures of the deny and stop effects |
-| Library/service split (exports map, `.ts` import extensions for other builds) and how StateForge would consume it | R-2026-11-07-09 follow-ups |
+| How StateForge consumes the packages (registry, ADR-0181 exception); the split itself is done (ADR 0002, phase 2) | R-2026-11-07-09 follow-ups; plan phase 7 |
 | OpenCode root `session.created`, compaction hook and events, `deny`/`ask` effects, failed tool status | See R-2026-11-07-08, Open questions |
 | Rules wording for Codex and OpenCode | The user |
 | Shim fail-closed variants | A policy that needs to block |

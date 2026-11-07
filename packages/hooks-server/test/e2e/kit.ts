@@ -3,7 +3,7 @@
 //   const hook = hookServer();                              // boots the real server for this file
 //   const res = await hook.post(variant(fixture("PreCompact"), { trigger: "auto" }));
 //   const { entry, text } = await hook.logFor(sessionIdOfThatPayload);
-// Fixtures live under test/fixtures/<harness>/<Event>/. Each harness has a provenance.json saying whether its
+// Fixtures live in @homelab/harness-hooks, fixtures/<harness>/<Event>/. Each harness has a provenance.json saying whether its
 // fixtures are real captures or synthetic (built from a source schema); see scripts/export-fixtures.ts.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";

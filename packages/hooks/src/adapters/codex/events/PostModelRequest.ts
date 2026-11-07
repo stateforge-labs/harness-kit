@@ -1,5 +1,5 @@
 // PostModelRequest: from the pinned schema evidence/codex-primary/schemas/model-request.command.input.schema.json (oneOf branch 2),
-// and the real payloads in test/fixtures/codex/PostModelRequest. No matcher support.
+// and the real payloads in @homelab/harness-hooks fixtures/codex/PostModelRequest. No matcher support.
 import { z } from "zod";
 import { common } from "../common.ts";
 import { ModelRequestStatus } from "../enums.ts";
