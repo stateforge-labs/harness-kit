@@ -1,6 +1,6 @@
 import { appendFile, mkdir, rename, stat } from "node:fs/promises";
 import { dirname } from "node:path";
-import { describe, type HookPayload } from "./handlers.ts";
+import type { Handled } from "./app.ts";
 
 /** Every write goes through this chain, so appends never overlap and a rotation never races an append. */
 let queue: Promise<void> = Promise.resolve();
@@ -30,14 +30,15 @@ function clip(v: unknown): unknown {
  */
 export function logEvent(
   file: string,
-  payload: HookPayload,
+  payload: Record<string, unknown>,
+  handled: Handled,
   full: boolean,
   ts: string,
   maxBytes: number,
 ): Promise<void> {
   let text: string;
   try {
-    text = JSON.stringify(lineFor(payload, full, ts)) + "\n";
+    text = JSON.stringify(lineFor(payload, handled, full, ts)) + "\n";
   } catch (err) {
     console.error("log line failed:", err);
     return queue;
@@ -48,21 +49,21 @@ export function logEvent(
   return next;
 }
 
-function lineFor(payload: HookPayload, full: boolean, ts: string): Record<string, unknown> {
-  const info = describe(payload);
-  if (full) return { ts, payload, known: info.known, missing: info.missing, wrong_type: info.wrong_type };
+function lineFor(payload: Record<string, unknown>, handled: Handled, full: boolean, ts: string): Record<string, unknown> {
+  const { decoded, common } = handled;
+  if (full) return { ts, payload, known: decoded.known, missing: decoded.missing, wrong_type: decoded.wrong_type };
   const line: Record<string, unknown> = {
     ts,
-    event: payload.hook_event_name,
-    session_id: payload.session_id,
-    agent_id: payload.agent_id,
-    agent_type: payload.agent_type,
-    tool_name: payload.tool_name,
+    event: common.event,
+    session_id: common.session_id,
+    agent_id: common.agent_id,
+    agent_type: common.agent_type,
+    tool_name: common.tool_name,
     keys: Object.keys(payload).sort(),
-    known: info.known,
-    missing: info.missing,
-    wrong_type: info.wrong_type,
-    ...info.meta,
+    known: decoded.known,
+    missing: decoded.missing,
+    wrong_type: decoded.wrong_type,
+    ...decoded.meta,
   };
   return Object.fromEntries(Object.entries(line).map(([k, v]) => [k, clip(v)]));
 }

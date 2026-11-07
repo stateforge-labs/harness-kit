@@ -1,5 +1,5 @@
-// Regenerates src/events/index.ts (handlers) and src/adapters/claude/schemas.ts (payload schemas)
-// from the files in src/events/ and src/adapters/claude/events/ (every <Event>.ts except index/types).
+// Regenerates src/adapters/claude/handlers/index.ts (handlers) and src/adapters/claude/schemas.ts (payload schemas)
+// from the files in src/adapters/claude/handlers/ and src/adapters/claude/events/ (every <Event>.ts except index/types).
 // Usage: bun scripts/gen-registry.ts [--check] [--root <dir>]
 // --check writes nothing: it exits 1 and lists the files that are stale. --root runs against another copy of the tree.
 import { readdirSync } from "node:fs";
@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { emit, parseArgs } from "./lib/emit.ts";
 
 const { check, root } = parseArgs();
-const dir = join(root, "src", "events");
+const dir = join(root, "src", "adapters", "claude", "handlers");
 const names = readdirSync(dir)
   .filter((f) => f.endsWith(".ts") && !["index.ts", "types.ts"].includes(f))
   .map((f) => f.slice(0, -3))

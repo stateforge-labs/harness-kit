@@ -16,7 +16,7 @@ async function run(script: string, args: string[]) {
 // A throwaway copy of the generated files and their sources, so the stale cases never touch the real tree.
 beforeAll(async () => {
   copy = await mkdtemp(join(tmpdir(), "harness-hooks-gen-"));
-  for (const d of ["src/events", "src/adapters/claude/events", "docs/schemas/claude"]) await cp(join(repo, d), join(copy, d), { recursive: true });
+  for (const d of ["src/adapters/claude/handlers", "src/adapters/claude/events", "docs/schemas/claude"]) await cp(join(repo, d), join(copy, d), { recursive: true });
   await cp(join(repo, "src/adapters/claude/schemas.ts"), join(copy, "src/adapters/claude/schemas.ts"));
 });
 afterAll(() => rm(copy, { recursive: true, force: true }));
@@ -37,13 +37,13 @@ describe("e2e: generated files are current", () => {
   });
 
   test("a hand-edited registry is reported as stale and left alone", async () => {
-    const file = join(copy, "src/events/index.ts");
+    const file = join(copy, "src/adapters/claude/handlers/index.ts");
     const original = await readFile(file, "utf8");
     await writeFile(file, original + "// edited by hand\n");
     try {
       const r = await run("gen-registry.ts", ["--check", "--root", copy]);
       expect(r.code).toBe(1);
-      expect(r.stderr).toContain("src/events/index.ts (differs)");
+      expect(r.stderr).toContain("src/adapters/claude/handlers/index.ts (differs)");
       expect(await readFile(file, "utf8")).toBe(original + "// edited by hand\n");
     } finally {
       await writeFile(file, original);
@@ -51,7 +51,7 @@ describe("e2e: generated files are current", () => {
   });
 
   test("a handler without a schema file makes the generator fail", async () => {
-    const extra = join(copy, "src/events/Extra.ts");
+    const extra = join(copy, "src/adapters/claude/handlers/Extra.ts");
     await writeFile(extra, "export const event = 'Extra';\n");
     try {
       const r = await run("gen-registry.ts", ["--check", "--root", copy]);
@@ -84,14 +84,14 @@ describe("e2e: generated files are current", () => {
   });
 
   test("--root=<dir> works like --root <dir>, and a flag the script does not know is an error that writes nothing", async () => {
-    const file = join(copy, "src/events/index.ts");
+    const file = join(copy, "src/adapters/claude/handlers/index.ts");
     const original = await readFile(file, "utf8");
     await writeFile(file, original + "// stale\n");
     try {
       // If the form were ignored, the check would run against the real tree and pass.
       const r = await run("gen-registry.ts", ["--check", `--root=${copy}`]);
       expect(r.code).toBe(1);
-      expect(r.stderr).toContain("src/events/index.ts (differs)");
+      expect(r.stderr).toContain("src/adapters/claude/handlers/index.ts (differs)");
       for (const args of [["--rot", copy], ["--root"], ["--root="], ["--chek"]]) {
         const bad = await run("gen-registry.ts", args);
         expect(bad.code).not.toBe(0);

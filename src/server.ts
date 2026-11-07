@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
-import { handle, type HookPayload } from "./handlers.ts";
+import { adapters } from "./adapters/index.ts";
+import { handle } from "./app.ts";
 import { flushLog, logEvent } from "./log.ts";
 
 export interface ServerConfig {
@@ -93,24 +94,30 @@ export function createServer(cfg: ServerConfig) {
     async fetch(req) {
       const { pathname } = new URL(req.url);
       if (pathname === "/healthz") return new Response("ok");
-      if (pathname !== "/hook") return new Response("not found", { status: 404 });
+      // POST /hook/<harness>; /hook alone is the Claude Code route, kept so existing settings keep working.
+      const route = /^\/hook(?:\/([^/]+))?$/.exec(pathname);
+      if (!route) return new Response("not found", { status: 404 });
       if (req.method !== "POST") return new Response("method not allowed", { status: 405 });
       const refused = admit(req, cfg.token);
       if (refused) return refused;
+      // Looked up after admission, so an unauthenticated caller learns nothing about which harnesses exist.
+      const adapter = adapters.get(route[1] ?? "claude");
+      if (!adapter) return new Response("not found", { status: 404 });
 
-      let payload: HookPayload;
+      let payload: Record<string, unknown>;
       try {
         const body: unknown = await req.json();
         if (typeof body !== "object" || body === null || Array.isArray(body)) {
           return new Response("expected a JSON object", { status: 400 });
         }
-        payload = body as HookPayload;
+        payload = body as Record<string, unknown>;
       } catch {
         return new Response("invalid JSON", { status: 400 });
       }
 
-      void logEvent(cfg.logFile, payload, cfg.logFullPayload, new Date().toISOString(), cfg.logMaxBytes);
-      return Response.json(handle(payload));
+      const handled = handle(adapter, payload);
+      void logEvent(cfg.logFile, payload, handled, cfg.logFullPayload, new Date().toISOString(), cfg.logMaxBytes);
+      return Response.json(handled.body);
     },
   });
 }
