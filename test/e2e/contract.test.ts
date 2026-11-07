@@ -12,6 +12,8 @@ const MAY_LOG = new Set([
   "expansion_type", "command_name", "command_source", "mcp_server_name", "from_model", "to_model", "requested_model",
   "pricing", "subagent_type", "model", "message_id", "turn_id", "elicitation_id", "task_id", "teammate_name", "team_name",
   "name", "reason", // reason: SessionEnd enum and the PermissionDenied classifier tag, both short labels
+  "effect", "delivery", "source_type", // OpenCode short labels: permission effect, prompt delivery, permission source
+  "agent", "type", "tool", // OpenCode: `agent` (build, general) is logged as agent_type, `tool` as tool_name, `type` is the source key behind source_type
   "status", // Codex PostModelRequest outcome label ("completed", ...), a short label like `reason`
 ]);
 

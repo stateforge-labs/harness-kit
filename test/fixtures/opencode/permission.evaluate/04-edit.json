@@ -1,0 +1,27 @@
+{
+  "sessionID": "fx-permission.evaluate-4",
+  "agent": "build",
+  "action": "edit",
+  "resources": [
+    "PLACEHOLDER-resources"
+  ],
+  "metadata": {
+    "files": [
+      {
+        "file": "out.txt",
+        "patch": "Index: out.txt\n===================================================================\n--- out.txt\n+++ out.txt\n@@ -0,0 +1,1 @@\n+hi\n",
+        "status": "added",
+        "additions": 1,
+        "deletions": 0
+      }
+    ]
+  },
+  "source": {
+    "type": "tool",
+    "messageID": "PLACEHOLDER-messageID",
+    "id": "PLACEHOLDER-id"
+  },
+  "effect": "allow",
+  "session_id": "fx-permission.evaluate-4",
+  "hook_event_name": "permission.evaluate"
+}

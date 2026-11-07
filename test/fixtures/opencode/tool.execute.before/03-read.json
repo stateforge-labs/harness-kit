@@ -1,0 +1,12 @@
+{
+  "tool": "read",
+  "sessionID": "fx-tool.execute.before-3",
+  "agent": "general",
+  "messageID": "PLACEHOLDER-messageID",
+  "id": "PLACEHOLDER-id",
+  "input": {
+    "path": "/tmp/oc-capture/work/notes.txt"
+  },
+  "session_id": "fx-tool.execute.before-3",
+  "hook_event_name": "tool.execute.before"
+}

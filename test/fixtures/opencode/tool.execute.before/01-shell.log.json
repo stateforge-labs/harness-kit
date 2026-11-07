@@ -1,0 +1,20 @@
+{
+  "harness": "opencode",
+  "event": "tool.execute.before",
+  "session_id": "fx-tool.execute.before-1",
+  "agent_type": "build",
+  "tool_name": "shell",
+  "keys": [
+    "agent",
+    "hook_event_name",
+    "id",
+    "input",
+    "messageID",
+    "sessionID",
+    "session_id",
+    "tool"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": []
+}

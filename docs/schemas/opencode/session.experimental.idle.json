@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "hook_event_name": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "sessionID": {
+      "type": "string"
+    },
+    "background": {
+      "type": "array",
+      "items": {}
+    }
+  },
+  "required": [
+    "hook_event_name",
+    "session_id",
+    "sessionID",
+    "background"
+  ],
+  "additionalProperties": {}
+}

@@ -1,0 +1,16 @@
+{
+  "sessionID": "fx-permission.evaluate-2",
+  "agent": "build",
+  "action": "subagent",
+  "resources": [
+    "PLACEHOLDER-resources"
+  ],
+  "source": {
+    "type": "tool",
+    "messageID": "PLACEHOLDER-messageID",
+    "id": "PLACEHOLDER-id"
+  },
+  "effect": "allow",
+  "session_id": "fx-permission.evaluate-2",
+  "hook_event_name": "permission.evaluate"
+}

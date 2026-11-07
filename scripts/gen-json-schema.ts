@@ -29,6 +29,14 @@ const HARNESSES: Record<string, { title: string; common: string[]; always: strin
       "Every event also carries `session_id`, `transcript_path` (null in ephemeral runs), `cwd` and `hook_event_name`;\n" +
       "the table lists only the keys specific to each event.",
   },
+  opencode: {
+    title: "OpenCode",
+    common: ["session_id", "sessionID", "hook_event_name"],
+    always: [],
+    intro:
+      "Bodies come from `clients/opencode/plugin.ts`: OpenCode's own hook arguments or event data, plus the plugin's `hook_event_name`\n" +
+      "and `session_id` (a copy of OpenCode's `sessionID`). The file name is the event name; the table lists only the keys specific to each event.",
+  },
 };
 
 type Js = { required?: string[]; properties?: Record<string, unknown> };

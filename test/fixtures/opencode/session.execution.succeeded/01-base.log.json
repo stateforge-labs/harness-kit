@@ -1,0 +1,13 @@
+{
+  "harness": "opencode",
+  "event": "session.execution.succeeded",
+  "session_id": "fx-session.execution.succeeded-1",
+  "keys": [
+    "hook_event_name",
+    "sessionID",
+    "session_id"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": []
+}

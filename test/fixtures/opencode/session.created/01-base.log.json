@@ -1,0 +1,24 @@
+{
+  "harness": "opencode",
+  "event": "session.created",
+  "session_id": "fx-session.created-1",
+  "agent_type": "general",
+  "keys": [
+    "agent",
+    "hook_event_name",
+    "location",
+    "model",
+    "parentID",
+    "projectID",
+    "sessionID",
+    "session_id",
+    "slug",
+    "subpath",
+    "title",
+    "version"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "is_child": true
+}

@@ -1,0 +1,28 @@
+{
+  "tool": "write",
+  "sessionID": "fx-tool.execute.after-4",
+  "agent": "build",
+  "messageID": "PLACEHOLDER-messageID",
+  "id": "PLACEHOLDER-id",
+  "input": {
+    "content": "PLACEHOLDER-content",
+    "path": "out.txt"
+  },
+  "status": "completed",
+  "result": {
+    "output": {
+      "operation": "write",
+      "target": "/tmp/oc-capture/work/out.txt",
+      "resource": "out.txt",
+      "existed": false
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "PLACEHOLDER-text"
+      }
+    ]
+  },
+  "session_id": "fx-tool.execute.after-4",
+  "hook_event_name": "tool.execute.after"
+}

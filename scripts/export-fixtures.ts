@@ -19,9 +19,10 @@ const FREE_TEXT = new Set([
   "new_string", "old_string", "stdout", "stderr", "output", "error_details", "summary", "description",
   "result", "text", "title", "session_title", "expanded_prompt", "command_args", "args",
   "tool_response", // Codex: the tool's output as a string
+  "resources", // OpenCode permission.evaluate: the command or path being asked about
 ]);
 /** Values that pick a variant of an event; two payloads that differ here are both kept. */
-const DISCRIMINATORS = ["trigger", "source", "notification_type", "command_source", "error", "reason", "tool_name", "mode", "memory_type", "load_reason"];
+const DISCRIMINATORS = ["trigger", "source", "notification_type", "command_source", "error", "reason", "tool_name", "mode", "memory_type", "load_reason", "tool", "delivery", "status", "action"];
 const MAX_PER_EVENT = 8;
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
@@ -34,6 +35,7 @@ function scrubString(key: string, s: string, id: string): string {
     .replace(/\/home\/[A-Za-z0-9_-]+/g, "/home/user")
     .replace(/\/tmp\/tmp\.[A-Za-z0-9]+/g, "/tmp/work")
     .replace(/\/tmp\/codex-capture-[A-Za-z0-9]+/g, "/tmp/codex-capture")
+    .replace(/\/tmp\/oc-capture-run-[A-Za-z0-9]+/g, "/tmp/oc-capture")
     .replace(/-tmp-tmp-[A-Za-z0-9]+/g, "-tmp-work")
     .replace(/-home-[a-z0-9_]+-/g, "-home-user-")
     .replace(/\/home\/user\/\.claude\/projects\/[^/]+\/[0-9a-f-]{36}/g, `/home/user/.claude/projects/p/${id}`)
@@ -44,8 +46,14 @@ function scrubString(key: string, s: string, id: string): string {
 }
 
 function scrub(v: unknown, key: string, id: string): unknown {
-  if (typeof v === "string") return key === "session_id" ? id : scrubString(key, v, id);
+  if (typeof v === "string") {
+    if (key === "session_id" || key === "sessionID") return id;
+    // OpenCode's ids (messageID, projectID, parentID, call and part ids) and its generated slug are random per run
+    if (/(?<!provider)ID$/.test(key) || key === "id" || key === "slug") return `PLACEHOLDER-${key}`;
+    return scrubString(key, v, id);
+  }
   if (Array.isArray(v)) return v.map((x) => scrub(x, key, id));
+  if (key === "model" && v && typeof v === "object") return v; // OpenCode's model reference (ids and a variant label) names no one
   if (v && typeof v === "object") {
     return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, scrub(x, k, id)]));
   }
@@ -80,7 +88,7 @@ for (const [ev, g] of [...groups].sort()) {
     if (n >= MAX_PER_EVENT) break;
     n++;
     const id = `fx-${ev}-${n}`;
-    const label = String(p.tool_name ?? p.trigger ?? p.source ?? p.notification_type ?? p.command_source ?? p.error ?? "base")
+    const label = String([p.tool_name, p.tool, p.delivery, p.action, p.trigger, p.source, p.notification_type, p.command_source, p.error].find((x) => typeof x === "string") ?? "base")
       .toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 24);
     const fixture = scrub(p, "", id) as Payload;
     writeFileSync(join(outDir, ev, `${String(n).padStart(2, "0")}-${label}.json`), JSON.stringify(fixture, null, 2) + "\n");

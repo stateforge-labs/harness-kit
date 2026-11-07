@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "hook_event_name": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "sessionID": {
+      "type": "string"
+    },
+    "agent": {
+      "type": "string"
+    },
+    "projectID": {
+      "type": "string"
+    },
+    "parentID": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "subpath": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "directory": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "directory"
+      ],
+      "additionalProperties": {}
+    },
+    "model": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "providerID": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "providerID"
+      ],
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "hook_event_name",
+    "session_id",
+    "sessionID",
+    "agent",
+    "projectID",
+    "slug",
+    "subpath",
+    "title",
+    "version",
+    "location",
+    "model"
+  ],
+  "additionalProperties": {}
+}

@@ -1,0 +1,16 @@
+{
+  "sessionID": "fx-permission.evaluate-1",
+  "agent": "build",
+  "action": "shell",
+  "resources": [
+    "PLACEHOLDER-resources"
+  ],
+  "source": {
+    "type": "tool",
+    "messageID": "PLACEHOLDER-messageID",
+    "id": "PLACEHOLDER-id"
+  },
+  "effect": "allow",
+  "session_id": "fx-permission.evaluate-1",
+  "hook_event_name": "permission.evaluate"
+}

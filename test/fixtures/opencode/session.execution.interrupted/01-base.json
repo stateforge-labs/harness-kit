@@ -1,0 +1,6 @@
+{
+  "sessionID": "fx-session.execution.interrupted-1",
+  "reason": "user",
+  "session_id": "fx-session.execution.interrupted-1",
+  "hook_event_name": "session.execution.interrupted"
+}

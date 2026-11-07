@@ -1,0 +1,20 @@
+{
+  "sessionID": "fx-session.created-1",
+  "projectID": "PLACEHOLDER-projectID",
+  "location": {
+    "directory": "/tmp/oc-capture/work"
+  },
+  "subpath": "",
+  "parentID": "PLACEHOLDER-parentID",
+  "slug": "PLACEHOLDER-slug",
+  "title": "PLACEHOLDER-title",
+  "agent": "general",
+  "model": {
+    "id": "claude-haiku-5-5",
+    "providerID": "opencode-go",
+    "variant": "default"
+  },
+  "version": "2.2.6",
+  "session_id": "fx-session.created-1",
+  "hook_event_name": "session.created"
+}

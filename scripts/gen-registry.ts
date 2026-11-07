@@ -2,12 +2,12 @@
 // (the payload schemas) from the files in <adapter>/handlers/ and <adapter>/events/ (every <Event>.ts except index/types).
 // Usage: bun scripts/gen-registry.ts [--check] [--root <dir>]
 // --check writes nothing: it exits 1 and lists the files that are stale. --root runs against another copy of the tree.
-import { readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { emit, parseArgs } from "./lib/emit.ts";
 
 /** The adapters that have per-event handlers and schemas. Adding a harness adds its folder name here. */
-export const HARNESSES = ["claude", "codex"];
+export const HARNESSES = ["claude", "codex", "opencode"];
 
 const { check, root } = parseArgs();
 const files = new Map<string, string>();
@@ -42,6 +42,9 @@ for (const harness of HARNESSES) {
       "",
     ].join("\n"),
   );
+  // A schema file may say which event it serves (`export const event = "tool.execute.before"`) when the event name cannot be a file
+  // name; otherwise the file name is the event name.
+  const eventOf = (n: string): string => /export const event = "([^"]+)"/.exec(readFileSync(join(schemaDir, `${n}.ts`), "utf8"))?.[1] ?? n;
   files.set(
     join(adapterDir, "schemas.ts"),
     [
@@ -50,7 +53,7 @@ for (const harness of HARNESSES) {
       ...schemaNames.map((n) => `import { schema as ${n} } from "./events/${n}.ts";`),
       "",
       "export const schemas: ReadonlyMap<string, z.ZodType> = new Map<string, z.ZodType>([",
-      ...schemaNames.map((n) => `  ["${n}", ${n}],`),
+      ...schemaNames.map((n) => `  [${JSON.stringify(eventOf(n))}, ${n}],`),
       "]);",
       "",
     ].join("\n"),

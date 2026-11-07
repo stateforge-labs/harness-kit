@@ -1,0 +1,23 @@
+{
+  "harness": "opencode",
+  "event": "tool.execute.after",
+  "session_id": "fx-tool.execute.after-1",
+  "agent_type": "general",
+  "tool_name": "read",
+  "keys": [
+    "agent",
+    "hook_event_name",
+    "id",
+    "input",
+    "messageID",
+    "result",
+    "sessionID",
+    "session_id",
+    "status",
+    "tool"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "status": "completed"
+}

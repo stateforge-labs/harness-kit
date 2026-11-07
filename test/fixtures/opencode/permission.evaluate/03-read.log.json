@@ -1,0 +1,23 @@
+{
+  "harness": "opencode",
+  "event": "permission.evaluate",
+  "session_id": "fx-permission.evaluate-3",
+  "agent_type": "general",
+  "keys": [
+    "action",
+    "agent",
+    "effect",
+    "hook_event_name",
+    "resources",
+    "sessionID",
+    "session_id",
+    "source"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "action": "read",
+  "effect": "allow",
+  "resource_count": 1,
+  "source_type": "tool"
+}

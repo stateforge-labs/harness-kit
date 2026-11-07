@@ -1,0 +1,23 @@
+{
+  "harness": "opencode",
+  "event": "tool.execute.after",
+  "session_id": "fx-tool.execute.after-4",
+  "agent_type": "build",
+  "tool_name": "write",
+  "keys": [
+    "agent",
+    "hook_event_name",
+    "id",
+    "input",
+    "messageID",
+    "result",
+    "sessionID",
+    "session_id",
+    "status",
+    "tool"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "status": "completed"
+}

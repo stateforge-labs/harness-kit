@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "hook_event_name": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "sessionID": {
+      "type": "string"
+    },
+    "agent": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "messageID": {
+      "type": "string"
+    },
+    "tool": {
+      "type": "string"
+    },
+    "input": {}
+  },
+  "required": [
+    "hook_event_name",
+    "session_id",
+    "sessionID",
+    "agent",
+    "id",
+    "messageID",
+    "tool",
+    "input"
+  ],
+  "additionalProperties": {}
+}

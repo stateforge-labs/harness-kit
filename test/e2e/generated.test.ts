@@ -16,7 +16,7 @@ async function run(script: string, args: string[]) {
 // A throwaway copy of the generated files and their sources, so the stale cases never touch the real tree.
 beforeAll(async () => {
   copy = await mkdtemp(join(tmpdir(), "harness-hooks-gen-"));
-  for (const h of ["claude", "codex"]) {
+  for (const h of ["claude", "codex", "opencode"]) {
     for (const d of [`src/adapters/${h}/handlers`, `src/adapters/${h}/events`, `docs/schemas/${h}`]) await cp(join(repo, d), join(copy, d), { recursive: true });
     await cp(join(repo, `src/adapters/${h}/schemas.ts`), join(copy, `src/adapters/${h}/schemas.ts`));
   }

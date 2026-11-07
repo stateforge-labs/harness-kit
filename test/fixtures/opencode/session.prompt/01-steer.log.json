@@ -1,0 +1,17 @@
+{
+  "harness": "opencode",
+  "event": "session.prompt",
+  "session_id": "fx-session.prompt-1",
+  "keys": [
+    "delivery",
+    "hook_event_name",
+    "messageID",
+    "prompt",
+    "sessionID",
+    "session_id"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "delivery": "steer"
+}

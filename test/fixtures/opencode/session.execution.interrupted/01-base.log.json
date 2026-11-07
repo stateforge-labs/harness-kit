@@ -1,0 +1,15 @@
+{
+  "harness": "opencode",
+  "event": "session.execution.interrupted",
+  "session_id": "fx-session.execution.interrupted-1",
+  "keys": [
+    "hook_event_name",
+    "reason",
+    "sessionID",
+    "session_id"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "reason": "user"
+}

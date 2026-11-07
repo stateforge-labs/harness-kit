@@ -1,0 +1,12 @@
+{
+  "tool": "shell",
+  "sessionID": "fx-tool.execute.before-1",
+  "agent": "build",
+  "messageID": "PLACEHOLDER-messageID",
+  "id": "PLACEHOLDER-id",
+  "input": {
+    "command": "sleep 60"
+  },
+  "session_id": "fx-tool.execute.before-1",
+  "hook_event_name": "tool.execute.before"
+}

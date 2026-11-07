@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "hook_event_name": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "sessionID": {
+      "type": "string"
+    },
+    "agent": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "messageID": {
+      "type": "string"
+    },
+    "tool": {
+      "type": "string"
+    },
+    "input": {},
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed"
+      ]
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "output": {},
+        "content": {
+          "type": "array",
+          "items": {}
+        },
+        "metadata": {}
+      },
+      "required": [
+        "output",
+        "content"
+      ],
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "hook_event_name",
+    "session_id",
+    "sessionID",
+    "agent",
+    "id",
+    "messageID",
+    "tool",
+    "input",
+    "status",
+    "result"
+  ],
+  "additionalProperties": {}
+}

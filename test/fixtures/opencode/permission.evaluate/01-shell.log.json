@@ -1,0 +1,23 @@
+{
+  "harness": "opencode",
+  "event": "permission.evaluate",
+  "session_id": "fx-permission.evaluate-1",
+  "agent_type": "build",
+  "keys": [
+    "action",
+    "agent",
+    "effect",
+    "hook_event_name",
+    "resources",
+    "sessionID",
+    "session_id",
+    "source"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "action": "shell",
+  "effect": "allow",
+  "resource_count": 1,
+  "source_type": "tool"
+}

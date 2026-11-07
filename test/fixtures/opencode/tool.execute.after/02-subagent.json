@@ -1,0 +1,32 @@
+{
+  "tool": "subagent",
+  "sessionID": "fx-tool.execute.after-2",
+  "agent": "build",
+  "messageID": "PLACEHOLDER-messageID",
+  "id": "PLACEHOLDER-id",
+  "input": {
+    "agent": "general",
+    "description": "PLACEHOLDER-description",
+    "prompt": "PLACEHOLDER-prompt"
+  },
+  "status": "completed",
+  "result": {
+    "output": {
+      "sessionID": "fx-tool.execute.after-2",
+      "status": "completed",
+      "output": "PLACEHOLDER-output"
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "PLACEHOLDER-text"
+      }
+    ],
+    "metadata": {
+      "sessionID": "fx-tool.execute.after-2",
+      "status": "completed"
+    }
+  },
+  "session_id": "fx-tool.execute.after-2",
+  "hook_event_name": "tool.execute.after"
+}

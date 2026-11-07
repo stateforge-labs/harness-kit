@@ -1,0 +1,5 @@
+{
+  "sessionID": "fx-session.compaction.failed-1",
+  "session_id": "fx-session.compaction.failed-1",
+  "hook_event_name": "session.compaction.failed"
+}

@@ -1,0 +1,13 @@
+{
+  "tool": "write",
+  "sessionID": "fx-tool.execute.before-4",
+  "agent": "build",
+  "messageID": "PLACEHOLDER-messageID",
+  "id": "PLACEHOLDER-id",
+  "input": {
+    "content": "PLACEHOLDER-content",
+    "path": "out.txt"
+  },
+  "session_id": "fx-tool.execute.before-4",
+  "hook_event_name": "tool.execute.before"
+}

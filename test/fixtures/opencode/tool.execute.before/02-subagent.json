@@ -1,0 +1,14 @@
+{
+  "tool": "subagent",
+  "sessionID": "fx-tool.execute.before-2",
+  "agent": "build",
+  "messageID": "PLACEHOLDER-messageID",
+  "id": "PLACEHOLDER-id",
+  "input": {
+    "agent": "general",
+    "description": "PLACEHOLDER-description",
+    "prompt": "PLACEHOLDER-prompt"
+  },
+  "session_id": "fx-tool.execute.before-2",
+  "hook_event_name": "tool.execute.before"
+}
