@@ -1,0 +1,24 @@
+{
+  // Node build of the library: `bun run build` writes dist/src/** and dist/clients/** as ESM .js plus .d.ts.
+  // Sources keep their `.ts` import specifiers; rewriteRelativeImportExtensions turns them into `.js` on emit.
+  // Bun reads src/ directly through the "bun" export condition; everything else gets dist/.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rewriteRelativeImportExtensions": true,
+    "verbatimModuleSyntax": true,
+    "types": ["node"],
+    "rootDir": ".",
+    "outDir": "dist",
+    "declaration": true,
+    "sourceMap": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src", "clients"]
+}

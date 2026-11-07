@@ -5,17 +5,41 @@
   "type": "module",
   "description": "Neutral hook events and replies, per-harness decode/encode for Claude Code, Codex and OpenCode, and the middleware pipeline.",
   "exports": {
-    ".": "./src/index.ts",
-    "./shim": "./clients/shim/hook-shim.ts",
-    "./opencode-plugin": "./clients/opencode/plugin.ts",
+    ".": {
+      "bun": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./shim": {
+      "bun": "./clients/shim/hook-shim.ts",
+      "types": "./dist/clients/shim/hook-shim.d.ts",
+      "default": "./dist/clients/shim/hook-shim.js"
+    },
+    "./opencode-plugin": {
+      "bun": "./clients/opencode/plugin.ts",
+      "types": "./dist/clients/opencode/plugin.d.ts",
+      "default": "./dist/clients/opencode/plugin.js"
+    },
     "./fixtures/*": "./fixtures/*",
     "./schemas/*": "./schemas/*"
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "gen": "bun scripts/gen-registry.ts && bun scripts/gen-json-schema.ts",
     "gen:check": "bun scripts/gen-registry.ts --check && bun scripts/gen-json-schema.ts --check"
   },
   "dependencies": {
     "zod": "4.6.7"
-  }
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "7.0.2"
+  },
+  "files": [
+    "src",
+    "clients",
+    "dist",
+    "fixtures",
+    "schemas"
+  ]
 }
