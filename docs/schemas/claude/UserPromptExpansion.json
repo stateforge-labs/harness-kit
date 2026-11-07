@@ -22,7 +22,15 @@
       "type": "string"
     },
     "permission_mode": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "default",
+        "plan",
+        "acceptEdits",
+        "auto",
+        "dontAsk",
+        "bypassPermissions"
+      ]
     },
     "effort": {
       "type": "object",
@@ -43,7 +51,10 @@
       "type": "string"
     },
     "expansion_type": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "slash_command"
+      ]
     },
     "command_name": {
       "type": "string"
@@ -52,7 +63,11 @@
       "type": "string"
     },
     "command_source": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "plugin",
+        "projectSettings"
+      ]
     },
     "prompt": {
       "type": "string"

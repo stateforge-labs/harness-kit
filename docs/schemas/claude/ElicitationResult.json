@@ -22,7 +22,15 @@
       "type": "string"
     },
     "permission_mode": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "default",
+        "plan",
+        "acceptEdits",
+        "auto",
+        "dontAsk",
+        "bypassPermissions"
+      ]
     },
     "effort": {
       "type": "object",
@@ -46,13 +54,20 @@
       "type": "string"
     },
     "action": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "cancel"
+      ]
     },
     "elicitation_id": {
       "type": "string"
     },
     "mode": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "form",
+        "url"
+      ]
     }
   },
   "required": [

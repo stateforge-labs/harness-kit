@@ -22,7 +22,15 @@
       "type": "string"
     },
     "permission_mode": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "default",
+        "plan",
+        "acceptEdits",
+        "auto",
+        "dontAsk",
+        "bypassPermissions"
+      ]
     },
     "effort": {
       "type": "object",
@@ -46,7 +54,14 @@
       "type": "string"
     },
     "source": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "startup",
+        "resume",
+        "clear",
+        "compact",
+        "fork"
+      ]
     },
     "context_tokens": {
       "type": "number"

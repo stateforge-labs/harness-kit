@@ -22,7 +22,15 @@
       "type": "string"
     },
     "permission_mode": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "default",
+        "plan",
+        "acceptEdits",
+        "auto",
+        "dontAsk",
+        "bypassPermissions"
+      ]
     },
     "effort": {
       "type": "object",
@@ -44,7 +52,14 @@
     },
     "error_details": {},
     "error": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "authentication_failed",
+        "model_not_found",
+        "rate_limit",
+        "server_error",
+        "unknown"
+      ]
     },
     "last_assistant_message": {
       "type": "string"

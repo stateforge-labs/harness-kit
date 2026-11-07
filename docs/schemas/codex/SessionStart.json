@@ -21,10 +21,24 @@
       "type": "string"
     },
     "permission_mode": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "default",
+        "acceptEdits",
+        "plan",
+        "dontAsk",
+        "bypassPermissions"
+      ]
     },
     "source": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "startup",
+        "resume",
+        "clear",
+        "compact",
+        "fork"
+      ]
     }
   },
   "required": [

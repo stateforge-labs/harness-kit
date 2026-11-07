@@ -88,7 +88,8 @@ for (const [harness, adapter] of adapters) {
 
     test.each(events.map((e) => [e] as const))("%s: a string key sent as a number is logged as wrong_type with no value", async (event) => {
       const f = fixtures(harness, event)[0]!;
-      const key = requiredKeys(event).find((k) => typeof f.payload[k] === "string" && !["session_id", "hook_event_name", "tool_name"].includes(k));
+      const props = (adapter.jsonSchemas()[event] as { properties?: Record<string, { enum?: unknown[] }> }).properties ?? {};
+      const key = requiredKeys(event).find((k) => typeof f.payload[k] === "string" && !props[k]?.enum && !["session_id", "hook_event_name", "tool_name"].includes(k));
       if (!key) return; // events with no string-typed key of their own: nothing to retype
       const body = variant(f, { [key]: 987654 }, `type-${event}`);
       const res = await hook.post(body);
@@ -97,6 +98,28 @@ for (const [harness, adapter] of adapters) {
       expect(entry.wrong_type).toEqual([`${key}: expected string`]);
       expect(entry.missing).toEqual([]);
       expect(text).not.toContain("987654");
+    });
+  });
+
+  describe(`contract[${harness}]: a value outside a closed set is reported, never rejected`, () => {
+    /** Required or optional keys the schema types as a closed set of values. */
+    const enumKeys = (event: string): string[] => {
+      const props = (adapter.jsonSchemas()[event] as { properties?: Record<string, { enum?: unknown[] }> }).properties ?? {};
+      return Object.keys(props).filter((k) => Array.isArray(props[k]!.enum));
+    };
+    test.each(events.map((e) => [e] as const))("%s: an unlisted value is logged as invalid_value without the value, and the answer stays 200", async (event) => {
+      const f = fixtures(harness, event)[0]!;
+      for (const key of enumKeys(event).filter((k) => k in f.payload)) {
+        const body = variant(f, { [key]: "SECRET-NOT-IN-THE-SET" }, `enum-${event}-${key}`);
+        const res = await hook.post(body);
+        expect(res.status).toBe(200);
+        expectNeverBlocks(await res.json());
+        const { entry } = await hook.logFor(body.session_id);
+        // The report names the path and the problem, never the value. (A handler may still log a short label field's value as
+        // metadata; the privacy tests below decide which fields may do that.)
+        expect(entry.wrong_type).toEqual([`${key}: invalid_value`]);
+        expect(entry.missing).toEqual([]);
+      }
     });
   });
 

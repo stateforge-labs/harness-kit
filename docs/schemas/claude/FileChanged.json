@@ -22,7 +22,15 @@
       "type": "string"
     },
     "permission_mode": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "default",
+        "plan",
+        "acceptEdits",
+        "auto",
+        "dontAsk",
+        "bypassPermissions"
+      ]
     },
     "effort": {
       "type": "object",
@@ -46,7 +54,12 @@
       "type": "string"
     },
     "event": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "add",
+        "change",
+        "unlink"
+      ]
     }
   },
   "required": [

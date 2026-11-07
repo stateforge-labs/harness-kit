@@ -2,6 +2,7 @@
 // and the real payloads in test/fixtures/codex/PostModelRequest. No matcher support.
 import { z } from "zod";
 import { common } from "../common.ts";
+import { ModelRequestStatus } from "../enums.ts";
 
 const tokenUsage = z.looseObject({
   /** Not in "required"; JSON Schema default 0. */
@@ -20,7 +21,6 @@ export const schema = z.looseObject({
   agent_id: z.string().optional(),
   agent_type: z.string().optional(),
   error: z.string().nullable(),
-  // enum: completed | failed | cancelled
-  status: z.string(),
+  status: ModelRequestStatus,
   token_usage: tokenUsage.nullable(),
 });

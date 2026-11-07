@@ -1,6 +1,7 @@
 // PreToolUse: pinned schema evidence/codex-primary/schemas/pre-tool-use.command.input.schema.json (hook_event_name const "PreToolUse")
 import { z } from "zod";
 import { common } from "../common.ts";
+import { PermissionMode } from "../enums.ts";
 
 export const schema = z.looseObject({
   ...common,
@@ -8,8 +9,7 @@ export const schema = z.looseObject({
   agent_id: z.string().optional(),
   agent_type: z.string().optional(),
   model: z.string(),
-  // enum: default | acceptEdits | plan | dontAsk | bypassPermissions
-  permission_mode: z.string(),
+  permission_mode: PermissionMode,
   /** JSON Schema `true` (any value). Required key; value unconstrained. */
   tool_input: z.unknown(),
   tool_name: z.string(),

@@ -1,6 +1,7 @@
 // PreModelSwitch: 4 real payloads from 3 captures (R-2026-11-07-05); judged spec: evidence/judged/PreModelSwitch.json
 import { z } from "zod";
 import { common } from "../common.ts";
+import { CacheTtl, ModelSwitchSource } from "../enums.ts";
 
 export const schema = z
   .looseObject({
@@ -10,10 +11,10 @@ export const schema = z
     from_model: z.string().nullable(),
     to_model: z.string(),
     requested_model: z.string(),
-    source: z.string(),  // seen so far (not exhaustive): command
+    source: ModelSwitchSource,
     context_tokens: z.number(),
     prompt_cache_warm: z.boolean(),
-    cache_ttl: z.string(),  // seen so far (not exhaustive): 1h
+    cache_ttl: CacheTtl,
     estimated_cache_write_usd: z.number(),
     pricing: z.string(),
   });

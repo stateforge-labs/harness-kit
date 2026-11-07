@@ -22,7 +22,15 @@
       "type": "string"
     },
     "permission_mode": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "default",
+        "plan",
+        "acceptEdits",
+        "auto",
+        "dontAsk",
+        "bypassPermissions"
+      ]
     },
     "effort": {
       "type": "object",
@@ -55,7 +63,10 @@
       "type": "string"
     },
     "source": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "command"
+      ]
     },
     "context_tokens": {
       "type": "number"
@@ -64,7 +75,10 @@
       "type": "boolean"
     },
     "cache_ttl": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "1h"
+      ]
     },
     "estimated_cache_write_usd": {
       "type": "number"

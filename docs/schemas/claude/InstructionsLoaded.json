@@ -22,7 +22,15 @@
       "type": "string"
     },
     "permission_mode": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "default",
+        "plan",
+        "acceptEdits",
+        "auto",
+        "dontAsk",
+        "bypassPermissions"
+      ]
     },
     "effort": {
       "type": "object",
@@ -46,10 +54,19 @@
       "type": "string"
     },
     "memory_type": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "Project"
+      ]
     },
     "load_reason": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "include",
+        "nested_traversal",
+        "path_glob_match",
+        "session_start"
+      ]
     },
     "globs": {
       "type": "array",

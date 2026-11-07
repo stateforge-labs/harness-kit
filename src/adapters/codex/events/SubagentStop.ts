@@ -1,6 +1,7 @@
 // SubagentStop: pinned schema evidence/codex-primary/schemas/subagent-stop.command.input.schema.json (hook_event_name const "SubagentStop")
 import { z } from "zod";
 import { common } from "../common.ts";
+import { PermissionMode } from "../enums.ts";
 
 export const schema = z.looseObject({
   ...common,
@@ -12,8 +13,7 @@ export const schema = z.looseObject({
   agent_transcript_path: z.string().nullable(),
   last_assistant_message: z.string().nullable(),
   model: z.string(),
-  // enum: default | acceptEdits | plan | dontAsk | bypassPermissions
-  permission_mode: z.string(),
+  permission_mode: PermissionMode,
   stop_hook_active: z.boolean(),
   /** Codex extension: expose the active turn id to internal turn-scoped hooks. */
   turn_id: z.string(),

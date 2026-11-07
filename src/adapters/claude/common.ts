@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PermissionMode } from "./enums.ts";
 
 /**
  * Fields every Claude Code hook payload can carry (R-2026-11-07-05, judged files and 164 captures).
@@ -15,7 +16,7 @@ export const common = {
   /** Per-session scratch directory; seen on some payloads only. */
   scratchpad_dir: z.string().optional(),
   /** "Not all events receive this field" (hooks.md line 746). */
-  permission_mode: z.string().optional(),
+  permission_mode: PermissionMode.optional(),
   effort: z.looseObject({ level: z.string() }).optional(),
   /** Set when the event happens inside a subagent or teammate. */
   agent_id: z.string().optional(),

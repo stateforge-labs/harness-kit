@@ -27,7 +27,11 @@
       "type": "string"
     },
     "trigger": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "manual",
+        "auto"
+      ]
     },
     "turn_id": {
       "type": "string"

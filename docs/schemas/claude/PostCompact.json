@@ -22,7 +22,15 @@
       "type": "string"
     },
     "permission_mode": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "default",
+        "plan",
+        "acceptEdits",
+        "auto",
+        "dontAsk",
+        "bypassPermissions"
+      ]
     },
     "effort": {
       "type": "object",
@@ -43,7 +51,11 @@
       "type": "string"
     },
     "trigger": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "manual",
+        "auto"
+      ]
     },
     "compact_summary": {
       "type": "string"
