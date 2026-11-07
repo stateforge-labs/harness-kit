@@ -1,78 +1,34 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { join } from "node:path";
-import { eventually, startServer, type RunningServer } from "../harness.ts";
+// What is special about Setup: it never returns context, and logs only the trigger. The shared checks are in ../contract.test.ts.
+import { describe, expect, test } from "bun:test";
+import { fixture, hookServer, variant } from "../kit.ts";
 
-let srv: RunningServer;
-
-beforeAll(async () => {
-  srv = await startServer();
-});
-afterAll(() => srv.stop());
-
-const post = (body: unknown) =>
-  fetch(`${srv.base}/hook`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-const logLineFor = (sessionId: string) =>
-  eventually(async () => {
-    const f = Bun.file(srv.logFile);
-    const text = (await f.exists()) ? await f.text() : "";
-    return text.split("\n").find((l) => l.includes(`"session_id":"${sessionId}"`));
-  });
-
-const common = (sessionId: string) => ({
-  session_id: sessionId,
-  transcript_path: "/home/user/.claude/projects/x/transcript.jsonl",
-  cwd: "/home/user/project",
-  hook_event_name: "Setup",
-});
+const hook = hookServer();
 
 describe("e2e: Setup", () => {
-  test("replays the first captured Setup payload from a real claude run: 200, {}, known, no missing keys", async () => {
-    const capture = join(import.meta.dir, "..", "..", "..", "docs", "research", "studies", "2026-11-07-claude-code-hook-surface", "evidence", "captures", "Setup-1", "events.jsonl");
-    const firstLine = (await Bun.file(capture).text()).split("\n").find((l) => l.trim() !== "");
-    const { payload } = JSON.parse(firstLine!) as { ts: string; payload: Record<string, unknown> };
-    expect(payload.hook_event_name).toBe("Setup");
-    const res = await post(payload);
+  test("the recorded init fixture is answered 200 with {} and logged known with no missing keys and trigger init", async () => {
+    const body = variant(fixture("Setup", "01-init"));
+    const res = await hook.post(body);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({});
-    const entry = JSON.parse((await logLineFor(String(payload.session_id)))!);
+    const { entry } = await hook.logFor(body.session_id);
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual([]);
     expect(entry.trigger).toBe("init");
   });
 
-  test("a realistic payload is answered with an empty response", async () => {
-    const res = await post({ ...common("setup1"), trigger: "init" });
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({});
-  });
-
-  test("the log line is known, has no missing keys, records the trigger, and no payload text", async () => {
-    await post({ ...common("setup2"), trigger: "maintenance", prompt: "SETUP-SECRET-PROMPT" });
-    const line = await logLineFor("setup2");
-    const entry = JSON.parse(line!);
+  test("the log line records the trigger and never the prompt text", async () => {
+    const body = variant(fixture("Setup", "02-maintenance"), { prompt: "SETUP-SECRET-PROMPT" });
+    await hook.post(body);
+    const { entry, text } = await hook.logFor(body.session_id);
     expect(entry.event).toBe("Setup");
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual([]);
     expect(entry.trigger).toBe("maintenance");
-    expect(line).not.toContain("SETUP-SECRET-PROMPT");
+    expect(text).not.toContain("SETUP-SECRET-PROMPT");
   });
 
-  test("a payload missing trigger is still answered 200 and logged with trigger in missing", async () => {
-    const res = await post(common("setup3"));
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({});
-    const entry = JSON.parse((await logLineFor("setup3"))!);
-    expect(entry.known).toBe(true);
-    expect(entry.missing).toEqual(["trigger"]);
-  });
-
-  test("never returns context, decisions or blocking fields, even for a setup that would otherwise get SessionStart context", async () => {
-    const res = await post({ ...common("setup4"), trigger: "init" });
+  test("never returns context, decisions or blocking fields, even for an init that would get SessionStart context", async () => {
+    const res = await hook.post(variant(fixture("Setup", "01-init")));
     const body = (await res.json()) as Record<string, unknown>;
     expect(body.hookSpecificOutput).toBeUndefined();
     expect(body.decision).toBeUndefined();

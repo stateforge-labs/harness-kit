@@ -1,107 +1,51 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { join } from "node:path";
-import { eventually, startServer, type RunningServer } from "../harness.ts";
+// What is special about PermissionRequest: it never decides, Agent calls get no context, and the log keeps tool meta only. The shared checks are in ../contract.test.ts.
+import { describe, expect, test } from "bun:test";
+import { fixture, hookServer, variant } from "../kit.ts";
 
-// First real payload captured from Claude Code (PermissionRequest-1, Bash touch x.txt).
-const capturedFile = join(
-  import.meta.dir,
-  "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/PermissionRequest-1/events.jsonl",
-);
-
-let srv: RunningServer;
-
-beforeAll(async () => {
-  srv = await startServer();
-});
-afterAll(() => srv.stop());
-
-const post = (body: unknown) =>
-  fetch(`${srv.base}/hook`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-const logLineFor = (sessionId: string) =>
-  eventually(async () => {
-    const f = Bun.file(srv.logFile);
-    const text = (await f.exists()) ? await f.text() : "";
-    return text.split("\n").find((l) => l.includes(`"session_id":"${sessionId}"`));
-  });
-
-const common = (sessionId: string) => ({
-  session_id: sessionId,
-  transcript_path: "/home/user/.claude/projects/x/transcript.jsonl",
-  cwd: "/home/user/project",
-  hook_event_name: "PermissionRequest",
-  permission_mode: "default",
-});
-
-const required = { tool_name: "Bash", tool_input: { command: "ls -la" } };
+const hook = hookServer();
 
 describe("e2e: PermissionRequest", () => {
-  test("a realistic payload gets exactly {} (passive, no decision)", async () => {
-    const res = await post({ ...common("pr1"), ...required });
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({});
-  });
-
-  test("the log line is known, has no missing keys, records tool_name and permission_mode, and no payload text", async () => {
-    await post({
-      ...common("pr2"),
-      ...required,
+  test("the log records tool_name and permission_mode, and no command, prompt or message text", async () => {
+    const body = variant(fixture("PermissionRequest", "bash"), {
       tool_input: { command: "PERM-SECRET-CMD" },
       prompt: "PERM-SECRET-PROMPT",
       message: "PERM-SECRET-MESSAGE",
     });
-    const line = await logLineFor("pr2");
-    const entry = JSON.parse(line!);
+    await hook.post(body);
+    const { entry, text } = await hook.logFor(body.session_id);
     expect(entry.event).toBe("PermissionRequest");
-    expect(entry.known).toBe(true);
-    expect(entry.missing).toEqual([]);
     expect(entry.tool_name).toBe("Bash");
     expect(entry.permission_mode).toBe("default");
-    expect(line).not.toContain("PERM-SECRET-CMD");
-    expect(line).not.toContain("PERM-SECRET-PROMPT");
-    expect(line).not.toContain("PERM-SECRET-MESSAGE");
+    expect(text).not.toContain("PERM-SECRET-CMD");
+    expect(text).not.toContain("PERM-SECRET-PROMPT");
+    expect(text).not.toContain("PERM-SECRET-MESSAGE");
   });
 
-  test("a payload missing tool_input is still answered 200 with {} and logged with tool_input in missing", async () => {
-    const res = await post({ ...common("pr3"), tool_name: "Write" });
-    expect(res.status).toBe(200);
+  test("the captured fixture logs tool_name Bash and permission_mode default", async () => {
+    const body = fixture("PermissionRequest", "bash").payload;
+    const res = await hook.post(body);
     expect(await res.json()).toEqual({});
-    const entry = JSON.parse((await logLineFor("pr3"))!);
-    expect(entry.known).toBe(true);
-    expect(entry.missing).toEqual(["tool_input"]);
-  });
-
-  test("a real captured payload gets {}, and the log line is known with no missing keys", async () => {
-    const first = (await Bun.file(capturedFile).text()).split("\n").find((l) => l.trim() !== "");
-    const { payload } = JSON.parse(first!) as { ts: string; payload: Record<string, unknown> };
-    const res = await post(payload);
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({});
-    const entry = JSON.parse((await logLineFor(String(payload.session_id)))!);
-    expect(entry.event).toBe("PermissionRequest");
-    expect(entry.known).toBe(true);
-    expect(entry.missing).toEqual([]);
+    const { entry } = await hook.logFor(String(body.session_id));
     expect(entry.tool_name).toBe("Bash");
     expect(entry.permission_mode).toBe("default");
   });
 
   test("Agent calls get {} with or without a return-format sentence, and no context is injected", async () => {
-    const noFormat = await post({
-      ...common("pr4"),
-      tool_name: "Agent",
-      tool_input: { prompt: "Find all API endpoints", description: "Find API endpoints", subagent_type: "Explore" },
-    });
+    const base = fixture("PermissionRequest", "bash");
+    const noFormat = await hook.post(
+      variant(base, {
+        tool_name: "Agent",
+        tool_input: { prompt: "Find all API endpoints", description: "Find API endpoints", subagent_type: "Explore" },
+      }),
+    );
     expect(await noFormat.json()).toEqual({});
 
-    const withFormat = await post({
-      ...common("pr5"),
-      tool_name: "Agent",
-      tool_input: { prompt: "Find all API endpoints. Return a list of at most 20 words.", description: "Find API endpoints" },
-    });
+    const withFormat = await hook.post(
+      variant(base, {
+        tool_name: "Agent",
+        tool_input: { prompt: "Find all API endpoints. Return a list of at most 20 words.", description: "Find API endpoints" },
+      }),
+    );
     expect(await withFormat.json()).toEqual({});
   });
 });

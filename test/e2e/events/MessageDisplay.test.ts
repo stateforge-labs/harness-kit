@@ -1,61 +1,20 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { join } from "node:path";
-import { eventually, startServer, type RunningServer } from "../harness.ts";
+// What is special about MessageDisplay. The shared checks are in ../contract.test.ts.
+import { describe, expect, test } from "bun:test";
+import { fixture, hookServer, variant } from "../kit.ts";
 
-// Real payloads captured from claude -p (see docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures).
-const captured = join(
-  import.meta.dir,
-  "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/MessageDisplay-1/events.jsonl",
-);
-
-let srv: RunningServer;
-
-beforeAll(async () => {
-  srv = await startServer();
-});
-afterAll(() => srv.stop());
-
-const post = (body: unknown) =>
-  fetch(`${srv.base}/hook`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-const readLog = async () => {
-  const f = Bun.file(srv.logFile);
-  return (await f.exists()) ? await f.text() : "";
-};
-
-const logLineFor = (sessionId: string) =>
-  eventually(async () => (await readLog()).split("\n").find((l) => l.includes(`"session_id":"${sessionId}"`)));
-
-const common = (sessionId: string) => ({
-  session_id: sessionId,
-  transcript_path: "/home/user/.claude/projects/x/transcript.jsonl",
-  cwd: "/home/user/project",
-  hook_event_name: "MessageDisplay",
-});
-
-const required = {
-  turn_id: "turn-7",
-  message_id: "msg-42",
-  index: 0,
-  final: false,
-  delta: "MD-SECRET-TEXT here is the plan\n",
-};
+const hook = hookServer();
 
 describe("e2e: MessageDisplay", () => {
-  test("a realistic payload is answered with an empty passive response", async () => {
-    const res = await post({ ...common("md1"), ...required });
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({});
-  });
-
   test("the log line records known, no missing keys and the meta fields, never message text", async () => {
-    await post({ ...common("md2"), ...required, final: true, index: 3, delta: "MD-LOG-SECRET" });
-    const line = await logLineFor("md2");
-    const entry = JSON.parse(line!);
+    const body = variant(fixture("MessageDisplay"), {
+      turn_id: "turn-7",
+      message_id: "msg-42",
+      index: 3,
+      final: true,
+      delta: "MD-LOG-SECRET",
+    });
+    await hook.post(body);
+    const { entry, text } = await hook.logFor(body.session_id);
     expect(entry.event).toBe("MessageDisplay");
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual([]);
@@ -63,26 +22,25 @@ describe("e2e: MessageDisplay", () => {
     expect(entry.final).toBe(true);
     expect(entry.message_id).toBe("msg-42");
     expect(entry.turn_id).toBe("turn-7");
-    expect(line).not.toContain("MD-LOG-SECRET");
+    expect(text).not.toContain("MD-LOG-SECRET");
   });
 
   test("a payload missing the required delta is still answered 200 and logged with delta in missing", async () => {
-    const { delta: _omit, ...withoutDelta } = required;
-    const res = await post({ ...common("md3"), ...withoutDelta });
+    const body = variant(fixture("MessageDisplay"), { delta: undefined });
+    const res = await hook.post(body);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({});
-    const entry = JSON.parse((await logLineFor("md3"))!);
+    const { entry } = await hook.logFor(body.session_id);
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual(["delta"]);
   });
 
-  test("a real captured payload (first line of MessageDisplay-1) is answered 200 {} and logged known with no missing keys", async () => {
-    const first = JSON.parse((await Bun.file(captured).text()).split("\n")[0]!);
-    const payload = first.payload as Record<string, unknown>;
-    const res = await post(payload);
+  test("the recorded fixture is answered {} and logged known with no missing keys, index 0 and final true", async () => {
+    const body = variant(fixture("MessageDisplay"));
+    const res = await hook.post(body);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({});
-    const entry = JSON.parse((await logLineFor(payload.session_id as string))!);
+    const { entry } = await hook.logFor(body.session_id);
     expect(entry.event).toBe("MessageDisplay");
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual([]);
@@ -91,7 +49,7 @@ describe("e2e: MessageDisplay", () => {
   });
 
   test("stays passive: never replaces the text with displayContent, blocks or adds context", async () => {
-    const res = await post({ ...common("md4"), ...required, delta: "**bold** text", final: true });
+    const res = await hook.post(variant(fixture("MessageDisplay"), { delta: "**bold** text", final: true }));
     const body = (await res.json()) as Record<string, unknown>;
     expect(body).toEqual({});
     expect(body.hookSpecificOutput).toBeUndefined();

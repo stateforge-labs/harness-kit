@@ -1,50 +1,8 @@
-import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { eventually, startServer, type RunningServer } from "../harness.ts";
+// What is special about PostToolBatch: the batch is logged as a count and tool names, never its payloads. The shared checks are in ../contract.test.ts.
+import { describe, expect, test } from "bun:test";
+import { fixture, hookServer, variant } from "../kit.ts";
 
-let srv: RunningServer;
-
-beforeAll(async () => {
-  srv = await startServer();
-});
-afterAll(() => srv.stop());
-
-const post = (body: unknown) =>
-  fetch(`${srv.base}/hook`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-const readLog = async () => {
-  const f = Bun.file(srv.logFile);
-  return (await f.exists()) ? await f.text() : "";
-};
-
-const logLineFor = (sessionId: string) =>
-  eventually(async () => {
-    const line = (await readLog()).split("\n").find((l) => l.includes(`"session_id":"${sessionId}"`));
-    return line;
-  });
-
-/** First line of a real capture: {ts, payload}. Resolved from this test file, not the cwd. */
-const capturedFirstLine = async (dir: string) => {
-  const file = join(
-    import.meta.dir,
-    "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures",
-    dir,
-    "events.jsonl",
-  );
-  const text = await Bun.file(file).text();
-  return JSON.parse(text.split("\n")[0]!) as { ts: string; payload: Record<string, unknown> };
-};
-
-const common = (sessionId: string) => ({
-  session_id: sessionId,
-  transcript_path: "/home/user/.claude/projects/x/transcript.jsonl",
-  cwd: "/home/user/project",
-  hook_event_name: "PostToolBatch",
-});
+const hook = hookServer();
 
 const toolCalls = [
   {
@@ -62,61 +20,42 @@ const toolCalls = [
 ];
 
 describe("e2e: PostToolBatch", () => {
-  test("a realistic batch is answered with an empty passive response", async () => {
-    const res = await post({ ...common("ptb1"), permission_mode: "default", tool_calls: toolCalls });
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({});
-  });
-
-  test("the log line records known, no missing keys and the count and tool names, never payload text", async () => {
-    await post({ ...common("ptb2"), tool_calls: toolCalls });
-    const line = await logLineFor("ptb2");
-    const entry = JSON.parse(line!);
+  test("the log records the count and tool names, and never the payload text", async () => {
+    const body = variant(fixture("PostToolBatch"), { tool_calls: toolCalls });
+    await hook.post(body);
+    const { entry, text } = await hook.logFor(body.session_id);
     expect(entry.event).toBe("PostToolBatch");
-    expect(entry.known).toBe(true);
-    expect(entry.missing).toEqual([]);
     expect(entry.tool_calls).toBe(2);
     expect(entry.tool_names).toBe("Read,Agent");
-    expect(line).not.toContain("BRIEF-SECRET-TEXT");
-    expect(line).not.toContain("PRIVATE-FILE-CONTENT");
-    expect(line).not.toContain("RESULT-SECRET-TEXT");
-  });
-
-  test("a payload missing tool_calls is still answered 200 and logged with tool_calls in missing", async () => {
-    const res = await post(common("ptb3"));
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({});
-    const entry = JSON.parse((await logLineFor("ptb3"))!);
-    expect(entry.known).toBe(true);
-    expect(entry.missing).toEqual(["tool_calls"]);
+    expect(text).not.toContain("BRIEF-SECRET-TEXT");
+    expect(text).not.toContain("PRIVATE-FILE-CONTENT");
+    expect(text).not.toContain("RESULT-SECRET-TEXT");
   });
 
   test("an Agent call with no return format stays passive, since the Agent review belongs to PreToolUse", async () => {
-    const res = await post({
-      ...common("ptb4"),
-      tool_calls: [
-        {
-          tool_name: "Agent",
-          tool_input: { prompt: "Find all API endpoints", model: "opus" },
-          tool_use_id: "toolu_03",
-          tool_response: { status: "completed" },
-        },
-      ],
-    });
+    const res = await hook.post(
+      variant(fixture("PostToolBatch"), {
+        tool_calls: [
+          {
+            tool_name: "Agent",
+            tool_input: { prompt: "Find all API endpoints", model: "opus" },
+            tool_use_id: "toolu_03",
+            tool_response: { status: "completed" },
+          },
+        ],
+      }),
+    );
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({});
   });
 
-  test("a replayed real capture (PostToolBatch-1, first line) is answered 200 with {} and logged known with no missing keys", async () => {
-    const { payload } = await capturedFirstLine("PostToolBatch-1");
-    expect(payload.hook_event_name).toBe("PostToolBatch");
-    const res = await post(payload);
+  test("the captured fixture is logged with one tool call, tool name Write", async () => {
+    const body = fixture("PostToolBatch", "01-base").payload;
+    const res = await hook.post(body);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({});
-    const entry = JSON.parse((await logLineFor(payload.session_id as string))!);
-    expect(entry.known).toBe(true);
-    expect(entry.missing).toEqual([]);
+    const { entry } = await hook.logFor(String(body.session_id));
     expect(entry.tool_calls).toBe(1);
-    expect(entry.tool_names).toBe("Read");
+    expect(entry.tool_names).toBe("Write");
   });
 });

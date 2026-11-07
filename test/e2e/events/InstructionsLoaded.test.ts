@@ -1,110 +1,48 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import path from "node:path";
-import { eventually, startServer, type RunningServer } from "../harness.ts";
+// What is special about InstructionsLoaded. The shared checks are in ../contract.test.ts.
+import { describe, expect, test } from "bun:test";
+import { fixture, hookServer, variant } from "../kit.ts";
 
-let srv: RunningServer;
-
-beforeAll(async () => {
-  srv = await startServer();
-});
-afterAll(() => srv.stop());
-
-const post = (body: unknown) =>
-  fetch(`${srv.base}/hook`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-const readLog = async () => {
-  const f = Bun.file(srv.logFile);
-  return (await f.exists()) ? await f.text() : "";
-};
-
-const logLineFor = (sessionId: string) =>
-  eventually(async () => (await readLog()).split("\n").find((l) => l.includes(`"session_id":"${sessionId}"`)));
-
-const common = (sessionId: string) => ({
-  session_id: sessionId,
-  transcript_path: "/home/user/.claude/projects/x/transcript.jsonl",
-  cwd: "/home/user/project",
-  hook_event_name: "InstructionsLoaded",
-});
+const hook = hookServer();
 
 describe("e2e: InstructionsLoaded", () => {
-  test("a realistic payload is answered 200 with an empty passive response", async () => {
-    const res = await post({
-      ...common("il1"),
-      file_path: "/home/user/project/CLAUDE.md",
-      memory_type: "Project",
-      load_reason: "session_start",
-    });
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({});
-  });
-
   test("the log line records known, no missing keys and the meta fields, never payload text", async () => {
-    await post({
-      ...common("il2"),
+    const body = variant(fixture("InstructionsLoaded", "01"), {
       file_path: "/home/user/project/src/CLAUDE.md",
-      memory_type: "Project",
       load_reason: "nested_traversal",
       trigger_file_path: "/home/user/project/src/INSTRUCTIONS-SECRET-PATH.ts",
       message: "INSTR-SECRET-TEXT",
     });
-    const line = await logLineFor("il2");
-    const entry = JSON.parse(line!);
+    await hook.post(body);
+    const { entry, text } = await hook.logFor(body.session_id);
     expect(entry.event).toBe("InstructionsLoaded");
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual([]);
     expect(entry.load_reason).toBe("nested_traversal");
     expect(entry.memory_type).toBe("Project");
-    expect(line).not.toContain("INSTR-SECRET-TEXT");
-    expect(line).not.toContain("INSTRUCTIONS-SECRET-PATH");
+    expect(text).not.toContain("INSTR-SECRET-TEXT");
+    expect(text).not.toContain("INSTRUCTIONS-SECRET-PATH");
   });
 
   test("a payload missing a required key is still answered 200 and logged with that key in missing", async () => {
-    const res = await post({ ...common("il3"), memory_type: "User", load_reason: "session_start" });
+    const body = variant(fixture("InstructionsLoaded", "01"), { file_path: undefined });
+    const res = await hook.post(body);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({});
-    const entry = JSON.parse((await logLineFor("il3"))!);
+    const { entry } = await hook.logFor(body.session_id);
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual(["file_path"]);
   });
 
-  test("a real captured session_start payload is answered 200, empty, and logged known with no missing keys", async () => {
-    const capFile = Bun.file(
-      path.resolve(
-        import.meta.dir,
-        "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/InstructionsLoaded-1/events.jsonl",
-      ),
-    );
-    const firstLine = (await capFile.text()).split("\n").find((l) => l.trim().length > 0);
-    const { payload } = JSON.parse(firstLine!) as { ts: string; payload: Record<string, unknown> };
-    const sessionId = payload.session_id as string;
-    const res = await post(payload);
+  test("the session_start fixture is answered 200, empty, and logged known with the load meta and no missing keys", async () => {
+    const body = variant(fixture("InstructionsLoaded", "01"));
+    const res = await hook.post(body);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({});
-    const entry = JSON.parse((await logLineFor(sessionId))!);
+    const { entry } = await hook.logFor(body.session_id);
     expect(entry.event).toBe("InstructionsLoaded");
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual([]);
     expect(entry.load_reason).toBe("session_start");
     expect(entry.memory_type).toBe("Project");
-  });
-
-  test("never blocks, changes permissions or injects context, even for a lazy load", async () => {
-    const res = await post({
-      ...common("il4"),
-      file_path: "/home/user/project/src/CLAUDE.md",
-      memory_type: "Project",
-      load_reason: "path_glob_match",
-      globs: ["src/**/*.ts"],
-    });
-    const body = (await res.json()) as Record<string, unknown>;
-    expect(body).toEqual({});
-    expect(body.decision).toBeUndefined();
-    expect(body.continue).toBeUndefined();
-    expect(body.hookSpecificOutput).toBeUndefined();
   });
 });
