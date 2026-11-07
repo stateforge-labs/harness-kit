@@ -1,26 +1,27 @@
 // Writes JSON Schema for every Claude hook event to docs/schemas/claude/, plus a README table of keys.
-// Usage: bun scripts/gen-json-schema.ts
+// Usage: bun scripts/gen-json-schema.ts [--check] [--root <dir>]
 // The schemas under src/adapters/claude/events/ are the source; these files are documentation only.
 // Per-tool `tool_input` checks are code, not JSON Schema, so they are listed in src/adapters/claude/tool-input.ts.
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+// --check writes nothing: it exits 1 and lists the files that are stale or no longer generated. --root points at another copy of docs/.
 import { join } from "node:path";
 import { jsonSchemas } from "../src/adapters/claude/index.ts";
+import { emit, parseArgs } from "./lib/emit.ts";
 
-const out = join(import.meta.dir, "..", "docs", "schemas", "claude");
-rmSync(out, { recursive: true, force: true });
-mkdirSync(out, { recursive: true });
+const { check, root } = parseArgs();
+const out = join(root, "docs", "schemas", "claude");
+const files = new Map<string, string>();
 
 const COMMON = new Set(["session_id", "transcript_path", "cwd", "hook_event_name", "prompt_id", "scratchpad_dir", "permission_mode", "effort", "agent_id", "agent_type"]);
 type Js = { required?: string[]; properties?: Record<string, unknown> };
 const rows: string[] = [];
 for (const [name, schema] of Object.entries(jsonSchemas()).sort(([a], [b]) => a.localeCompare(b))) {
-  writeFileSync(join(out, `${name}.json`), JSON.stringify(schema, null, 2) + "\n");
+  files.set(join(out, `${name}.json`), JSON.stringify(schema, null, 2) + "\n");
   const s = schema as Js;
   const required = (s.required ?? []).filter((k) => !COMMON.has(k) || k === "agent_id" || k === "agent_type");
   const optional = Object.keys(s.properties ?? {}).filter((k) => !required.includes(k) && !COMMON.has(k));
   rows.push(`| ${name} | ${required.map((k) => `\`${k}\``).join(", ")} | ${optional.map((k) => `\`${k}\``).join(", ")} |`);
 }
-writeFileSync(
+files.set(
   join(out, "README.md"),
   [
     "# Claude Code hook payloads",
@@ -36,4 +37,7 @@ writeFileSync(
     "",
   ].join("\n"),
 );
-console.log(`wrote ${rows.length} schemas to ${out}`);
+
+const code = emit(files, check, [out], root);
+if (!check && code === 0) console.log(`wrote ${rows.length} schemas to ${out}`);
+process.exit(code);
