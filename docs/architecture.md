@@ -77,7 +77,7 @@ harness version must never stop an agent. Value sets are zod enums in one `enums
 | `HOOK_MAX_BODY_BYTES` | 32 MiB | larger bodies get 413 |
 | `HOOK_SHUTDOWN_GRACE_MS` | 5000 | wait for requests in flight before closing |
 
-Loopback is decided by `src/net.ts` from Node's `URL`, `net.isIP` and `net.BlockList` (so `127.1`, `0x7f.1` and `[::ffff:127.0.0.1]` count; `user@localhost` and `0.0.0.0` do not).
+Loopback is decided by `src/net.ts` with `ipaddr.js` (`range() === "loopback"`) after the URL parser has split `host[:port]`; only canonical spellings are accepted (`localhost`, `127.x.y.z`, `[::1]`), and `127.1`, `user@localhost`, `app.localhost` and `0.0.0.0` are refused. No DNS lookup is ever made.
 `HookServerBuilder` (`src/server.ts`) wires config, adapters and the handler; `src/shutdown.ts` drains the log on SIGTERM/SIGINT.
 
 ## Tests

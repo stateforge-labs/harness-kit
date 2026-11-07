@@ -1,32 +1,19 @@
-// Is this host name or address the local machine? Built on Node's own URL parser (which canonicalises 127.1, 0x7f.1, 2130706433,
-// [::ffff:127.0.0.1] and the like), net.isIP and net.BlockList, so no address form is parsed by hand.
-import { BlockList, isIP } from "node:net";
+// Is this Host header (or bind address) the local machine?
+// IP classification is ipaddr.js (range() === "loopback" covers 127.0.0.0/8, ::1 and IPv4-mapped forms such as ::ffff:127.0.0.1).
+// Splitting the `host[:port]` is the URL parser's job. Anything the parser would rewrite or add to (a user part, a path, a query, a
+// numeric spelling such as 127.1 or 0x7f.1) is refused rather than interpreted: real clients send the canonical form, and not guessing
+// what a header "really" means keeps this check small. The only name accepted is `localhost`; no DNS lookup is ever made.
+import ipaddr from "ipaddr.js";
 
-const LOOPBACK = new BlockList();
-LOOPBACK.addSubnet("127.0.0.0", 8, "ipv4");
-LOOPBACK.addAddress("::1", "ipv6");
-
-/**
- * The host name of a bare `host` or `host:port` (a Host header, or a bind address), or null when it is anything else:
- * empty, malformed, or carrying a user, path or query (`user@localhost`, `localhost/x`). IPv6 comes back without brackets.
- */
-export function hostnameOf(hostPort: string): string | null {
+/** True for `localhost`, an IPv4 address in 127.0.0.0/8 or `::1`, with an optional port, written in its canonical form. */
+export function isLoopbackHost(hostPort: string): boolean {
   let url: URL;
   try {
     url = new URL(`http://${hostPort}`);
   } catch {
-    return null;
+    return false;
   }
-  const bare = url.username === "" && url.password === "" && url.pathname === "/" && url.search === "" && url.hash === "";
-  return bare && url.hostname !== "" ? url.hostname.replace(/^\[(.*)\]$/, "$1") : null;
-}
-
-/** True for 127.0.0.0/8, ::1 (also written 0:0:0:0:0:0:0:1 or ::ffff:127.0.0.1), `localhost` and any `*.localhost`. */
-export function isLoopbackHost(hostPort: string): boolean {
-  const name = hostnameOf(hostPort);
-  if (name === null) return false;
-  const family = isIP(name);
-  if (family === 4) return LOOPBACK.check(name, "ipv4");
-  if (family === 6) return LOOPBACK.check(name, "ipv6");
-  return name === "localhost" || name.endsWith(".localhost");
+  if (url.host !== hostPort.toLowerCase()) return false; // the parser changed it or found more than host:port in it
+  const name = url.hostname.replace(/^\[(.*)\]$/, "$1");
+  return ipaddr.isValid(name) ? ipaddr.process(name).range() === "loopback" : name === "localhost";
 }

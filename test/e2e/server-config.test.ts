@@ -108,11 +108,11 @@ describe("e2e: a server with no token only answers loopback JSON posts", () => {
       expect((await post(srv.base, { "content-type": "application/json", host: "127.0.0.1.evil.example" })).status).toBe(403);
       expect((await post(srv.base, { "content-type": "application/json", host: `localhost:${srv.port}` })).status).toBe(200);
       expect((await post(srv.base, { "content-type": "application/json", host: `127.0.0.1:${srv.port}` })).status).toBe(200);
-      // Other spellings of the same machine are loopback too (the URL parser canonicalises them); look-alikes with a user part are not.
-      for (const host of ["127.1", "0x7f.1", "2130706433", "[::1]", "[0:0:0:0:0:0:0:1]", "[::ffff:127.0.0.1]", "app.localhost", "LOCALHOST"]) {
+      // Only canonical spellings of the machine are accepted; anything the URL parser would rewrite, or that carries more than host:port, is refused.
+      for (const host of ["[::1]", "LOCALHOST", `LocalHost:${srv.port}`, "127.0.0.2"]) {
         expect((await post(srv.base, { "content-type": "application/json", host })).status, host).toBe(200);
       }
-      for (const host of ["user@localhost", "localhost/x", "localhost?x", "0.0.0.0", "[::]", "128.0.0.1", "[::ffff:10.0.0.1]", "a b"]) {
+      for (const host of ["127.1", "0x7f.1", "2130706433", "[0:0:0:0:0:0:0:1]", "[::ffff:127.0.0.1]", "app.localhost", "user@localhost", "localhost/x", "localhost?x", "0.0.0.0", "[::]", "128.0.0.1", "[::ffff:10.0.0.1]", "a b"]) {
         // 403 from the Host check, or 400 when the URL the Host builds cannot even be parsed: either way it is refused, never answered or a 500
         expect([400, 403], host).toContain((await post(srv.base, { "content-type": "application/json", host })).status);
       }
