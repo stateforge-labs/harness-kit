@@ -1,0 +1,30 @@
+{
+  "event": "PostToolUse",
+  "session_id": "fx-PostToolUse-8",
+  "agent_id": "aresearcher-071a9e0a4ead0b0a",
+  "agent_type": "researcher",
+  "tool_name": "SendMessage",
+  "keys": [
+    "agent_id",
+    "agent_type",
+    "cwd",
+    "duration_ms",
+    "effort",
+    "hook_event_name",
+    "permission_mode",
+    "prompt_id",
+    "scratchpad_dir",
+    "session_id",
+    "tool_input",
+    "tool_name",
+    "tool_response",
+    "tool_use_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "duration_ms": 12,
+  "permission_mode": "auto",
+  "mcp_server": null
+}

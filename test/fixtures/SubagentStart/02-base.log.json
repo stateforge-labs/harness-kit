@@ -1,0 +1,19 @@
+{
+  "event": "SubagentStart",
+  "session_id": "fx-SubagentStart-2",
+  "agent_id": "aresearcher-071a9e0a4ead0b0a",
+  "agent_type": "researcher",
+  "keys": [
+    "agent_id",
+    "agent_type",
+    "cwd",
+    "hook_event_name",
+    "prompt_id",
+    "scratchpad_dir",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": []
+}

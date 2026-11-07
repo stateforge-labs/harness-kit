@@ -1,0 +1,24 @@
+{
+  "event": "PreToolUse",
+  "session_id": "fx-PreToolUse-6",
+  "tool_name": "Read",
+  "keys": [
+    "cwd",
+    "effort",
+    "hook_event_name",
+    "permission_mode",
+    "prompt_id",
+    "session_id",
+    "tool_input",
+    "tool_name",
+    "tool_use_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "permission_mode": "acceptEdits",
+  "subagent_type": null,
+  "model": null,
+  "advised": false
+}

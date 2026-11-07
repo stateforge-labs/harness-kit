@@ -1,0 +1,28 @@
+{
+  "event": "PostToolUseFailure",
+  "session_id": "fx-PostToolUseFailure-1",
+  "tool_name": "Read",
+  "keys": [
+    "cwd",
+    "duration_ms",
+    "effort",
+    "error",
+    "hook_event_name",
+    "is_interrupt",
+    "permission_mode",
+    "prompt_id",
+    "session_id",
+    "tool_input",
+    "tool_name",
+    "tool_use_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "is_interrupt": false,
+  "duration_ms": 2,
+  "mcp_server_name": null,
+  "mcp_server_source": null,
+  "error_exit_code": null
+}

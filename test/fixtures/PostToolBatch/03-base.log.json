@@ -1,0 +1,23 @@
+{
+  "event": "PostToolBatch",
+  "session_id": "fx-PostToolBatch-3",
+  "agent_id": "ab6dc56369d23de44",
+  "agent_type": "general-purpose",
+  "keys": [
+    "agent_id",
+    "agent_type",
+    "cwd",
+    "effort",
+    "hook_event_name",
+    "permission_mode",
+    "prompt_id",
+    "session_id",
+    "tool_calls",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "tool_calls": 1,
+  "tool_names": "Read"
+}

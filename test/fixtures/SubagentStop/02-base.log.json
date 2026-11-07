@@ -1,0 +1,28 @@
+{
+  "event": "SubagentStop",
+  "session_id": "fx-SubagentStop-2",
+  "agent_id": "ab6dc56369d23de44",
+  "agent_type": "general-purpose",
+  "keys": [
+    "agent_id",
+    "agent_transcript_path",
+    "agent_type",
+    "background_tasks",
+    "cwd",
+    "effort",
+    "hook_event_name",
+    "last_assistant_message",
+    "permission_mode",
+    "prompt_id",
+    "session_crons",
+    "session_id",
+    "stop_hook_active",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "stop_hook_active": false,
+  "permission_mode": "default",
+  "effort_level": "medium"
+}

@@ -1,0 +1,18 @@
+{
+  "event": "Notification",
+  "session_id": "fx-Notification-1",
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "message",
+    "notification_type",
+    "prompt_id",
+    "scratchpad_dir",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "notification_type": "permission_prompt"
+}

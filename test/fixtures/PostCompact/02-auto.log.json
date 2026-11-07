@@ -1,0 +1,17 @@
+{
+  "event": "PostCompact",
+  "session_id": "fx-PostCompact-2",
+  "keys": [
+    "compact_summary",
+    "cwd",
+    "hook_event_name",
+    "prompt_id",
+    "session_id",
+    "transcript_path",
+    "trigger"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "trigger": "auto"
+}

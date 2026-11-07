@@ -1,0 +1,22 @@
+{
+  "event": "PermissionRequest",
+  "session_id": "fx-PermissionRequest-3",
+  "tool_name": "Write",
+  "keys": [
+    "cwd",
+    "effort",
+    "hook_event_name",
+    "permission_mode",
+    "permission_suggestions",
+    "prompt_id",
+    "scratchpad_dir",
+    "session_id",
+    "tool_input",
+    "tool_name",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "permission_mode": "default"
+}

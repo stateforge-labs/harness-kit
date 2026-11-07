@@ -1,0 +1,23 @@
+{
+  "event": "PermissionDenied",
+  "session_id": "fx-PermissionDenied-1",
+  "tool_name": "Bash",
+  "keys": [
+    "cwd",
+    "effort",
+    "hook_event_name",
+    "permission_mode",
+    "prompt_id",
+    "reason",
+    "session_id",
+    "tool_input",
+    "tool_name",
+    "tool_use_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "reason": "[Data Exfiltration]",
+  "permission_mode": "auto"
+}

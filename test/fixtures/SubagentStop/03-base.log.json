@@ -1,0 +1,29 @@
+{
+  "event": "SubagentStop",
+  "session_id": "fx-SubagentStop-3",
+  "agent_id": "aresearcher-071a9e0a4ead0b0a",
+  "agent_type": "researcher",
+  "keys": [
+    "agent_id",
+    "agent_transcript_path",
+    "agent_type",
+    "background_tasks",
+    "cwd",
+    "effort",
+    "hook_event_name",
+    "last_assistant_message",
+    "permission_mode",
+    "prompt_id",
+    "scratchpad_dir",
+    "session_crons",
+    "session_id",
+    "stop_hook_active",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "stop_hook_active": false,
+  "permission_mode": "auto",
+  "effort_level": "medium"
+}

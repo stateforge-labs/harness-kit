@@ -1,0 +1,16 @@
+{
+  "event": "WorktreeCreate",
+  "session_id": "fx-WorktreeCreate-2",
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "name",
+    "prompt_id",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "name": "tooltest"
+}

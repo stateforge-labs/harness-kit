@@ -1,0 +1,16 @@
+{
+  "event": "SessionEnd",
+  "session_id": "fx-SessionEnd-1",
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "prompt_id",
+    "reason",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "reason": "other"
+}

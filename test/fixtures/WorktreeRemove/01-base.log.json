@@ -1,0 +1,15 @@
+{
+  "event": "WorktreeRemove",
+  "session_id": "fx-WorktreeRemove-1",
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "prompt_id",
+    "session_id",
+    "transcript_path",
+    "worktree_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": []
+}

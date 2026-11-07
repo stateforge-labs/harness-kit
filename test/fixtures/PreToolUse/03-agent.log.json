@@ -1,0 +1,24 @@
+{
+  "event": "PreToolUse",
+  "session_id": "fx-PreToolUse-3",
+  "tool_name": "Agent",
+  "keys": [
+    "cwd",
+    "effort",
+    "hook_event_name",
+    "permission_mode",
+    "prompt_id",
+    "session_id",
+    "tool_input",
+    "tool_name",
+    "tool_use_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "permission_mode": "auto",
+  "subagent_type": "general-purpose",
+  "model": "haiku",
+  "advised": true
+}

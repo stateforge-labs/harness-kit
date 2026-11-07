@@ -1,0 +1,17 @@
+{
+  "event": "ConfigChange",
+  "session_id": "fx-ConfigChange-2",
+  "keys": [
+    "cwd",
+    "file_path",
+    "hook_event_name",
+    "prompt_id",
+    "session_id",
+    "source",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "source": "project_settings"
+}

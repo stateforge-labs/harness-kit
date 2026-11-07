@@ -1,0 +1,18 @@
+{
+  "event": "SubagentStart",
+  "session_id": "fx-SubagentStart-1",
+  "agent_id": "ad53432b0a8b96570",
+  "agent_type": "general-purpose",
+  "keys": [
+    "agent_id",
+    "agent_type",
+    "cwd",
+    "hook_event_name",
+    "prompt_id",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": []
+}

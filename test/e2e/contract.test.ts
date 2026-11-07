@@ -34,6 +34,10 @@ describe("contract: every fixture", () => {
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual([]);
     expect(entry.wrong_type).toEqual([]);
+    // The whole line, byte for byte except the timestamp and the session id the test chose: keys, order and values.
+    const { ts: _ts, ...line } = entry;
+    line.session_id = f.log.session_id;
+    expect(JSON.stringify(line)).toBe(JSON.stringify(f.log));
   });
 });
 

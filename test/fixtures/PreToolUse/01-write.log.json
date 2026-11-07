@@ -1,0 +1,25 @@
+{
+  "event": "PreToolUse",
+  "session_id": "fx-PreToolUse-1",
+  "tool_name": "Write",
+  "keys": [
+    "cwd",
+    "effort",
+    "hook_event_name",
+    "permission_mode",
+    "prompt_id",
+    "scratchpad_dir",
+    "session_id",
+    "tool_input",
+    "tool_name",
+    "tool_use_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "permission_mode": "default",
+  "subagent_type": null,
+  "model": null,
+  "advised": false
+}

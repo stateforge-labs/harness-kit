@@ -1,0 +1,19 @@
+{
+  "event": "TaskCompleted",
+  "session_id": "fx-TaskCompleted-1",
+  "agent_id": null,
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "prompt_id",
+    "session_id",
+    "task_description",
+    "task_id",
+    "task_subject",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "teammate_name": null
+}

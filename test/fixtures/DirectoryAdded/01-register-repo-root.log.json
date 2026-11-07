@@ -1,0 +1,16 @@
+{
+  "event": "DirectoryAdded",
+  "session_id": "fx-DirectoryAdded-1",
+  "keys": [
+    "cwd",
+    "directory",
+    "hook_event_name",
+    "session_id",
+    "source",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "source": "register_repo_root"
+}

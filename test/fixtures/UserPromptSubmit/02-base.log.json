@@ -1,0 +1,20 @@
+{
+  "event": "UserPromptSubmit",
+  "session_id": "fx-UserPromptSubmit-2",
+  "agent_type": null,
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "permission_mode",
+    "prompt",
+    "prompt_id",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "permission_mode": "default",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "prompt_length": 18
+}

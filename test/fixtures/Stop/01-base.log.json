@@ -1,0 +1,23 @@
+{
+  "event": "Stop",
+  "session_id": "fx-Stop-1",
+  "keys": [
+    "background_tasks",
+    "cwd",
+    "effort",
+    "hook_event_name",
+    "last_assistant_message",
+    "permission_mode",
+    "prompt_id",
+    "session_crons",
+    "session_id",
+    "stop_hook_active",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "stop_hook_active": false,
+  "permission_mode": "default",
+  "message_length": 34
+}

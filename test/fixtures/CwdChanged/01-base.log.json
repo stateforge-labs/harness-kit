@@ -1,0 +1,16 @@
+{
+  "event": "CwdChanged",
+  "session_id": "fx-CwdChanged-1",
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "new_cwd",
+    "old_cwd",
+    "prompt_id",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": []
+}

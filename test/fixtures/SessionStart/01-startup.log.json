@@ -1,0 +1,17 @@
+{
+  "event": "SessionStart",
+  "session_id": "fx-SessionStart-1",
+  "agent_type": null,
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "session_id",
+    "source",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "source": "startup",
+  "model": null
+}

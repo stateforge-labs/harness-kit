@@ -1,0 +1,22 @@
+{
+  "event": "ElicitationResult",
+  "session_id": "fx-ElicitationResult-2",
+  "keys": [
+    "action",
+    "cwd",
+    "elicitation_id",
+    "hook_event_name",
+    "mcp_server_name",
+    "mode",
+    "prompt_id",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "mcp_server_name": "elic",
+  "action": "cancel",
+  "mode": "url",
+  "elicitation_id": "eid-123"
+}

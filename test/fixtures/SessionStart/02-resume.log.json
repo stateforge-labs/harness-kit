@@ -1,0 +1,21 @@
+{
+  "event": "SessionStart",
+  "session_id": "fx-SessionStart-2",
+  "agent_type": null,
+  "keys": [
+    "context_tokens",
+    "cwd",
+    "estimated_cache_write_usd",
+    "hook_event_name",
+    "prompt_cache_likely_expired",
+    "seconds_since_last_response",
+    "session_id",
+    "source",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "source": "resume",
+  "model": null
+}

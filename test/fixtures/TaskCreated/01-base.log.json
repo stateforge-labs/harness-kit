@@ -1,0 +1,20 @@
+{
+  "event": "TaskCreated",
+  "session_id": "fx-TaskCreated-1",
+  "agent_id": null,
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "prompt_id",
+    "session_id",
+    "task_description",
+    "task_id",
+    "task_subject",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "task_id": "1",
+  "teammate_name": null
+}

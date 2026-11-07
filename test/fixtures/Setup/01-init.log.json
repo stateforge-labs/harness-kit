@@ -1,0 +1,15 @@
+{
+  "event": "Setup",
+  "session_id": "fx-Setup-1",
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "session_id",
+    "transcript_path",
+    "trigger"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "trigger": "init"
+}

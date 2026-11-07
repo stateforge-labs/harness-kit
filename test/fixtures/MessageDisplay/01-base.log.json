@@ -1,0 +1,23 @@
+{
+  "event": "MessageDisplay",
+  "session_id": "fx-MessageDisplay-1",
+  "keys": [
+    "cwd",
+    "delta",
+    "final",
+    "hook_event_name",
+    "index",
+    "message_id",
+    "prompt_id",
+    "session_id",
+    "transcript_path",
+    "turn_id"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "index": 0,
+  "final": true,
+  "message_id": "00000000-0000-4000-8000-000000000000",
+  "turn_id": "00000000-0000-4000-8000-000000000000"
+}

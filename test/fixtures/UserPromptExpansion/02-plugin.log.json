@@ -1,0 +1,23 @@
+{
+  "event": "UserPromptExpansion",
+  "session_id": "fx-UserPromptExpansion-2",
+  "keys": [
+    "command_args",
+    "command_name",
+    "command_source",
+    "cwd",
+    "expansion_type",
+    "hook_event_name",
+    "permission_mode",
+    "prompt",
+    "prompt_id",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "expansion_type": "slash_command",
+  "command_name": "upe-probe:cmd",
+  "command_source": "plugin"
+}

@@ -1,0 +1,25 @@
+{
+  "event": "TeammateIdle",
+  "session_id": "fx-TeammateIdle-1",
+  "agent_id": "aresearcher-071a9e0a4ead0b0a",
+  "agent_type": "researcher",
+  "keys": [
+    "agent_id",
+    "agent_type",
+    "cwd",
+    "hook_event_name",
+    "permission_mode",
+    "prompt_id",
+    "scratchpad_dir",
+    "session_id",
+    "team_name",
+    "teammate_name",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "teammate_name": "researcher",
+  "team_name": "session-1a023d31",
+  "permission_mode": "auto"
+}

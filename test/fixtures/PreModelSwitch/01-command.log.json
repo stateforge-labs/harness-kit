@@ -1,0 +1,29 @@
+{
+  "event": "PreModelSwitch",
+  "session_id": "fx-PreModelSwitch-1",
+  "keys": [
+    "cache_ttl",
+    "context_tokens",
+    "cwd",
+    "estimated_cache_write_usd",
+    "from_model",
+    "hook_event_name",
+    "pricing",
+    "prompt_cache_warm",
+    "prompt_id",
+    "requested_model",
+    "session_id",
+    "source",
+    "to_model",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "source": "command",
+  "from_model": "claude-haiku-5-5",
+  "to_model": "claude-opus-5-5",
+  "requested_model": "opus",
+  "prompt_cache_warm": false,
+  "pricing": "catalog"
+}

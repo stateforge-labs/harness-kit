@@ -1,0 +1,22 @@
+{
+  "event": "InstructionsLoaded",
+  "session_id": "fx-InstructionsLoaded-4",
+  "keys": [
+    "cwd",
+    "effort",
+    "file_path",
+    "globs",
+    "hook_event_name",
+    "load_reason",
+    "memory_type",
+    "prompt_id",
+    "session_id",
+    "transcript_path",
+    "trigger_file_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "load_reason": "path_glob_match",
+  "memory_type": "Project"
+}

@@ -1,0 +1,21 @@
+{
+  "event": "InstructionsLoaded",
+  "session_id": "fx-InstructionsLoaded-3",
+  "keys": [
+    "cwd",
+    "effort",
+    "file_path",
+    "hook_event_name",
+    "load_reason",
+    "memory_type",
+    "prompt_id",
+    "session_id",
+    "transcript_path",
+    "trigger_file_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "load_reason": "nested_traversal",
+  "memory_type": "Project"
+}

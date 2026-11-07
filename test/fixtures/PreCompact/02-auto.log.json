@@ -1,0 +1,17 @@
+{
+  "event": "PreCompact",
+  "session_id": "fx-PreCompact-2",
+  "keys": [
+    "custom_instructions",
+    "cwd",
+    "hook_event_name",
+    "prompt_id",
+    "session_id",
+    "transcript_path",
+    "trigger"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "trigger": "auto"
+}

@@ -1,0 +1,20 @@
+{
+  "event": "PostToolBatch",
+  "session_id": "fx-PostToolBatch-1",
+  "keys": [
+    "cwd",
+    "effort",
+    "hook_event_name",
+    "permission_mode",
+    "prompt_id",
+    "scratchpad_dir",
+    "session_id",
+    "tool_calls",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "tool_calls": 1,
+  "tool_names": "Write"
+}

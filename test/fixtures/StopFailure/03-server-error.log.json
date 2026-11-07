@@ -1,0 +1,18 @@
+{
+  "event": "StopFailure",
+  "session_id": "fx-StopFailure-3",
+  "keys": [
+    "cwd",
+    "effort",
+    "error",
+    "hook_event_name",
+    "last_assistant_message",
+    "prompt_id",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "error": "server_error"
+}

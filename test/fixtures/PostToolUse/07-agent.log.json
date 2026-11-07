@@ -1,0 +1,27 @@
+{
+  "event": "PostToolUse",
+  "session_id": "fx-PostToolUse-7",
+  "agent_type": null,
+  "tool_name": "Agent",
+  "keys": [
+    "cwd",
+    "duration_ms",
+    "effort",
+    "hook_event_name",
+    "permission_mode",
+    "prompt_id",
+    "scratchpad_dir",
+    "session_id",
+    "tool_input",
+    "tool_name",
+    "tool_response",
+    "tool_use_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "duration_ms": 22,
+  "permission_mode": "auto",
+  "mcp_server": null
+}

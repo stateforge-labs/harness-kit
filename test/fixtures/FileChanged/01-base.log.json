@@ -1,0 +1,17 @@
+{
+  "event": "FileChanged",
+  "session_id": "fx-FileChanged-1",
+  "keys": [
+    "cwd",
+    "event",
+    "file_path",
+    "hook_event_name",
+    "prompt_id",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "change": "change"
+}

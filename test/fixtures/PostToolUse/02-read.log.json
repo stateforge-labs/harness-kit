@@ -1,0 +1,26 @@
+{
+  "event": "PostToolUse",
+  "session_id": "fx-PostToolUse-2",
+  "agent_type": null,
+  "tool_name": "Read",
+  "keys": [
+    "cwd",
+    "duration_ms",
+    "effort",
+    "hook_event_name",
+    "permission_mode",
+    "prompt_id",
+    "session_id",
+    "tool_input",
+    "tool_name",
+    "tool_response",
+    "tool_use_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "duration_ms": 5,
+  "permission_mode": "default",
+  "mcp_server": null
+}

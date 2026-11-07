@@ -1,0 +1,21 @@
+{
+  "event": "Elicitation",
+  "session_id": "fx-Elicitation-2",
+  "keys": [
+    "cwd",
+    "elicitation_id",
+    "hook_event_name",
+    "mcp_server_name",
+    "message",
+    "mode",
+    "prompt_id",
+    "session_id",
+    "transcript_path",
+    "url"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "mcp_server_name": "elicit",
+  "mode": "url"
+}

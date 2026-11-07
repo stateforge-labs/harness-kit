@@ -16,6 +16,8 @@ export interface Fixture {
   payload: Payload;
   /** The status and body the server returned for this payload when the fixtures were recorded. */
   expected: { status: number; body: unknown };
+  /** The log line the server wrote for this payload when the fixtures were recorded, without `ts`. */
+  log: Record<string, unknown>;
 }
 
 const FIXTURES = join(import.meta.dir, "..", "fixtures");
@@ -26,12 +28,12 @@ export function fixtures(event?: string): Fixture[] {
     .sort()
     .flatMap((e) =>
       readdirSync(join(FIXTURES, e))
-        .filter((f) => f.endsWith(".json") && !f.endsWith(".expected.json"))
+        .filter((f) => f.endsWith(".json") && !f.endsWith(".expected.json") && !f.endsWith(".log.json"))
         .sort()
         .map((f) => {
           const name = f.slice(0, -5);
           const read = (file: string) => JSON.parse(readFileSync(join(FIXTURES, e, file), "utf8"));
-          return { event: e, name, payload: read(f), expected: read(`${name}.expected.json`) } as Fixture;
+          return { event: e, name, payload: read(f), expected: read(`${name}.expected.json`), log: read(`${name}.log.json`) } as Fixture;
         }),
     );
 }

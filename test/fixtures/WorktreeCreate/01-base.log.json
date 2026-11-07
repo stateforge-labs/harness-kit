@@ -1,0 +1,15 @@
+{
+  "event": "WorktreeCreate",
+  "session_id": "fx-WorktreeCreate-1",
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "name",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "name": "myfeat"
+}

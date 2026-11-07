@@ -1,0 +1,19 @@
+{
+  "event": "InstructionsLoaded",
+  "session_id": "fx-InstructionsLoaded-2",
+  "keys": [
+    "cwd",
+    "file_path",
+    "hook_event_name",
+    "load_reason",
+    "memory_type",
+    "parent_file_path",
+    "session_id",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "load_reason": "include",
+  "memory_type": "Project"
+}
