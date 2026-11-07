@@ -1,5 +1,5 @@
 // Command-hook shim: reads one hook payload on stdin, POSTs it to the harness-hooks server, prints the answer.
-//   bun clients/shim/hook-shim.ts --harness codex
+//   bun hook-shim.ts --harness codex      (or: node hook-shim.ts ..., Node 22.18+ runs it as is; it uses no Bun API)
 // For harnesses whose hooks are commands (Codex, and Claude Code's SessionStart and Setup, which cannot be http).
 //
 // Environment: HOOK_URL (default http://127.0.0.1:8787), HOOK_TOKEN (sent as a bearer token, never printed),
@@ -34,8 +34,14 @@ const token = process.env.HOOK_TOKEN ?? "";
 /** The reason a call failed open. Its text never contains a header, so it cannot carry the token. */
 class FailOpen extends Error {}
 
+async function readStdin(): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+  return Buffer.concat(chunks).toString("utf8");
+}
+
 async function ask(): Promise<string> {
-  const body = await Bun.stdin.text();
+  const body = await readStdin();
   let res: Response;
   try {
     res = await fetch(`${base}/hook/${harness}`, {
@@ -66,5 +72,5 @@ try {
   if (debug) console.error(`hook-shim: failing open (${err instanceof FailOpen ? err.message : "unexpected error"})`);
 }
 // Wait for the write to finish: exiting straight after a write to a pipe can cut the answer short.
-await Bun.write(Bun.stdout, `${out}\n`);
+await new Promise<void>((done) => process.stdout.write(`${out}\n`, () => done()));
 process.exit(0);
