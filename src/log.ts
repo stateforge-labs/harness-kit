@@ -51,9 +51,10 @@ export function logEvent(
 
 function lineFor(payload: Record<string, unknown>, handled: Handled, full: boolean, ts: string): Record<string, unknown> {
   const { decoded, common } = handled;
-  if (full) return { ts, payload, known: decoded.known, missing: decoded.missing, wrong_type: decoded.wrong_type };
+  if (full) return { ts, harness: handled.harness, payload, known: decoded.known, missing: decoded.missing, wrong_type: decoded.wrong_type };
   const line: Record<string, unknown> = {
     ts,
+    harness: handled.harness,
     event: common.event,
     session_id: common.session_id,
     agent_id: common.agent_id,

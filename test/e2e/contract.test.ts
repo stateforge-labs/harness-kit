@@ -7,7 +7,7 @@ import { fixtures, hookServer, variant, type Fixture } from "./kit.ts";
 
 /** Keys whose values the server may log, because they are short identifiers or enumerations, never typed text. */
 const MAY_LOG = new Set([
-  "session_id", "agent_id", "agent_type", "tool_name", "permission_mode", "prompt_id", "level",
+  "session_id", "harness", "agent_id", "agent_type", "tool_name", "permission_mode", "prompt_id", "level",
   "source", "trigger", "event", "error", "action", "mode", "load_reason", "memory_type", "notification_type",
   "expansion_type", "command_name", "command_source", "mcp_server_name", "from_model", "to_model", "requested_model",
   "pricing", "subagent_type", "model", "message_id", "turn_id", "elicitation_id", "task_id", "teammate_name", "team_name",

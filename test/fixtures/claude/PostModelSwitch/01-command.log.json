@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PostModelSwitch",
   "session_id": "fx-PostModelSwitch-1",
   "keys": [

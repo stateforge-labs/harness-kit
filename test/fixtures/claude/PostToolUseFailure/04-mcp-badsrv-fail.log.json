@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PostToolUseFailure",
   "session_id": "fx-PostToolUseFailure-4",
   "tool_name": "mcp__badsrv__fail",

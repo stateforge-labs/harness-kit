@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "UserPromptExpansion",
   "session_id": "fx-UserPromptExpansion-1",
   "keys": [

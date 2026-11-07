@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "Notification",
   "session_id": "fx-Notification-1",
   "keys": [

@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PreToolUse",
   "session_id": "fx-PreToolUse-1",
   "tool_name": "Write",

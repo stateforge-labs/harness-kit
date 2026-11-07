@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PermissionRequest",
   "session_id": "fx-PermissionRequest-2",
   "tool_name": "Write",

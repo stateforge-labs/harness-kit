@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PostToolBatch",
   "session_id": "fx-PostToolBatch-2",
   "keys": [

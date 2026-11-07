@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "WorktreeRemove",
   "session_id": "fx-WorktreeRemove-1",
   "keys": [

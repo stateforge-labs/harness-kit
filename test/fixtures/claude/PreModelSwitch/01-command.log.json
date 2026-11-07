@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PreModelSwitch",
   "session_id": "fx-PreModelSwitch-1",
   "keys": [

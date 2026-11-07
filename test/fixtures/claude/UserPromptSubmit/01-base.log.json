@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "UserPromptSubmit",
   "session_id": "fx-UserPromptSubmit-1",
   "agent_type": null,

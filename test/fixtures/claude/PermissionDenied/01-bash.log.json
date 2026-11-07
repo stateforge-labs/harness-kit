@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PermissionDenied",
   "session_id": "fx-PermissionDenied-1",
   "tool_name": "Bash",

@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PreCompact",
   "session_id": "fx-PreCompact-2",
   "keys": [

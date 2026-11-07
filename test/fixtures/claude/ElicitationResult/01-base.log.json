@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "ElicitationResult",
   "session_id": "fx-ElicitationResult-1",
   "keys": [

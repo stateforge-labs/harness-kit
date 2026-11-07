@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PermissionRequest",
   "session_id": "fx-PermissionRequest-4",
   "agent_id": "a1f0d62939ed8e9d7",

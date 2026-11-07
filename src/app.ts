@@ -2,6 +2,7 @@ import { policy } from "./core/policy.ts";
 import type { Common, Decoded, HarnessAdapter } from "./port.ts";
 
 export interface Handled {
+  harness: string;
   body: unknown;
   decoded: Decoded;
   common: Common;
@@ -27,5 +28,5 @@ export function handle(adapter: HarnessAdapter, raw: Record<string, unknown>): H
   } catch (err) {
     console.error(`encode failed (${adapter.id}):`, err);
   }
-  return { body, decoded, common };
+  return { harness: adapter.id, body, decoded, common };
 }

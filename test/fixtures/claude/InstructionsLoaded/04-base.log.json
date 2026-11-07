@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "InstructionsLoaded",
   "session_id": "fx-InstructionsLoaded-4",
   "keys": [

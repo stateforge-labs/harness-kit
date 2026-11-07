@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PostToolBatch",
   "session_id": "fx-PostToolBatch-3",
   "agent_id": "ab6dc56369d23de44",

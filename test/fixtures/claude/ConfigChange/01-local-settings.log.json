@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "ConfigChange",
   "session_id": "fx-ConfigChange-1",
   "keys": [

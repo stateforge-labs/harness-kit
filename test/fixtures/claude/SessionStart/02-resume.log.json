@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "SessionStart",
   "session_id": "fx-SessionStart-2",
   "agent_type": null,

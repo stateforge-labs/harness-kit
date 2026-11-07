@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "TaskCreated",
   "session_id": "fx-TaskCreated-1",
   "agent_id": null,

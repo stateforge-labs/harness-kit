@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "StopFailure",
   "session_id": "fx-StopFailure-1",
   "keys": [

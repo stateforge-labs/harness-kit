@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "MessageDisplay",
   "session_id": "fx-MessageDisplay-1",
   "keys": [

@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PostCompact",
   "session_id": "fx-PostCompact-1",
   "keys": [

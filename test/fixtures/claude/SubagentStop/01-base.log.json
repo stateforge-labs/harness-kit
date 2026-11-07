@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "SubagentStop",
   "session_id": "fx-SubagentStop-1",
   "agent_id": "a708ce592686b783d",

@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "PostToolUseFailure",
   "session_id": "fx-PostToolUseFailure-1",
   "tool_name": "Read",

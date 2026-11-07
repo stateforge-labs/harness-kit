@@ -1,4 +1,5 @@
 {
+  "harness": "claude",
   "event": "DirectoryAdded",
   "session_id": "fx-DirectoryAdded-1",
   "keys": [
