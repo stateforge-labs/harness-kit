@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { resolve } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 let srv: RunningServer;
@@ -84,5 +85,48 @@ describe("e2e: TaskCompleted", () => {
     expect(body.continue).toBeUndefined();
     expect(body.decision).toBeUndefined();
     expect(body.hookSpecificOutput).toBeUndefined();
+  });
+
+  test("the TaskUpdate-path payload from capture 7, which carried a continue:false reply, is still answered with {} and is known", async () => {
+    const capturePath = resolve(
+      import.meta.dir,
+      "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/TaskCompleted-7/events.jsonl",
+    );
+    const captured = (await Bun.file(capturePath).text())
+      .split("\n")
+      .filter((l) => l.trim() !== "")
+      .map((l) => JSON.parse(l) as { payload: Record<string, unknown> })
+      .find((e) => e.payload.hook_event_name === "TaskCompleted");
+    expect(captured).toBeDefined();
+    const sessionId = String(captured!.payload.session_id);
+
+    const res = await post(captured!.payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(sessionId))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+  });
+
+  test("a payload replayed from a real capture (first TaskCompleted line) gets {} and is known with no missing keys", async () => {
+    const capturePath = resolve(
+      import.meta.dir,
+      "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/TaskCompleted-3/events.jsonl",
+    );
+    const lines = (await Bun.file(capturePath).text()).split("\n").filter((l) => l.trim() !== "");
+    // Line 1 of this capture is a TaskCreated payload, so take the first TaskCompleted line.
+    const captured = lines
+      .map((l) => JSON.parse(l) as { ts: string; payload: Record<string, unknown> })
+      .find((e) => e.payload.hook_event_name === "TaskCompleted");
+    expect(captured).toBeDefined();
+    const sessionId = String(captured!.payload.session_id);
+
+    const res = await post(captured!.payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(sessionId))!);
+    expect(entry.event).toBe("TaskCompleted");
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
   });
 });

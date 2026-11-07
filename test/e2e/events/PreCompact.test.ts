@@ -1,5 +1,18 @@
+import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
+
+const CAPTURE_FILE = join(
+  import.meta.dir,
+  "..", "..", "..",
+  "docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/PreCompact-1/events.jsonl",
+);
+
+const AUTO_CAPTURE_FILE = join(
+  import.meta.dir,
+  "..", "..", "..",
+  "docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/PreCompact-5/events.jsonl",
+);
 
 let srv: RunningServer;
 
@@ -68,5 +81,31 @@ describe("e2e: PreCompact", () => {
     const manual = await (await post({ ...common("pc5"), trigger: "manual", custom_instructions: "focus on tests" })).json();
     expect(auto).toEqual({});
     expect(manual).toEqual({});
+  });
+
+  test("replays the first captured payload from a real manual /compact run", async () => {
+    const first = (await Bun.file(CAPTURE_FILE).text()).split("\n")[0] ?? "";
+    const { payload } = JSON.parse(first) as { payload: Record<string, unknown> };
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(String(payload.session_id)))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.trigger).toBe("manual");
+  });
+
+  test("replays the real auto-compaction payload from captures/PreCompact-5", async () => {
+    const first = (await Bun.file(AUTO_CAPTURE_FILE).text()).split("\n")[0] ?? "";
+    const { payload } = JSON.parse(first) as { payload: Record<string, unknown> };
+    expect(payload.trigger).toBe("auto");
+    expect(payload.custom_instructions).toBeNull();
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(String(payload.session_id)))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.trigger).toBe("auto");
   });
 });

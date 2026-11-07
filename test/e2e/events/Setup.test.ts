@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 let srv: RunningServer;
@@ -30,6 +31,20 @@ const common = (sessionId: string) => ({
 });
 
 describe("e2e: Setup", () => {
+  test("replays the first captured Setup payload from a real claude run: 200, {}, known, no missing keys", async () => {
+    const capture = join(import.meta.dir, "..", "..", "..", "docs", "research", "studies", "2026-11-07-claude-code-hook-surface", "evidence", "captures", "Setup-1", "events.jsonl");
+    const firstLine = (await Bun.file(capture).text()).split("\n").find((l) => l.trim() !== "");
+    const { payload } = JSON.parse(firstLine!) as { ts: string; payload: Record<string, unknown> };
+    expect(payload.hook_event_name).toBe("Setup");
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(String(payload.session_id)))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.trigger).toBe("init");
+  });
+
   test("a realistic payload is answered with an empty response", async () => {
     const res = await post({ ...common("setup1"), trigger: "init" });
     expect(res.status).toBe(200);

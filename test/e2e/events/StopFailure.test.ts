@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { resolve } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
+
+// Real payloads captured from headless Claude Code (see evidence/captures/StopFailure-1/events.jsonl).
+const CAPTURED = resolve(
+  import.meta.dir,
+  "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/StopFailure-1/events.jsonl",
+);
 
 let srv: RunningServer;
 
@@ -27,7 +34,6 @@ const common = (sessionId: string) => ({
   transcript_path: "/home/user/.claude/projects/x/transcript.jsonl",
   cwd: "/home/user/project",
   hook_event_name: "StopFailure",
-  permission_mode: "default",
 });
 
 describe("e2e: StopFailure", () => {
@@ -70,6 +76,18 @@ describe("e2e: StopFailure", () => {
     const entry = JSON.parse((await logLineFor("sf3"))!);
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual(["error"]);
+  });
+
+  test("a captured real payload (StopFailure-1) is answered {} and logged known with no missing keys", async () => {
+    const line = (await Bun.file(CAPTURED).text()).split("\n").find((l) => l.trim().length > 0);
+    const { payload } = JSON.parse(line!) as { ts: string; payload: Record<string, unknown> };
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(String(payload.session_id)))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.error).toBe("model_not_found");
   });
 
   test("never blocks, injects context, or sets terminalSequence, even when tool_name is present", async () => {

@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 let srv: RunningServer;
@@ -76,5 +77,29 @@ describe("e2e: Elicitation", () => {
     const body = (await res.json()) as Record<string, unknown>;
     expect(body.decision).toBeUndefined();
     expect(body.hookSpecificOutput).toBeUndefined();
+  });
+
+  test("replaying the first real captured Elicitation payload is answered {} and logged known with no missing keys", async () => {
+    const capturePath = join(
+      import.meta.dir,
+      "..",
+      "..",
+      "..",
+      "docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/Elicitation-1/events.jsonl",
+    );
+    const firstLine = (await Bun.file(capturePath).text()).split("\n").find((l) => l.trim() !== "");
+    const { payload } = JSON.parse(firstLine!) as { ts: string; payload: Record<string, unknown> };
+    expect(payload.hook_event_name).toBe("Elicitation");
+
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+
+    const entry = JSON.parse((await logLineFor(String(payload.session_id)))!);
+    expect(entry.event).toBe("Elicitation");
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.mcp_server_name).toBe("elicit");
+    expect(entry.mode).toBe("form");
   });
 });

@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
@@ -65,5 +66,48 @@ describe("e2e: CwdChanged", () => {
     const entry = JSON.parse(lines[0]!);
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual(["new_cwd"]);
+  });
+
+  test("the first captured real payload is answered 200 with no missing keys", async () => {
+    const capture = join(
+      import.meta.dir,
+      "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/CwdChanged-1/events.jsonl",
+    );
+    const firstLine = (await Bun.file(capture).text()).split("\n").find((l) => l.trim());
+    const { payload } = JSON.parse(firstLine!) as { ts: string; payload: Record<string, unknown> };
+    const sessionId = String(payload.session_id);
+
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const lines = await eventually(() => logLines(sessionId));
+    const entry = JSON.parse(lines[0]!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+  });
+
+  test("every captured CwdChanged payload is answered 200 with no missing keys", async () => {
+    const dirs = ["CwdChanged-1", "CwdChanged-2", "CwdChanged-3"];
+    let count = 0;
+    for (const dir of dirs) {
+      const capture = join(
+        import.meta.dir,
+        "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures",
+        dir,
+        "events.jsonl",
+      );
+      const lines = (await Bun.file(capture).text()).split("\n").filter((l) => l.trim());
+      for (const line of lines) {
+        const { payload } = JSON.parse(line) as { payload: Record<string, unknown> };
+        const sessionId = String(payload.session_id);
+        const res = await post(payload);
+        expect(res.status).toBe(200);
+        expect(await res.json()).toEqual({});
+        const logged = await eventually(() => logLines(sessionId));
+        expect(JSON.parse(logged[0]!).missing).toEqual([]);
+        count++;
+      }
+    }
+    expect(count).toBe(4);
   });
 });

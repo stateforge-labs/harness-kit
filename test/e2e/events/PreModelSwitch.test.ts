@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 let srv: RunningServer;
@@ -89,5 +90,27 @@ describe("e2e: PreModelSwitch", () => {
     expect(body).toEqual({});
     expect(body.decision).toBeUndefined();
     expect(body.hookSpecificOutput).toBeUndefined();
+  });
+
+  test("replays the first payload of a real captured /model run and it is known with no missing keys", async () => {
+    const capture = Bun.file(
+      join(
+        import.meta.dir,
+        "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/PreModelSwitch-1/events.jsonl",
+      ),
+    );
+    const firstLine = (await capture.text()).split("\n")[0]!;
+    const { payload } = JSON.parse(firstLine) as { ts: string; payload: Record<string, unknown> };
+    expect(payload.hook_event_name).toBe("PreModelSwitch");
+
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+
+    const entry = JSON.parse((await logLineFor(String(payload.session_id)))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.from_model).toBe("claude-haiku-5-5");
+    expect(entry.requested_model).toBe("sonnet");
   });
 });

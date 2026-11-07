@@ -1,6 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
+// First payload line from a real headless run (captures/SessionEnd-1), replayed verbatim.
+const CAPTURE = new URL(
+  "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/SessionEnd-1/events.jsonl",
+  import.meta.url,
+).pathname;
+
 const TOKEN = "t0k3n";
 let srv: RunningServer;
 
@@ -75,5 +81,19 @@ describe("e2e: SessionEnd", () => {
     const entry = JSON.parse(lines[0]!);
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual(["reason"]);
+  });
+  test("a captured real payload is answered 200 with {} and logged known with no missing keys", async () => {
+    const text = await Bun.file(CAPTURE).text();
+    const first = JSON.parse(text.split("\n").find((l) => l.trim().length > 0)!);
+    const captured = first.payload as Record<string, unknown>;
+    const sessionId = captured.session_id as string;
+    const res = await post(captured);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const lines = await eventually(() => logLines(sessionId));
+    const entry = JSON.parse(lines[0]!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.reason).toBe("other");
   });
 });

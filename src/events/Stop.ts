@@ -3,7 +3,8 @@ import type { EventHandler } from "./types.ts";
 
 export const handler: EventHandler = {
   event: "Stop",
-  required: ["stop_hook_active", "last_assistant_message"],
+  // last_assistant_message is absent when the final turn had no text (captures/Stop-3), so it is optional.
+  required: ["stop_hook_active"],
   meta: (p) => ({
     stop_hook_active: typeof p.stop_hook_active === "boolean" ? p.stop_hook_active : null,
     permission_mode: typeof p.permission_mode === "string" ? p.permission_mode : null,

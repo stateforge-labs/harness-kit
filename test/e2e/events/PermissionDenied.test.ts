@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 const TOKEN = "t0k3n";
@@ -80,5 +81,41 @@ describe("e2e: PermissionDenied", () => {
       reason: "Auto mode could not evaluate this action and is blocking it for safety",
     });
     expect(await res.json()).toEqual({});
+  });
+});
+
+describe("e2e: PermissionDenied replay of a real capture", () => {
+  test("the first captured PermissionDenied payload is answered {} and logged known with no missing keys", async () => {
+    // Line 1 of the capture is a PreToolUse payload, so pick the first line whose hook_event_name is PermissionDenied.
+    const capture = join(
+      import.meta.dir,
+      "..",
+      "..",
+      "..",
+      "docs",
+      "research",
+      "studies",
+      "2026-11-07-claude-code-hook-surface",
+      "evidence",
+      "captures",
+      "PermissionDenied-4",
+      "events.jsonl",
+    );
+    const lines = (await Bun.file(capture).text()).split("\n").filter((l) => l.trim());
+    const entry = lines
+      .map((l) => JSON.parse(l) as { ts: string; payload: Record<string, unknown> })
+      .find((e) => e.payload.hook_event_name === "PermissionDenied");
+    expect(entry).toBeDefined();
+    const payload = entry!.payload;
+
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+
+    const { line } = await logLineFor(String(payload.session_id));
+    expect(line.known).toBe(true);
+    expect(line.missing).toEqual([]);
+    expect(line.tool_name).toBe("Bash");
+    expect(line.reason).toBe("[Data Exfiltration]");
   });
 });

@@ -1,4 +1,5 @@
-// PreCompact: http supported. Passive: never blocks (decision/reason are not used) and injects nothing; returns {}.
+// PreCompact: http supported. trigger is manual or auto (both captured). Captured: decision/reason can abort a manual compaction, but this handler stays passive and returns {}.
+// HTTP JSON hookSpecificOutput is rejected for PreCompact, so no summary instructions can be injected here.
 import type { EventHandler } from "./types.ts";
 
 const str = (v: unknown) => (typeof v === "string" ? v : null);

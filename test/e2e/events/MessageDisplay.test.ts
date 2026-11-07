@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
+
+// Real payloads captured from claude -p (see docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures).
+const captured = join(
+  import.meta.dir,
+  "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/MessageDisplay-1/events.jsonl",
+);
 
 let srv: RunningServer;
 
@@ -67,6 +74,20 @@ describe("e2e: MessageDisplay", () => {
     const entry = JSON.parse((await logLineFor("md3"))!);
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual(["delta"]);
+  });
+
+  test("a real captured payload (first line of MessageDisplay-1) is answered 200 {} and logged known with no missing keys", async () => {
+    const first = JSON.parse((await Bun.file(captured).text()).split("\n")[0]!);
+    const payload = first.payload as Record<string, unknown>;
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(payload.session_id as string))!);
+    expect(entry.event).toBe("MessageDisplay");
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.index).toBe(0);
+    expect(entry.final).toBe(true);
   });
 
   test("stays passive: never replaces the text with displayContent, blocks or adds context", async () => {

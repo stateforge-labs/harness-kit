@@ -4,7 +4,9 @@ import type { EventHandler } from "./types.ts";
 export const handler: EventHandler = {
   event: "PostCompact",
   required: ["trigger", "compact_summary"],
-  // compact_summary is conversation content and is never logged; trigger is the only scalar kept.
+  // trigger is observed as "manual" (PostCompact-2) and "auto" (PostCompact-4). An empty summary never reaches
+  // this hook: the compaction fails first (PostCompact-5). compact_summary is conversation content and is never logged;
+  // trigger is the only scalar kept.
   meta: (p) => ({ trigger: typeof p.trigger === "string" ? p.trigger : null }),
   respond: () => ({}),
 };

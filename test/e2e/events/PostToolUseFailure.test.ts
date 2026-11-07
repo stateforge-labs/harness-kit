@@ -1,5 +1,13 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { resolve } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
+
+// First payload from a real Claude Code run (capture PostToolUseFailure-2): Bash `ls ./nonexistent_dir`.
+const CAPTURED = resolve(
+  import.meta.dir,
+  "../../..",
+  "docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/PostToolUseFailure-2/events.jsonl",
+);
 
 const SECRET_CMD = "npm test SECRET-CMD-PTUF";
 const SECRET_ERR = "SECRET-ERROR-BODY-PTUF";
@@ -100,5 +108,19 @@ describe("e2e: PostToolUseFailure", () => {
       });
       expect(await res.json()).toEqual({});
     }
+  });
+
+  test("replays the first captured payload from a real run: 200, empty response, known, no missing keys", async () => {
+    const first = (await Bun.file(CAPTURED).text()).split("\n").find((l) => l.trim() !== "");
+    expect(first).toBeDefined();
+    const { payload } = JSON.parse(first!) as { payload: Record<string, unknown> };
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const { entry } = await logLineFor(payload.session_id as string);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.tool_name).toBe("Bash");
+    expect(entry.error_exit_code).toBe(2);
   });
 });

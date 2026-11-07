@@ -5,7 +5,19 @@ const str = (v: unknown) => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
   event: "PostModelSwitch",
-  required: ["from_model", "to_model", "requested_model", "source"],
+  // Docs give PostModelSwitch the PreModelSwitch table (no conditional marks), and a real claude run sent all nine on source=command.
+  // prompt_id is documented as conditionally present, so it is not required.
+  required: [
+    "from_model",
+    "to_model",
+    "requested_model",
+    "source",
+    "context_tokens",
+    "prompt_cache_warm",
+    "cache_ttl",
+    "estimated_cache_write_usd",
+    "pricing",
+  ],
   // Model names and the switch source only. Cost fields and pricing are not logged.
   meta: (p) => ({
     source: str(p.source),

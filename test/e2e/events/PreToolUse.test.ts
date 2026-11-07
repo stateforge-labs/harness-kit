@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 let srv: RunningServer;
@@ -102,6 +103,26 @@ describe("e2e: PreToolUse", () => {
       agentCall("pre6", { prompt: "Find endpoints. Return a list.", model: "haiku" }),
     );
     expect(await res.json()).toEqual({});
+  });
+
+  test("a payload captured from real claude is answered {} and logged known with no missing keys", async () => {
+    const captured = Bun.file(
+      join(
+        import.meta.dir,
+        "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/PreToolUse-1/events.jsonl",
+      ),
+    );
+    const first = JSON.parse((await captured.text()).split("\n")[0]!) as {
+      ts: string;
+      payload: Record<string, unknown>;
+    };
+    const res = await post(first.payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(first.payload.session_id as string))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.tool_name).toBe("Bash");
   });
 
   test("non-Agent tools get {} and never a permission or block field", async () => {

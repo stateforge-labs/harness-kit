@@ -66,4 +66,22 @@ describe("e2e: WorktreeCreate", () => {
     const body = (await res.json()) as Record<string, unknown>;
     expect(body).toEqual({});
   });
+
+  test("replaying the first captured WorktreeCreate payload gets 200 {} and is known with no missing keys", async () => {
+    const capturePath = `${import.meta.dir}/../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/WorktreeCreate-1/events.jsonl`;
+    const firstLine = (await Bun.file(capturePath).text()).split("\n").find((l) => l.trim() !== "");
+    expect(firstLine).toBeDefined();
+    const { payload } = JSON.parse(firstLine as string) as { ts: string; payload: Record<string, unknown> };
+    const sessionId = payload.session_id as string;
+
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+
+    const entry = await logLineFor(sessionId);
+    expect(entry.event).toBe("WorktreeCreate");
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.name).toBe("myfeat");
+  });
 });

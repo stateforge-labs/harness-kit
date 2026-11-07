@@ -1,7 +1,15 @@
+import { resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 let srv: RunningServer;
+
+// A real headless claude run (`/model opus`) captured by scripts/capture.sh. Path is relative to this file: test/e2e/events.
+const capturePath = resolve(
+  import.meta.dir,
+  "../../..",
+  "docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/PostModelSwitch-5/events.jsonl",
+);
 
 beforeAll(async () => {
   srv = await startServer();
@@ -27,6 +35,11 @@ const required = {
   to_model: "claude-opus-5",
   requested_model: "claude-opus-5",
   source: "command",
+  context_tokens: 0,
+  prompt_cache_warm: false,
+  cache_ttl: "1h",
+  estimated_cache_write_usd: 0,
+  pricing: "catalog",
 };
 
 const logLineFor = (sessionId: string) =>
@@ -74,5 +87,21 @@ describe("e2e: PostModelSwitch", () => {
       expect(body.hookSpecificOutput).toBeUndefined();
       expect(body.continue).toBeUndefined();
     }
+  });
+
+  test("replays the first captured payload from a real claude /model opus run", async () => {
+    const firstLine = (await Bun.file(capturePath).text()).split("\n").find((l) => l.trim() !== "");
+    const { payload } = JSON.parse(firstLine!) as { ts: string; payload: Record<string, unknown> };
+    expect(payload.hook_event_name).toBe("PostModelSwitch");
+
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+
+    const entry = JSON.parse((await logLineFor(payload.session_id as string))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.source).toBe("command");
+    expect(entry.to_model).toBe("claude-opus-5-5");
   });
 });

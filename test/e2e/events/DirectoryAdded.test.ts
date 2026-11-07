@@ -1,5 +1,15 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
+
+// First real DirectoryAdded payload captured from a headless claude run (DirectoryAdded-2).
+const FIRST_CAPTURE = join(
+  import.meta.dir,
+  "..",
+  "..",
+  "..",
+  "docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/DirectoryAdded-2/events.jsonl",
+);
 
 let srv: RunningServer;
 
@@ -74,5 +84,16 @@ describe("e2e: DirectoryAdded", () => {
     expect(body.continue).toBeUndefined();
     expect(body.permissionDecision).toBeUndefined();
     expect(body.hookSpecificOutput).toBeUndefined();
+  });
+
+  test("a payload captured from a real claude run is answered 200 with {} and logged known with no missing keys", async () => {
+    const first = JSON.parse((await Bun.file(FIRST_CAPTURE).text()).split("\n")[0]!) as { payload: Record<string, unknown> };
+    const res = await post(first.payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(String(first.payload.session_id)))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.source).toBe("register_repo_root");
   });
 });

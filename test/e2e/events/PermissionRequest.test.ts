@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
+
+// First real payload captured from Claude Code (PermissionRequest-1, Bash touch x.txt).
+const capturedFile = join(
+  import.meta.dir,
+  "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/PermissionRequest-1/events.jsonl",
+);
 
 let srv: RunningServer;
 
@@ -66,6 +73,20 @@ describe("e2e: PermissionRequest", () => {
     const entry = JSON.parse((await logLineFor("pr3"))!);
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual(["tool_input"]);
+  });
+
+  test("a real captured payload gets {}, and the log line is known with no missing keys", async () => {
+    const first = (await Bun.file(capturedFile).text()).split("\n").find((l) => l.trim() !== "");
+    const { payload } = JSON.parse(first!) as { ts: string; payload: Record<string, unknown> };
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(String(payload.session_id)))!);
+    expect(entry.event).toBe("PermissionRequest");
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.tool_name).toBe("Bash");
+    expect(entry.permission_mode).toBe("default");
   });
 
   test("Agent calls get {} with or without a return-format sentence, and no context is injected", async () => {

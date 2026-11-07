@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 let srv: RunningServer;
@@ -72,5 +73,27 @@ describe("e2e: UserPromptSubmit", () => {
     expect(body.decision).toBeUndefined();
     expect(body.continue).toBeUndefined();
     expect(body.hookSpecificOutput).toBeUndefined();
+  });
+
+  test("replaying the first captured payload from a real Claude Code run is 200, known, and has no missing keys", async () => {
+    const capturePath = join(
+      import.meta.dir,
+      "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/UserPromptSubmit-1/events.jsonl",
+    );
+    const first = JSON.parse((await Bun.file(capturePath).text()).split("\n")[0]!) as {
+      ts: string;
+      payload: Record<string, unknown>;
+    };
+    const res = await post(first.payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const sessionId = String(first.payload.session_id);
+    const line = await logLineFor(sessionId);
+    const entry = JSON.parse(line!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.permission_mode).toBe("default");
+    expect(entry.prompt_id).toBe(first.payload.prompt_id);
+    expect(line).not.toContain("Say hi in one word.");
   });
 });

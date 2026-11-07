@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 let srv: RunningServer;
@@ -61,12 +62,41 @@ describe("e2e: Stop", () => {
   });
 
   test("a payload missing a required key is still answered 200 and logged with it in missing", async () => {
-    const res = await post({ ...common("stop3"), stop_hook_active: false });
+    const res = await post({ ...common("stop3"), last_assistant_message: "no flag here" });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({});
     const entry = JSON.parse((await logLineFor("stop3"))!);
     expect(entry.known).toBe(true);
-    expect(entry.missing).toEqual(["last_assistant_message"]);
+    expect(entry.missing).toEqual(["stop_hook_active"]);
+  });
+
+  test("replays the first captured Stop payload (captures/Stop-1): 200, {}, known with no missing keys", async () => {
+    const file = Bun.file(
+      join(import.meta.dir, "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/Stop-1/events.jsonl"),
+    );
+    const firstLine = (await file.text()).split("\n").find((l) => l.trim() !== "")!;
+    const { payload } = JSON.parse(firstLine) as { ts: string; payload: Record<string, unknown> };
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(payload.session_id as string))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+  });
+
+  test("replays a captured Stop payload with no last_assistant_message (captures/Stop-3): still no missing keys", async () => {
+    const file = Bun.file(
+      join(import.meta.dir, "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/Stop-3/events.jsonl"),
+    );
+    const firstLine = (await file.text()).split("\n").find((l) => l.trim() !== "")!;
+    const { payload } = JSON.parse(firstLine) as { ts: string; payload: Record<string, unknown> };
+    expect("last_assistant_message" in payload).toBe(false);
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(payload.session_id as string))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
   });
 
   test("never injects context or blocks, even when the message asks for a return format", async () => {

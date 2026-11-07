@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { resolve } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 const SECRET_MSG = "SUBAGENT-FINAL-SECRET-SS7";
@@ -81,5 +82,27 @@ describe("e2e: SubagentStop", () => {
   test("never returns a decision, a block or context, even when stop_hook_active is true", async () => {
     const res = await post({ ...common("ss-4"), ...subagentFields("a4"), stop_hook_active: true });
     expect(await res.json()).toEqual({});
+  });
+
+  test("replays a captured SubagentStop payload from the evidence: 200, {}, known with no missing keys", async () => {
+    const captured = resolve(
+      import.meta.dir,
+      "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/SubagentStop-1/events.jsonl",
+    );
+    const lines = (await Bun.file(captured).text())
+      .split("\n")
+      .filter((l) => l.trim() !== "")
+      .map((l) => JSON.parse(l) as { ts: string; payload: Record<string, unknown> });
+    // The capture file's first line is a SubagentStart payload, so take the first SubagentStop line.
+    const first = lines.find((l) => l.payload.hook_event_name === "SubagentStop");
+    if (!first) throw new Error("no SubagentStop payload in the capture file");
+    const session_id = String(first.payload.session_id);
+    const res = await post(first.payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const { line } = await logLineFor(session_id);
+    expect(line.event).toBe("SubagentStop");
+    expect(line.known).toBe(true);
+    expect(line.missing).toEqual([]);
   });
 });

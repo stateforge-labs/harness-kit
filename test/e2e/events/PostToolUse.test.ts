@@ -99,3 +99,39 @@ describe("e2e: PostToolUse", () => {
     expect(text).not.toContain("group%2Fproject");
   });
 });
+
+describe("e2e: PostToolUse captured payload", () => {
+  const CAPTURE = `${import.meta.dir}/../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/PostToolUse-1/events.jsonl`;
+  let cap: RunningServer;
+  let payload: Record<string, unknown> = {};
+
+  beforeAll(async () => {
+    cap = await startServer({ HOOK_TOKEN: TOKEN });
+    // The first line is PreToolUse, so take the first real PostToolUse payload from the capture.
+    const lines = (await Bun.file(CAPTURE).text()).split("\n").filter(Boolean).map((l) => JSON.parse(l));
+    const first = lines.find((l) => l.payload.hook_event_name === "PostToolUse");
+    if (!first) throw new Error("no PostToolUse payload in capture");
+    payload = first.payload;
+  });
+  afterAll(() => cap.stop());
+
+  test("a captured PostToolUse payload gets an empty 200 response", async () => {
+    const res = await fetch(`${cap.base}/hook`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify(payload),
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+  });
+
+  test("the log marks the captured payload known with no missing keys", async () => {
+    const line = await eventually(async () => {
+      const text = await Bun.file(cap.logFile).text().catch(() => "");
+      const hit = text.split("\n").find((l) => l.includes(`"session_id":"${payload.session_id}"`));
+      return hit ? (JSON.parse(hit) as Record<string, unknown>) : undefined;
+    });
+    expect(line.known).toBe(true);
+    expect(line.missing).toEqual([]);
+  });
+});

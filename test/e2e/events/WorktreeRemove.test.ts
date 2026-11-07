@@ -1,5 +1,18 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
+
+// The first WorktreeRemove line of the real capture (the file's first line is a WorktreeCreate payload).
+const CAPTURE = join(
+  import.meta.dir,
+  "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/WorktreeRemove-1/events.jsonl",
+);
+const captured = async (): Promise<Record<string, unknown>> => {
+  const lines = (await Bun.file(CAPTURE).text()).split("\n").filter((l) => l.trim());
+  const row = lines.map((l) => JSON.parse(l) as { payload: Record<string, unknown> }).find((r) => r.payload.hook_event_name === "WorktreeRemove");
+  if (!row) throw new Error("no WorktreeRemove line in the capture");
+  return row.payload;
+};
 
 const PROMPT = "WORKTREE-REMOVE-SECRET-PROMPT";
 let srv: RunningServer;
@@ -72,5 +85,15 @@ describe("e2e: WorktreeRemove", () => {
       hookSpecificOutput: { hookEventName: "WorktreeRemove", additionalContext: "x" },
     });
     expect(await res.json()).toEqual({});
+  });
+
+  test("replaying the real captured WorktreeRemove payload gets 200 {} and is known with no missing keys", async () => {
+    const payload = await captured();
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = await logLineFor(String(payload.session_id));
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
   });
 });

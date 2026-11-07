@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
@@ -25,6 +26,18 @@ const logLineFor = (sessionId: string) =>
     const line = (await readLog()).split("\n").find((l) => l.includes(`"session_id":"${sessionId}"`));
     return line;
   });
+
+/** First line of a real capture: {ts, payload}. Resolved from this test file, not the cwd. */
+const capturedFirstLine = async (dir: string) => {
+  const file = join(
+    import.meta.dir,
+    "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures",
+    dir,
+    "events.jsonl",
+  );
+  const text = await Bun.file(file).text();
+  return JSON.parse(text.split("\n")[0]!) as { ts: string; payload: Record<string, unknown> };
+};
 
 const common = (sessionId: string) => ({
   session_id: sessionId,
@@ -92,5 +105,18 @@ describe("e2e: PostToolBatch", () => {
     });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({});
+  });
+
+  test("a replayed real capture (PostToolBatch-1, first line) is answered 200 with {} and logged known with no missing keys", async () => {
+    const { payload } = await capturedFirstLine("PostToolBatch-1");
+    expect(payload.hook_event_name).toBe("PostToolBatch");
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(payload.session_id as string))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.tool_calls).toBe(1);
+    expect(entry.tool_names).toBe("Read");
   });
 });

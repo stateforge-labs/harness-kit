@@ -81,4 +81,24 @@ describe("e2e: ElicitationResult", () => {
     expect(body.decision).toBeUndefined();
     expect(body.hookSpecificOutput).toBeUndefined();
   });
+
+  test("replays a real captured ElicitationResult payload: 200, empty response, known with no missing keys", async () => {
+    // First line of captures/ElicitationResult-3 (ElicitationResult-1's first line is an Elicitation payload, not this event).
+    const capture = new URL(
+      "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/ElicitationResult-3/events.jsonl",
+      import.meta.url,
+    );
+    const first = JSON.parse((await Bun.file(capture).text()).split("\n")[0]!) as { payload: Record<string, unknown> };
+    const sessionId = String(first.payload.session_id);
+    const res = await post(first.payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(sessionId))!);
+    expect(entry.event).toBe("ElicitationResult");
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.mcp_server_name).toBe("elic");
+    expect(entry.action).toBe("cancel");
+    expect(entry.mode).toBe("form");
+  });
 });

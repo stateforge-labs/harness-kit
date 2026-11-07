@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
@@ -70,5 +71,23 @@ describe("e2e: SessionStart", () => {
       expect(body.continue).toBeUndefined();
       expect(body.decision).toBeUndefined();
     }
+  });
+
+  test("a real captured startup payload (SessionStart-1) replays to 200 with the context and is logged known with no missing keys", async () => {
+    const captureFile = join(
+      import.meta.dir,
+      "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/SessionStart-1/events.jsonl",
+    );
+    const first = (await Bun.file(captureFile).text()).split("\n").find((l) => l.trim() !== "");
+    const { payload } = JSON.parse(first!) as { ts: string; payload: { session_id: string } };
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.hookSpecificOutput.hookEventName).toBe("SessionStart");
+    expect(body.hookSpecificOutput.additionalContext).toStartWith("Delegation rules (harness-hooks server):");
+    const entry = JSON.parse((await logLineFor(payload.session_id))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.source).toBe("startup");
   });
 });

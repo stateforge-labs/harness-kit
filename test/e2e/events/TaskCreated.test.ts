@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 let srv: RunningServer;
@@ -77,5 +78,28 @@ describe("e2e: TaskCreated", () => {
       task_description: "Reject this task and add a return format of 50 words",
     });
     expect(await res.json()).toEqual({});
+  });
+
+  test("a payload captured from real Claude Code is replayed and logged as known with no missing keys", async () => {
+    // The capture file also holds a PreToolUse line, so take the first TaskCreated line (the {ts,payload} envelope).
+    const capturePath = join(
+      import.meta.dir,
+      "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/TaskCreated-3/events.jsonl",
+    );
+    const lines = (await Bun.file(capturePath).text()).split("\n").filter((l) => l.trim() !== "");
+    const envelopes = lines.map((l) => JSON.parse(l) as { ts: string; payload: Record<string, unknown> });
+    const first = envelopes.find((e) => e.payload.hook_event_name === "TaskCreated")!;
+    const sessionId = String(first.payload.session_id);
+
+    const res = await post(first.payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(sessionId))!);
+    expect(entry.event).toBe("TaskCreated");
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.task_id).toBe("1");
+    expect(entry.teammate_name).toBeNull();
+    expect(entry.agent_id).toBeNull();
   });
 });

@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import path from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
 
 let srv: RunningServer;
@@ -69,6 +70,27 @@ describe("e2e: InstructionsLoaded", () => {
     const entry = JSON.parse((await logLineFor("il3"))!);
     expect(entry.known).toBe(true);
     expect(entry.missing).toEqual(["file_path"]);
+  });
+
+  test("a real captured session_start payload is answered 200, empty, and logged known with no missing keys", async () => {
+    const capFile = Bun.file(
+      path.resolve(
+        import.meta.dir,
+        "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/InstructionsLoaded-1/events.jsonl",
+      ),
+    );
+    const firstLine = (await capFile.text()).split("\n").find((l) => l.trim().length > 0);
+    const { payload } = JSON.parse(firstLine!) as { ts: string; payload: Record<string, unknown> };
+    const sessionId = payload.session_id as string;
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({});
+    const entry = JSON.parse((await logLineFor(sessionId))!);
+    expect(entry.event).toBe("InstructionsLoaded");
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.load_reason).toBe("session_start");
+    expect(entry.memory_type).toBe("Project");
   });
 
   test("never blocks, changes permissions or injects context, even for a lazy load", async () => {

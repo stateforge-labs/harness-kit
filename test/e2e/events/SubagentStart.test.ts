@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "../harness.ts";
+
+// First SubagentStart line from a real headless run (captures/SubagentStart-1).
+const CAPTURE_FILE = join(
+  import.meta.dir,
+  "../../../docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/SubagentStart-1/events.jsonl",
+);
 
 let srv: RunningServer;
 
@@ -73,5 +80,22 @@ describe("e2e: SubagentStart", () => {
     expect(body.decision).toBeUndefined();
     expect(body.continue).toBeUndefined();
     expect(body.permissionDecision).toBeUndefined();
+  });
+
+  test("replaying the first captured SubagentStart payload gets 200, the rules, and a known log line with no missing keys", async () => {
+    const first = (await Bun.file(CAPTURE_FILE).text()).split("\n")[0]!;
+    const { payload } = JSON.parse(first) as { payload: Record<string, unknown> };
+    expect(payload.hook_event_name).toBe("SubagentStart");
+    const res = await post(payload);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(Object.keys(body)).toEqual(["hookSpecificOutput"]);
+    const out = body.hookSpecificOutput as Record<string, unknown>;
+    expect(out.hookEventName).toBe("SubagentStart");
+    expect(out.additionalContext).toStartWith("Subagent rules (harness-hooks server):");
+    const entry = JSON.parse((await logLineFor(payload.session_id as string))!);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.agent_type).toBe("Explore");
   });
 });
