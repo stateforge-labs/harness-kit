@@ -1,6 +1,6 @@
 // A subagent spawn in OpenCode's terms, observed on 2.2.6 (R-2026-11-07-08, capture "subagent"): the tool is `subagent` and its
-// input is { agent, description, prompt }. OpenCode's own code reads an optional `model` from that input, so it is passed on when
-// present; no capture set one, so whether a model can be requested this way is UNRESOLVED.
+// input is { agent, description, prompt } plus an optional `model` written "provider/model" (capture "subagent-model" asked for
+// opencode-go/beam-free and the key arrived with that value).
 import type { Spawn } from "../../core/event.ts";
 
 const SUBAGENT_TOOL = "subagent";

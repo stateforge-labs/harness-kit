@@ -1,7 +1,6 @@
 {
   "default": "captured",
   "overrides": {
-    "session.execution.failed/01-synthetic": "synthetic (event name seen in the opencode 2.2.6 binary; the payload shape was never captured, so the fixture holds the envelope only)",
     "session.compaction/01-synthetic": "synthetic (event name seen in the opencode 2.2.6 binary; the payload shape was never captured, so the fixture holds the envelope only)",
     "session.compaction.started/01-synthetic": "synthetic (event name seen in the opencode 2.2.6 binary; the payload shape was never captured, so the fixture holds the envelope only)",
     "session.compaction.ended/01-synthetic": "synthetic (event name seen in the opencode 2.2.6 binary; the payload shape was never captured, so the fixture holds the envelope only)",

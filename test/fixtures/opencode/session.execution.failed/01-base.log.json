@@ -3,11 +3,13 @@
   "event": "session.execution.failed",
   "session_id": "fx-session.execution.failed-1",
   "keys": [
+    "error",
     "hook_event_name",
     "sessionID",
     "session_id"
   ],
   "known": true,
   "missing": [],
-  "wrong_type": []
+  "wrong_type": [],
+  "error_type": "provider.no-route"
 }

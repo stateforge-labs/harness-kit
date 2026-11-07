@@ -1,7 +1,7 @@
 {
   "harness": "opencode",
   "event": "tool.execute.after",
-  "session_id": "fx-tool.execute.after-2",
+  "session_id": "fx-tool.execute.after-3",
   "agent_type": "build",
   "tool_name": "subagent",
   "keys": [

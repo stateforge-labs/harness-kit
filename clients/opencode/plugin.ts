@@ -36,10 +36,11 @@ const EVENTS: ReadonlySet<string> = new Set([
   "session.compaction.failed",
 ]);
 
-const timeoutMs = (() => {
+/** Read on every post, like HOOK_URL and HOOK_TOKEN, so a change to the environment takes effect without reloading the plugin. */
+function timeoutMs(): number {
   const v = process.env.HOOK_PLUGIN_TIMEOUT_MS;
   return v && /^\d+$/.test(v) && Number(v) > 0 ? Number(v) : DEFAULT_TIMEOUT_MS;
-})();
+}
 
 /** Posts one body. Resolves in every case; a failure is dropped (fail open). */
 async function send(name: string, payload: unknown): Promise<void> {
@@ -53,7 +54,7 @@ async function send(name: string, payload: unknown): Promise<void> {
       method: "POST",
       headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: AbortSignal.timeout(timeoutMs()),
     });
   } catch {
     /* fail open: nothing is reported to OpenCode */

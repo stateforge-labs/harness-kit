@@ -79,6 +79,13 @@ for (const name of readdirSync(capturesDir).sort()) {
   }
 }
 
+// Hand-made files survive a re-export: synthetic fixtures (<nn>-synthetic.json) and provenance.json are not derived from captures.
+const kept = new Map<string, string>();
+if (existsSync(outDir)) {
+  for (const f of readdirSync(outDir, { recursive: true }) as string[]) {
+    if (f === "provenance.json" || /(^|\/)\d+-synthetic\.json$/.test(f)) kept.set(f, readFileSync(join(outDir, f), "utf8"));
+  }
+}
 rmSync(outDir, { recursive: true, force: true });
 let total = 0;
 for (const [ev, g] of [...groups].sort()) {
@@ -95,4 +102,8 @@ for (const [ev, g] of [...groups].sort()) {
     total++;
   }
 }
-console.log(`${total} fixtures for ${groups.size} events -> ${outDir}`);
+for (const [f, content] of kept) {
+  mkdirSync(join(outDir, f, ".."), { recursive: true });
+  writeFileSync(join(outDir, f), content);
+}
+console.log(`${kept.size} hand-made files kept; ${total} fixtures for ${groups.size} events -> ${outDir}`);

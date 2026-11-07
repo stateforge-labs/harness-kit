@@ -1,5 +1,9 @@
 {
   "sessionID": "fx-session.execution.failed-1",
+  "error": {
+    "type": "provider.no-route",
+    "message": "PLACEHOLDER-message"
+  },
   "session_id": "fx-session.execution.failed-1",
   "hook_event_name": "session.execution.failed"
 }

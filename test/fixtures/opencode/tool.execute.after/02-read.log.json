@@ -1,9 +1,9 @@
 {
   "harness": "opencode",
   "event": "tool.execute.after",
-  "session_id": "fx-tool.execute.after-3",
-  "agent_type": "build",
-  "tool_name": "shell",
+  "session_id": "fx-tool.execute.after-2",
+  "agent_type": "general",
+  "tool_name": "read",
   "keys": [
     "agent",
     "hook_event_name",
