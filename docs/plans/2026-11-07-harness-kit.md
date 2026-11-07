@@ -5,7 +5,7 @@ Decisions: [ADR 0001](../decisions/0001-library-layers-service-boundary.md), [AD
 Every phase ends green (`bun test`, `bunx tsc --noEmit`, `bun run gen:check`) and in one commit or a short series. Nothing in StateForge is
 edited from here; StateForge-side steps are listed at the end for its own change process.
 
-## Phase 0. Rename and record (small)
+## Phase 0. Rename and record (small) (done 2026-11-07; remote https://gitlab.example.internal/homelab/harness-kit)
 
 - Rename the folder `~/Projects/homelab/harness-hooks` to `harness-kit` (done 2026-11-07); `package.json` name `harness-kit` (workspace root).
 - Update what points at the old path: the printed Claude/Codex config blocks (`scripts/install.ts`), the unit template, docs, memory notes. The installed OpenCode plugin is a copy and needs no change.
