@@ -1,0 +1,6 @@
+{
+  "default": "captured",
+  "overrides": {
+    "PermissionRequest/01-synthetic": "synthetic (openai/codex @ 57e64682f8ef83c09cc868c39010733dd6760805, permission-request.command.input schema; the event never fired under codex exec 0.167.0)"
+  }
+}

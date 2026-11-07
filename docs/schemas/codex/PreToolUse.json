@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "cwd": {
+      "type": "string"
+    },
+    "hook_event_name": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "transcript_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "agent_id": {
+      "type": "string"
+    },
+    "agent_type": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "permission_mode": {
+      "type": "string"
+    },
+    "tool_input": {},
+    "tool_name": {
+      "type": "string"
+    },
+    "tool_use_id": {
+      "type": "string"
+    },
+    "turn_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "cwd",
+    "hook_event_name",
+    "session_id",
+    "transcript_path",
+    "model",
+    "permission_mode",
+    "tool_input",
+    "tool_name",
+    "tool_use_id",
+    "turn_id"
+  ],
+  "additionalProperties": {}
+}

@@ -51,6 +51,16 @@ afterAll(async () => {
 });
 
 describe("e2e: the command-hook shim", () => {
+  test("a Codex payload through --harness codex is logged as codex and answered {} (passive)", async () => {
+    const body = variant(fixtureOf("codex", "SessionStart"), {}, `shim-${crypto.randomUUID()}`);
+    const r = await runShim({ args: ["--harness", "codex"], stdin: JSON.stringify(body), env: { HOOK_URL: open.base } });
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout)).toEqual({});
+    const log = await Bun.file(open.logFile).text();
+    expect(log).toContain(`"harness":"codex"`);
+    expect(log).toContain(body.session_id);
+  });
+
   test("prints the server's answer and exits 0", async () => {
     const r = await runShim({ stdin: sessionStart(), env: { HOOK_URL: open.base } });
     expect(r.code).toBe(0);

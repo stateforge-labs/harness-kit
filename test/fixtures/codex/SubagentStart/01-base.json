@@ -1,0 +1,11 @@
+{
+  "session_id": "fx-SubagentStart-1",
+  "turn_id": "00000000-0000-4000-8000-000000000000",
+  "transcript_path": null,
+  "cwd": "/tmp/codex-capture/work",
+  "hook_event_name": "SubagentStart",
+  "model": "gpt-6.1-sol",
+  "permission_mode": "bypassPermissions",
+  "agent_id": "00000000-0000-4000-8000-000000000000",
+  "agent_type": "default"
+}

@@ -1,0 +1,16 @@
+{
+  "session_id": "fx-PreToolUse-2",
+  "turn_id": "00000000-0000-4000-8000-000000000000",
+  "transcript_path": null,
+  "cwd": "/tmp/codex-capture/work",
+  "hook_event_name": "PreToolUse",
+  "model": "gpt-6.1-sol",
+  "permission_mode": "bypassPermissions",
+  "tool_name": "collaborationspawn_agent",
+  "tool_input": {
+    "task_name": "read_notes",
+    "fork_turns": "all",
+    "message": "PLACEHOLDER-message"
+  },
+  "tool_use_id": "call_8b79b29956a84cf7a173e09f37932669"
+}

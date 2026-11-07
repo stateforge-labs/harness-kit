@@ -1,0 +1,10 @@
+{
+  "session_id": "fx-PreModelRequest-2",
+  "turn_id": "00000000-0000-4000-8000-000000000000",
+  "cwd": "/tmp/codex-capture/work",
+  "transcript_path": null,
+  "model": "gpt-6.1-sol",
+  "agent_id": "00000000-0000-4000-8000-000000000000",
+  "agent_type": "default",
+  "hook_event_name": "PreModelRequest"
+}

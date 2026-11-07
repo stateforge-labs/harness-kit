@@ -12,6 +12,7 @@ const MAY_LOG = new Set([
   "expansion_type", "command_name", "command_source", "mcp_server_name", "from_model", "to_model", "requested_model",
   "pricing", "subagent_type", "model", "message_id", "turn_id", "elicitation_id", "task_id", "teammate_name", "team_name",
   "name", "reason", // reason: SessionEnd enum and the PermissionDenied classifier tag, both short labels
+  "status", // Codex PostModelRequest outcome label ("completed", ...), a short label like `reason`
 ]);
 
 

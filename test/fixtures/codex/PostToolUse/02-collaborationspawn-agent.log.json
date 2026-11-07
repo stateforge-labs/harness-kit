@@ -1,0 +1,23 @@
+{
+  "harness": "codex",
+  "event": "PostToolUse",
+  "session_id": "fx-PostToolUse-2",
+  "tool_name": "collaborationspawn_agent",
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "model",
+    "permission_mode",
+    "session_id",
+    "tool_input",
+    "tool_name",
+    "tool_response",
+    "tool_use_id",
+    "transcript_path",
+    "turn_id"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "permission_mode": "bypassPermissions"
+}

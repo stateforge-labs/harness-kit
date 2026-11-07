@@ -1,0 +1,29 @@
+{
+  "harness": "codex",
+  "event": "PostModelRequest",
+  "session_id": "fx-PostModelRequest-2",
+  "agent_id": "00000000-0000-4000-8000-000000000000",
+  "agent_type": "default",
+  "keys": [
+    "agent_id",
+    "agent_type",
+    "cwd",
+    "error",
+    "hook_event_name",
+    "model",
+    "session_id",
+    "status",
+    "token_usage",
+    "transcript_path",
+    "turn_id"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "model": "gpt-6.1-sol",
+  "status": "completed",
+  "has_error": false,
+  "input_tokens": 15747,
+  "output_tokens": 52,
+  "total_tokens": 15799
+}

@@ -1,0 +1,22 @@
+{
+  "harness": "codex",
+  "event": "SubagentStart",
+  "session_id": "fx-SubagentStart-1",
+  "agent_id": "00000000-0000-4000-8000-000000000000",
+  "agent_type": "default",
+  "keys": [
+    "agent_id",
+    "agent_type",
+    "cwd",
+    "hook_event_name",
+    "model",
+    "permission_mode",
+    "session_id",
+    "transcript_path",
+    "turn_id"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "permission_mode": "bypassPermissions"
+}

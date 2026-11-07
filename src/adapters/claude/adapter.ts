@@ -1,6 +1,7 @@
 import type { NeutralEvent } from "../../core/event.ts";
 import type { NeutralReply } from "../../core/reply.ts";
-import type { Common, Decoded, HarnessAdapter } from "../../port.ts";
+import type { Decoded, HarnessAdapter } from "../../port.ts";
+import { commonFields } from "../shared.ts";
 import { handlers } from "./handlers/index.ts";
 import { claudeRules } from "./rules.ts";
 import { hasSchema, jsonSchemas, validate } from "./index.ts";
@@ -36,13 +37,7 @@ export const claude: HarnessAdapter = {
     return { hookSpecificOutput: { hookEventName: native, additionalContext: reply.context } };
   },
 
-  common: (raw): Common => ({
-    event: raw.hook_event_name,
-    session_id: raw.session_id,
-    agent_id: raw.agent_id,
-    agent_type: raw.agent_type,
-    tool_name: raw.tool_name,
-  }),
+  common: commonFields,
 
   jsonSchemas,
 };

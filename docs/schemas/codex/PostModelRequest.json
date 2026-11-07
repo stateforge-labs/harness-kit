@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "cwd": {
+      "type": "string"
+    },
+    "hook_event_name": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "transcript_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "model": {
+      "type": "string"
+    },
+    "turn_id": {
+      "type": "string"
+    },
+    "agent_id": {
+      "type": "string"
+    },
+    "agent_type": {
+      "type": "string"
+    },
+    "error": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "type": "string"
+    },
+    "token_usage": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "cache_write_input_tokens": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "cached_input_tokens": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "input_tokens": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "output_tokens": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "reasoning_output_tokens": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "total_tokens": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "cached_input_tokens",
+            "input_tokens",
+            "output_tokens",
+            "reasoning_output_tokens",
+            "total_tokens"
+          ],
+          "additionalProperties": {}
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "cwd",
+    "hook_event_name",
+    "session_id",
+    "transcript_path",
+    "model",
+    "turn_id",
+    "error",
+    "status",
+    "token_usage"
+  ],
+  "additionalProperties": {}
+}

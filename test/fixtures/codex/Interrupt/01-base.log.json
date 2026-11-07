@@ -1,0 +1,18 @@
+{
+  "harness": "codex",
+  "event": "Interrupt",
+  "session_id": "fx-Interrupt-1",
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "model",
+    "permission_mode",
+    "session_id",
+    "transcript_path",
+    "turn_id"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "permission_mode": "bypassPermissions"
+}

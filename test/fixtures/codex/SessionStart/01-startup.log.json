@@ -1,0 +1,20 @@
+{
+  "harness": "codex",
+  "event": "SessionStart",
+  "session_id": "fx-SessionStart-1",
+  "keys": [
+    "cwd",
+    "hook_event_name",
+    "model",
+    "permission_mode",
+    "session_id",
+    "source",
+    "transcript_path"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "model": "gpt-6.1-sol",
+  "permission_mode": "bypassPermissions",
+  "source": "startup"
+}

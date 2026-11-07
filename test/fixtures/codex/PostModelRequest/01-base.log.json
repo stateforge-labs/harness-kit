@@ -1,0 +1,25 @@
+{
+  "harness": "codex",
+  "event": "PostModelRequest",
+  "session_id": "fx-PostModelRequest-1",
+  "keys": [
+    "cwd",
+    "error",
+    "hook_event_name",
+    "model",
+    "session_id",
+    "status",
+    "token_usage",
+    "transcript_path",
+    "turn_id"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "model": "gpt-6.1-sol",
+  "status": "completed",
+  "has_error": false,
+  "input_tokens": 15396,
+  "output_tokens": 88,
+  "total_tokens": 15484
+}

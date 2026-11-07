@@ -1,5 +1,6 @@
 // Turns the real captured hook payloads into scrubbed, de-duplicated test fixtures.
-// Usage: bun scripts/export-fixtures.ts [captures-dir] [out-dir]   (out-dir defaults to test/fixtures/claude)
+// Usage: bun scripts/export-fixtures.ts [captures-dir] [out-dir]   (defaults: the Claude captures, test/fixtures/claude;
+// for Codex pass the R-2026-11-07-08 captures folder and test/fixtures/codex)
 // Reads captures/*/events.jsonl, keeps one payload per distinct (event, key set, discriminating values),
 // scrubs paths, ids and free text, and writes test/fixtures/claude/<Event>/<nn>-<label>.json.
 // Re-running replaces the fixtures, so the output is reproducible from the captures.
@@ -17,6 +18,7 @@ const FREE_TEXT = new Set([
   "prompt", "last_assistant_message", "compact_summary", "custom_instructions", "message", "content",
   "new_string", "old_string", "stdout", "stderr", "output", "error_details", "summary", "description",
   "result", "text", "title", "session_title", "expanded_prompt", "command_args", "args",
+  "tool_response", // Codex: the tool's output as a string
 ]);
 /** Values that pick a variant of an event; two payloads that differ here are both kept. */
 const DISCRIMINATORS = ["trigger", "source", "notification_type", "command_source", "error", "reason", "tool_name", "mode", "memory_type", "load_reason"];
@@ -31,6 +33,7 @@ function scrubString(key: string, s: string, id: string): string {
     .replace(/Bearer\s+\S+/g, "Bearer REDACTED")
     .replace(/\/home\/[A-Za-z0-9_-]+/g, "/home/user")
     .replace(/\/tmp\/tmp\.[A-Za-z0-9]+/g, "/tmp/work")
+    .replace(/\/tmp\/codex-capture-[A-Za-z0-9]+/g, "/tmp/codex-capture")
     .replace(/-tmp-tmp-[A-Za-z0-9]+/g, "-tmp-work")
     .replace(/-home-[a-z0-9_]+-/g, "-home-user-")
     .replace(/\/home\/user\/\.claude\/projects\/[^/]+\/[0-9a-f-]{36}/g, `/home/user/.claude/projects/p/${id}`)

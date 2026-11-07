@@ -1,0 +1,17 @@
+{
+  "session_id": "fx-PostToolUse-3",
+  "turn_id": "00000000-0000-4000-8000-000000000000",
+  "agent_id": "00000000-0000-4000-8000-000000000000",
+  "agent_type": "default",
+  "transcript_path": null,
+  "cwd": "/tmp/codex-capture/work",
+  "hook_event_name": "PostToolUse",
+  "model": "gpt-6.1-sol",
+  "permission_mode": "bypassPermissions",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "head -n 1 /tmp/codex-capture/work/notes.txt"
+  },
+  "tool_response": "PLACEHOLDER-tool_response",
+  "tool_use_id": "exec-00000000-0000-4000-8000-000000000000"
+}

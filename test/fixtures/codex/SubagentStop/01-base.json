@@ -1,0 +1,14 @@
+{
+  "session_id": "fx-SubagentStop-1",
+  "turn_id": "00000000-0000-4000-8000-000000000000",
+  "transcript_path": null,
+  "agent_transcript_path": null,
+  "cwd": "/tmp/codex-capture/work",
+  "hook_event_name": "SubagentStop",
+  "model": "gpt-6.1-sol",
+  "permission_mode": "bypassPermissions",
+  "stop_hook_active": false,
+  "agent_id": "00000000-0000-4000-8000-000000000000",
+  "agent_type": "default",
+  "last_assistant_message": "PLACEHOLDER-last_assistant_message"
+}

@@ -1,0 +1,13 @@
+{
+  "session_id": "fx-PermissionRequest-1",
+  "turn_id": "00000000-0000-4000-8000-000000000000",
+  "transcript_path": null,
+  "cwd": "/tmp/codex-capture/work",
+  "hook_event_name": "PermissionRequest",
+  "model": "gpt-6.1-sol",
+  "permission_mode": "default",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "curl -sI https://example.com"
+  }
+}

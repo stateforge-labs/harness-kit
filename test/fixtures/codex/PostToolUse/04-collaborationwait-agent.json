@@ -1,0 +1,15 @@
+{
+  "session_id": "fx-PostToolUse-4",
+  "turn_id": "00000000-0000-4000-8000-000000000000",
+  "transcript_path": null,
+  "cwd": "/tmp/codex-capture/work",
+  "hook_event_name": "PostToolUse",
+  "model": "gpt-6.1-sol",
+  "permission_mode": "bypassPermissions",
+  "tool_name": "collaborationwait_agent",
+  "tool_input": {
+    "timeout_ms": 60000
+  },
+  "tool_response": "PLACEHOLDER-tool_response",
+  "tool_use_id": "call_fbc84b2b50c64aa9b3bf65017f2a6202"
+}
