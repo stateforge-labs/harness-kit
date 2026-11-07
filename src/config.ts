@@ -1,3 +1,4 @@
+import { isAbsolute } from "node:path";
 import { z } from "zod";
 import { isLoopbackHost } from "./net.ts";
 
@@ -20,6 +21,12 @@ const EnvSchema = z.object({
   HOOK_LOG_MAX_BYTES: digits("HOOK_LOG_MAX_BYTES", 1, Number.MAX_SAFE_INTEGER).default(100 * 1024 * 1024),
   HOOK_MAX_BODY_BYTES: digits("HOOK_MAX_BODY_BYTES", 1, Number.MAX_SAFE_INTEGER).default(32 * 1024 * 1024),
   HOOK_SHUTDOWN_GRACE_MS: digits("HOOK_SHUTDOWN_GRACE_MS", 0, 600_000).default(5000),
+  HOOK_MIDDLEWARE: z
+    .string()
+    .default("")
+    .transform((v) => v.split(",").map((p) => p.trim()).filter((p) => p !== ""))
+    .refine((paths) => paths.every((p) => isAbsolute(p)), "HOOK_MIDDLEWARE must be a comma-separated list of absolute file paths"),
+  HOOK_MIDDLEWARE_TIMEOUT_MS: digits("HOOK_MIDDLEWARE_TIMEOUT_MS", 1, 60_000).default(2000),
 });
 
 /**
@@ -40,6 +47,10 @@ export class ServerConfig {
   readonly maxBodyBytes: number;
   /** How long a shutdown waits for requests in flight before it closes them. */
   readonly shutdownGraceMs: number;
+  /** Modules loaded at start, each default-exporting a Middleware (or an array of them), outermost first. */
+  readonly middleware: readonly string[];
+  /** A middleware that has not answered after this long is skipped. */
+  readonly middlewareTimeoutMs: number;
 
   constructor(env: Record<string, string | undefined> = process.env) {
     const parsed = EnvSchema.safeParse(env);
@@ -53,6 +64,8 @@ export class ServerConfig {
     this.logMaxBytes = e.HOOK_LOG_MAX_BYTES;
     this.maxBodyBytes = e.HOOK_MAX_BODY_BYTES;
     this.shutdownGraceMs = e.HOOK_SHUTDOWN_GRACE_MS;
+    this.middleware = e.HOOK_MIDDLEWARE;
+    this.middlewareTimeoutMs = e.HOOK_MIDDLEWARE_TIMEOUT_MS;
     if (this.token === "" && !isLoopbackHost(this.host)) {
       throw new ConfigError(`HOOK_TOKEN is empty, so the server only starts on a loopback address, not on ${this.host}`);
     }

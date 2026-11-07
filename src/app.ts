@@ -1,4 +1,4 @@
-import { policy } from "./core/policy.ts";
+import type { Pipeline } from "./core/pipeline.ts";
 import type { Common, Decoded, HarnessAdapter } from "./port.ts";
 
 export interface Handled {
@@ -11,10 +11,10 @@ export interface Handled {
 const UNKNOWN: Decoded = { event: null, known: false, missing: [], wrong_type: [], meta: {} };
 
 /**
- * Run one payload through an adapter: decode, decide, encode. Whatever the adapter does, the answer is a body:
- * a throw in decode makes the event unknown (still logged), and a throw in encode makes the answer an empty object.
+ * Run one payload through an adapter: decode, the middleware pipeline, encode. Whatever happens, the answer is a body:
+ * a throw in decode makes the event unknown (still logged), and a throw in the pipeline or in encode makes the answer an empty object.
  */
-export function handle(adapter: HarnessAdapter, raw: Record<string, unknown>): Handled {
+export async function handle(adapter: HarnessAdapter, raw: Record<string, unknown>, pipeline: Pipeline): Promise<Handled> {
   const common = adapter.common(raw);
   let decoded = UNKNOWN;
   try {
@@ -24,9 +24,10 @@ export function handle(adapter: HarnessAdapter, raw: Record<string, unknown>): H
   }
   let body: unknown = {};
   try {
-    body = adapter.encode(decoded.event ? policy(decoded.event, adapter.rules) : {}, raw);
+    const reply = decoded.event ? await pipeline.run({ event: decoded.event, rules: adapter.rules, raw }) : {};
+    body = adapter.encode(reply, raw);
   } catch (err) {
-    console.error(`encode failed (${adapter.id}):`, err);
+    console.error(`pipeline or encode failed (${adapter.id}):`, err);
   }
   return { harness: adapter.id, body, decoded, common };
 }

@@ -1,6 +1,8 @@
 // The hook server. `bun src/server.ts` reads the environment (see config.ts), builds the server and runs it until a signal.
 import { adapters as allAdapters } from "./adapters/index.ts";
 import { ConfigError, ServerConfig } from "./config.ts";
+import { Pipeline, policyLayer, type Middleware } from "./core/pipeline.ts";
+import { loadMiddleware } from "./middleware-loader.ts";
 import { HookHandler } from "./http/hook-handler.ts";
 import type { HarnessAdapter } from "./port.ts";
 import { installGracefulShutdown } from "./shutdown.ts";
@@ -9,6 +11,7 @@ import { installGracefulShutdown } from "./shutdown.ts";
 export class HookServerBuilder {
   #config: ServerConfig | undefined;
   #adapters: ReadonlyMap<string, HarnessAdapter> | undefined;
+  readonly #middleware: Middleware[] = [];
 
   withConfig(config: ServerConfig): this {
     this.#config = config;
@@ -21,10 +24,17 @@ export class HookServerBuilder {
     return this;
   }
 
+  /** Adds middleware, outermost first. The built-in policy always runs innermost, so these see and can change its reply. */
+  use(...layers: Middleware[]): this {
+    this.#middleware.push(...layers);
+    return this;
+  }
+
   build() {
     if (!this.#config || !this.#adapters) throw new Error("HookServerBuilder needs withConfig() and withAdapters() before build()");
     const config = this.#config;
-    const handler = new HookHandler(config, this.#adapters);
+    const pipeline = new Pipeline({ timeoutMs: config.middlewareTimeoutMs }).use(...this.#middleware, policyLayer);
+    const handler = new HookHandler(config, this.#adapters, pipeline);
     return Bun.serve({
       port: config.port,
       hostname: config.host,
@@ -36,15 +46,17 @@ export class HookServerBuilder {
 
 if (import.meta.main) {
   let config: ServerConfig;
+  let middleware: Middleware[];
   try {
     config = new ServerConfig(process.env);
+    middleware = await loadMiddleware(config.middleware);
   } catch (err) {
     if (!(err instanceof ConfigError)) throw err;
     console.error(`harness-hooks: ${err.message}`);
     process.exit(2);
   }
   if (config.token === "") console.warn("HOOK_TOKEN is empty: auth disabled (loopback only)");
-  const server = new HookServerBuilder().withConfig(config).withAdapters(allAdapters).build();
+  const server = new HookServerBuilder().withConfig(config).withAdapters(allAdapters).use(...middleware).build();
   console.log(`harness-hooks listening on ${server.hostname}:${server.port}`);
   installGracefulShutdown(server, config.shutdownGraceMs);
 }

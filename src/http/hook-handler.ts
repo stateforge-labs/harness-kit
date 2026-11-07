@@ -1,6 +1,7 @@
 import type { HarnessAdapter } from "../port.ts";
 import type { ServerConfig } from "../config.ts";
 import { handle } from "../app.ts";
+import type { Pipeline } from "../core/pipeline.ts";
 import { logEvent } from "../log.ts";
 import { Admission } from "./admission.ts";
 
@@ -26,10 +27,12 @@ export class HookHandler {
   readonly #config: ServerConfig;
   readonly #adapters: ReadonlyMap<string, HarnessAdapter>;
   readonly #admission: Admission;
+  readonly #pipeline: Pipeline;
 
-  constructor(config: ServerConfig, adapters: ReadonlyMap<string, HarnessAdapter>) {
+  constructor(config: ServerConfig, adapters: ReadonlyMap<string, HarnessAdapter>, pipeline: Pipeline) {
     this.#config = config;
     this.#adapters = adapters;
+    this.#pipeline = pipeline;
     this.#admission = new Admission(config.token);
   }
 
@@ -51,7 +54,7 @@ export class HookHandler {
     const payload = await this.#readPayload(req);
     if (payload instanceof Response) return payload;
 
-    const handled = handle(adapter, payload);
+    const handled = await handle(adapter, payload, this.#pipeline);
     void logEvent(this.#config.logFile, payload, handled, this.#config.logFullPayload, new Date().toISOString(), this.#config.logMaxBytes);
     return Response.json(handled.body);
   }
