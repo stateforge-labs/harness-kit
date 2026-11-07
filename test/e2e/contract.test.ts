@@ -1,0 +1,84 @@
+// One suite that every Claude hook event must pass, driven by the real captured payloads in test/fixtures.
+// Event files under test/e2e/events/ hold only what is special about one event.
+import { describe, expect, test } from "bun:test";
+import { jsonSchemas } from "../../src/adapters/claude/index.ts";
+import { fixtures, hookServer, variant, type Fixture } from "./kit.ts";
+
+const hook = hookServer();
+const all = fixtures();
+const events = [...new Set(all.map((f) => f.event))];
+const requiredKeys = (event: string): string[] =>
+  ((jsonSchemas()[event] as { required?: string[] }).required ?? []).filter((k) => k !== "hook_event_name");
+
+/** Keys whose values the server may log, because they are short identifiers or enumerations, never typed text. */
+const MAY_LOG = new Set([
+  "session_id", "agent_id", "agent_type", "tool_name", "permission_mode", "prompt_id", "level",
+  "source", "trigger", "event", "error", "action", "mode", "load_reason", "memory_type", "notification_type",
+  "expansion_type", "command_name", "command_source", "mcp_server_name", "from_model", "to_model", "requested_model",
+  "pricing", "subagent_type", "model", "message_id", "turn_id", "elicitation_id", "task_id", "teammate_name", "team_name",
+  "name", "reason", // reason: SessionEnd enum and the PermissionDenied classifier tag, both short labels
+]);
+
+describe("contract: every fixture", () => {
+  test("there is a fixture for all 33 events", () => {
+    expect(events.length).toBe(33);
+  });
+
+  test.each(all.map((f) => [`${f.event}/${f.name}`, f] as const))("%s: answered exactly as recorded, and logged as known and well-formed", async (_n, f: Fixture) => {
+    const body = variant(f);
+    const res = await hook.post(body);
+    expect(res.status).toBe(f.expected.status);
+    expect(await res.json()).toEqual(f.expected.body);
+    const { entry } = await hook.logFor(body.session_id);
+    expect(entry.event).toBe(f.event);
+    expect(entry.known).toBe(true);
+    expect(entry.missing).toEqual([]);
+    expect(entry.wrong_type).toEqual([]);
+  });
+});
+
+describe("contract: a bad payload is reported, never rejected", () => {
+  test.each(events.map((e) => [e] as const))("%s: each required key removed is logged as missing, and the answer stays 200", async (event) => {
+    const f = fixtures(event)[0]!;
+    for (const key of requiredKeys(event)) {
+      const body = variant(f, { [key]: undefined }, `miss-${event}-${key}`);
+      // session_id is how the test finds its line; keep a stand-in for it
+      if (key === "session_id") continue;
+      const res = await hook.post(body);
+      expect(res.status).toBe(200);
+      expect(typeof (await res.json())).toBe("object");
+      const { entry } = await hook.logFor(body.session_id);
+      expect(entry.missing).toEqual([key]);
+      expect(entry.wrong_type).toEqual([]);
+    }
+  });
+
+  test.each(events.map((e) => [e] as const))("%s: a string key sent as a number is logged as wrong_type with no value", async (event) => {
+    const f = fixtures(event)[0]!;
+    const key = requiredKeys(event).find((k) => typeof f.payload[k] === "string" && !["session_id", "hook_event_name", "tool_name"].includes(k));
+    if (!key) return; // events with no string-typed key of their own: nothing to retype
+    const body = variant(f, { [key]: 987654 }, `type-${event}`);
+    const res = await hook.post(body);
+    expect(res.status).toBe(200);
+    const { entry, text } = await hook.logFor(body.session_id);
+    expect(entry.wrong_type).toEqual([`${key}: expected string`]);
+    expect(entry.missing).toEqual([]);
+    expect(text).not.toContain("987654");
+  });
+});
+
+describe("contract: privacy", () => {
+  test.each(all.map((f) => [`${f.event}/${f.name}`, f] as const))("%s: no typed text reaches the log", async (_n, f: Fixture) => {
+    const fill = (v: unknown, key: string): unknown =>
+      typeof v === "string" ? `SECRET<${key}>`
+      : Array.isArray(v) ? v.map((x) => fill(x, key))
+      : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fill(x, k)]))
+      : v;
+    const body = { ...(fill(f.payload, "") as Record<string, unknown>), hook_event_name: f.event, session_id: `priv-${f.event}-${f.name}` };
+    const res = await hook.post(body);
+    expect(res.status).toBe(200);
+    const { text } = await hook.logFor(body.session_id as string);
+    const leaked = [...text.matchAll(/SECRET<([^>]*)>/g)].map((m) => m[1]!).filter((k) => !MAY_LOG.has(k));
+    expect(leaked).toEqual([]);
+  });
+});
