@@ -1,6 +1,7 @@
 # The server observes; it never blocks, denies or stops an agent on its own
 
-Status: **accepted** (recorded 2026-11-07 from the code comments it was written in; the decisions date from the builds of R-2026-11-07-03, -05 and -08). Research: [R-2026-11-07-03](../research/studies/2026-11-07-claude-code-hook-surface/README.md), [R-2026-11-07-05](../research/studies/2026-11-07-claude-hook-surface-verified/README.md), [R-2026-11-07-08](../research/studies/2026-11-07-codex-opencode-real-hook-payloads/README.md), [R-2026-11-07-10](../research/studies/2026-11-07-mcp-hooks-feasibility-codex-opencode/README.md).
+Status: **accepted**, amended by [ADR 0005](0005-a-hook-that-replaces-claude-behaviour-gets-that-behaviour-by-default.md) for the
+worktree events (recorded 2026-11-07 from the code comments it was written in; the decisions date from the builds of R-2026-11-07-03, -05 and -08). Research: [R-2026-11-07-03](../research/studies/2026-11-07-claude-code-hook-surface/README.md), [R-2026-11-07-05](../research/studies/2026-11-07-claude-hook-surface-verified/README.md), [R-2026-11-07-08](../research/studies/2026-11-07-codex-opencode-real-hook-payloads/README.md), [R-2026-11-07-10](../research/studies/2026-11-07-mcp-hooks-feasibility-codex-opencode/README.md).
 
 ## Context and Problem Statement
 
@@ -47,8 +48,9 @@ its own.**
 ### Consequences
 
 - Good: a new harness version or a broken server cannot stop an agent; a consumer decides every effect explicitly and in one place.
-- Cost: `WorktreeCreate` over HTTP needs a `worktreePath` in the answer or Claude fails the creation (per its docs), so the passive `{}`
-  breaks worktree creation with the default installed hooks block, which includes `WorktreeCreate`. It is listed in `docs/architecture.md`, Unresolved.
+- Cost: an event whose hook replaces Claude Code's own behaviour cannot be answered passively: `WorktreeCreate` must answer a
+  `worktreePath` and `WorktreeRemove` must remove the directory. [ADR 0005](0005-a-hook-that-replaces-claude-behaviour-gets-that-behaviour-by-default.md)
+  amends this decision for them: the server's default is Claude's own git behaviour.
 
 ### Confirmation
 

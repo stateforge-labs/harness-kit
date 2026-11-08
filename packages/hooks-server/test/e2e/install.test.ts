@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { opencodePluginPath } from "@homelab/harness-hooks";
 import { join } from "node:path";
-import { adapters } from "@homelab/harness-hooks";
+import { ClaudeHook, WORKTREE_TIMEOUT_MS, adapters } from "@homelab/harness-hooks";
 import { EnvVar, processEnv } from "@homelab/harness-hooks";
 
 const repo = join(import.meta.dir, "..", "..");
@@ -35,6 +35,8 @@ describe("e2e: scripts/install.ts", () => {
       } else {
         expect(h).toMatchObject({ type: "http", url: "http://127.0.0.1:9999/hook" });
       }
+      const worktreeHook = event === ClaudeHook.WorktreeCreate || event === ClaudeHook.WorktreeRemove;
+      expect((h as { timeout?: number }).timeout).toBe(worktreeHook ? WORKTREE_TIMEOUT_MS / 1000 : 10);
     }
   });
 

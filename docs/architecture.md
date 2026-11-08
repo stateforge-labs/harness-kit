@@ -45,8 +45,10 @@ The exception is a pipeline built to fail closed (a layer with `onFault: { deny 
 Every event passes through a pipeline between decode and encode. A layer is `(ctx, next) => NeutralReply`, where `ctx` is the neutral
 `event`, the adapter's `rules` and the native payload `raw` (read-only; it holds prompts and tool input, so never log or forward it whole).
 
-- **Order is outside-in, like Koa.** The first layer registered runs first and wraps the rest; `policyLayer` is added last, so it is
-  always the innermost and every layer can see and change what the policy said.
+- **Order is outside-in, like Koa.** The first layer registered runs first and wraps the rest. The server registers the consumer layers,
+  then `worktreeLayer` (Claude's own worktree behaviour, 60 s timeout, ADR 0005), then `policyLayer`, so the policy is always the
+  innermost, every layer can see and change what it said, and a consumer that answers a worktree event first keeps the default from
+  acting. `defaultPipeline()` has the same two built-in layers.
 - **A layer can** call `next()` and add to its reply, replace it, or not call `next()` and answer alone. `next()` is memoised: calling it
   twice runs the layers below once. `mergeReplies` joins two contexts with a blank line; `onKinds(kinds, mw)` limits a layer to some events.
 - **Fault mode per layer.** `pipeline.use(layer, { timeoutMs, onFault })`. A layer that throws, rejects or works longer than its timeout
@@ -146,8 +148,11 @@ interface HarnessAdapter {
 ```
 
 Neutral kinds (`packages/hooks/src/core/event.ts`): `session-start`, `session-end`, `prompt-submit`, `pre-tool`, `post-tool`, `post-tool-failure`,
-`permission-request`, `subagent-start`, `subagent-stop`, `stop`, `pre-compact`, `post-compact`, `other`. A kind comes from the native
-event **name** only, so a damaged payload never changes it. A subagent spawn is a `pre-tool` event with an optional `spawn { brief, model }`.
+`permission-request`, `subagent-start`, `subagent-stop`, `stop`, `pre-compact`, `post-compact`, `worktree-create`, `worktree-remove`,
+`other`. A kind comes from the native event **name**, so a damaged payload never changes it, with one exception: OpenCode's
+`session.context` is `subagent-start` when it carries a string `parentID` and `session-start` otherwise (the plugin sends it; both
+kinds only add context). A subagent spawn is a `pre-tool` event with an optional `spawn { brief, model }`; a worktree event carries
+`worktree { cwd, name?, path? }`.
 A native event with no shared meaning is `other`: it is still validated, logged and answered.
 
 ## Adapters
@@ -196,7 +201,8 @@ owner has not picked an OpenCode subagent model.
 | `StopFailure` | output ignored except `terminalSequence` (interactive only) | |
 | `InstructionsLoaded` | async; all JSON output discarded | |
 | `CwdChanged` | no decision control | a `hookSpecificOutput` reply was not surfaced (CwdChanged-3) |
-| `WorktreeCreate` | over HTTP the answer must carry `worktreePath`, or creation fails | see Unresolved |
+| `WorktreeCreate` | over HTTP the answer must carry `worktreePath`, or creation fails | `worktreeLayer` creates the worktree and answers its path (ADR 0005); live with `claude -p -w` |
+| `WorktreeRemove` | a successful answer counts as removed; nothing else is read | `worktreeLayer` removes it (ADR 0005) |
 
 ### Codex notes
 
@@ -389,7 +395,7 @@ into another's files, imports an undeclared package, or (hooks, adapters) uses a
 
 | Unresolved | Settles it |
 | --- | --- |
-| Claude `WorktreeCreate` over HTTP: the passive `{}` lacks `worktreePath`, which per Claude's docs fails the creation (ADR 0003) | Leave it out of the installed hooks or answer a `worktreePath`; a capture |
+| Whether Claude Code calls `WorktreeRemove` on an interactive exit (a `claude -p` `ExitWorktree` call used its git fallback instead, ADR 0005) | An interactive worktree session exited with "remove" |
 | Claude `from_model` null on Pre/PostModelSwitch | A capture of a model switch with no previous model |
 | Codex spawn: can a model be requested, under which key | Capture with a prompt that names a subagent model |
 | Codex merge order with several hooks; whether `hookEventName` is mandatory in output (the late-hook timeout is settled: fails open, R-2026-11-07-10 F7) | A run with two hooks; a run that answers context without it |

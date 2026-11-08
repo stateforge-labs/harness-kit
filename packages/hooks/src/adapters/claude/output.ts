@@ -6,4 +6,5 @@ export const output: HookOutputRules = {
   permission: ClaudeHook.PermissionRequest,
   context: new Set([ClaudeHook.SessionStart, ClaudeHook.SubagentStart, ClaudeHook.PreToolUse]),
   stop: new Set([ClaudeHook.Stop, ClaudeHook.SubagentStop]),
+  worktreeCreate: ClaudeHook.WorktreeCreate,
 };

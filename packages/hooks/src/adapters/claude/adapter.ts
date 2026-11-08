@@ -1,4 +1,4 @@
-import { Harness, type NeutralEvent } from "../../core/event.ts";
+import { Harness, Kind, type NeutralEvent } from "../../core/event.ts";
 import { ClaudeHook } from "./names.ts";
 import type { NeutralReply } from "../../core/reply.ts";
 import type { Decoded, HarnessAdapter } from "../../port.ts";
@@ -32,6 +32,8 @@ export const claude: HarnessAdapter = {
       const spawn = spawnOf(raw);
       if (spawn) event.spawn = spawn;
     }
+    if (kind === Kind.WorktreeCreate) event.worktree = { cwd: str(raw.cwd), name: str(raw.name) ?? undefined };
+    if (kind === Kind.WorktreeRemove) event.worktree = { cwd: str(raw.cwd), path: str(raw.worktree_path) ?? undefined };
     return { event, known: true, missing: v.missing, wrong_type: v.wrong_type, meta: h.meta(raw) };
   },
 

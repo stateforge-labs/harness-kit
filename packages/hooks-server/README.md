@@ -22,7 +22,7 @@ can change its reply.
 
 | Command | What |
 | --- | --- |
-| `bun scripts/install.ts claude` | prints the `hooks` block for Claude Code's `settings.json` (never written: those settings live in dotfiles) |
+| `bun scripts/install.ts claude` | prints the `hooks` block for Claude Code's `settings.json` (never written: those settings live in dotfiles); every hook gets a 10 s timeout, the two worktree hooks 60 s (ADR 0005) |
 | `bun scripts/install.ts codex [--apply] [--codex-home <dir>]` | Codex `hooks.json`, command hooks running the shim |
 | `bun scripts/install.ts opencode [--apply] [--config-dir <dir>]` | bundles the plugin into one file, `plugins/harness-hooks.js` (removes an older `harness-hooks.ts`) |
 | `bun scripts/install.ts service [--apply] [--unit-dir <dir>] [--no-systemctl]` | the systemd user unit that runs this server |

@@ -14,6 +14,8 @@ const KINDS: ReadonlyMap<string, NeutralKind> = new Map<string, NeutralKind>([
   [ClaudeHook.Stop, Kind.Stop],
   [ClaudeHook.PreCompact, Kind.PreCompact],
   [ClaudeHook.PostCompact, Kind.PostCompact],
+  [ClaudeHook.WorktreeCreate, Kind.WorktreeCreate],
+  [ClaudeHook.WorktreeRemove, Kind.WorktreeRemove],
 ]);
 
 export const kindOf = (native: string): NeutralKind => KINDS.get(native) ?? Kind.Other;

@@ -1,5 +1,5 @@
 import { ConfigError, ServerConfig } from "./config.ts";
-import { adapters as allAdapters, EnvVar, Pipeline, policyLayer, type HarnessAdapter, type Middleware } from "@homelab/harness-hooks";
+import { adapters as allAdapters, EnvVar, Pipeline, policyLayer, WORKTREE_TIMEOUT_MS, worktreeLayer, type HarnessAdapter, type Middleware } from "@homelab/harness-hooks";
 import { loadMiddleware } from "./middleware-loader.ts";
 import { HookHandler } from "./http/hook-handler.ts";
 import { installGracefulShutdown } from "./shutdown.ts";
@@ -27,7 +27,10 @@ export class HookServerBuilder {
   build() {
     if (!this.#config || !this.#adapters) throw new Error("HookServerBuilder needs withConfig() and withAdapters() before build()");
     const config = this.#config;
-    const pipeline = new Pipeline({ timeoutMs: config.middlewareTimeoutMs }).use(...this.#middleware, policyLayer);
+    const pipeline = new Pipeline({ timeoutMs: config.middlewareTimeoutMs })
+      .use(...this.#middleware)
+      .use(worktreeLayer, { timeoutMs: WORKTREE_TIMEOUT_MS })
+      .use(policyLayer);
     const handler = new HookHandler(config, this.#adapters, pipeline);
     return Bun.serve({
       port: config.port,

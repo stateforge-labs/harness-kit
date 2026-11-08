@@ -1,4 +1,4 @@
-import { ClaudeHook, EnvDefault, EnvVar, Harness, adapters, shimPath } from "@homelab/harness-hooks";
+import { ClaudeHook, EnvDefault, EnvVar, Harness, WORKTREE_TIMEOUT_MS, adapters, shimPath } from "@homelab/harness-hooks";
 
 export interface RenderOptions {
   url: string;
@@ -7,7 +7,9 @@ export interface RenderOptions {
 }
 
 const CLAUDE_COMMAND_ONLY: ReadonlySet<string> = new Set([ClaudeHook.SessionStart, ClaudeHook.Setup]);
+const CLAUDE_WORKTREE_HOOKS: ReadonlySet<string> = new Set([ClaudeHook.WorktreeCreate, ClaudeHook.WorktreeRemove]);
 const HOOK_TIMEOUT_S = 10;
+const WORKTREE_HOOK_TIMEOUT_S = WORKTREE_TIMEOUT_MS / 1000;
 
 const events = (harness: string): string[] => Object.keys(adapters.get(harness)!.jsonSchemas()).sort();
 const shim = (o: RenderOptions, harness: string) => `${o.bun} ${shimPath} --harness ${harness}`;
@@ -17,7 +19,7 @@ export function claudeHooks(o: RenderOptions): { hooks: Record<string, unknown[]
   for (const event of events(Harness.Claude)) {
     const handler = CLAUDE_COMMAND_ONLY.has(event)
       ? { type: "command", command: `${EnvVar.HookUrl}=${o.url} ${shim(o, Harness.Claude)}`, timeout: HOOK_TIMEOUT_S }
-      : { type: "http", url: `${o.url}/hook`, timeout: HOOK_TIMEOUT_S };
+      : { type: "http", url: `${o.url}/hook`, timeout: CLAUDE_WORKTREE_HOOKS.has(event) ? WORKTREE_HOOK_TIMEOUT_S : HOOK_TIMEOUT_S };
     hooks[event] = [{ hooks: [handler] }];
   }
   return { hooks };

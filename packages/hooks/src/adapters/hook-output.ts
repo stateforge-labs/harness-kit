@@ -5,6 +5,7 @@ export interface HookOutputRules {
   permission: string;
   context: ReadonlySet<string>;
   stop: ReadonlySet<string>;
+  worktreeCreate?: string;
 }
 
 export function encodeHookOutput(reply: NeutralReply, native: string | undefined, rules: HookOutputRules): Record<string, unknown> {
@@ -17,6 +18,7 @@ export function encodeHookOutput(reply: NeutralReply, native: string | undefined
     if (reply.allow) return { hookSpecificOutput: { hookEventName: native, decision: { behavior: "allow" } } };
     return {};
   }
+  if (native === rules.worktreeCreate) return reply.worktree ? { hookSpecificOutput: { hookEventName: native, worktreePath: reply.worktree.path } } : {};
   if (rules.stop.has(native)) return reply.continue ? { decision: "block", reason: continueText(reply.continue) } : {};
   if (reply.context && rules.context.has(native)) return { hookSpecificOutput: { hookEventName: native, additionalContext: reply.context } };
   return {};

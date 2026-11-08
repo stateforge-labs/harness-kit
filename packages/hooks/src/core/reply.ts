@@ -3,6 +3,11 @@ export interface NeutralReply {
   deny?: Deny;
   continue?: Continue;
   allow?: true;
+  worktree?: WorktreePath;
+}
+
+export interface WorktreePath {
+  path: string;
 }
 
 export interface Deny {

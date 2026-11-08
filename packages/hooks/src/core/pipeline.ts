@@ -1,6 +1,7 @@
 import type { NeutralEvent, NeutralKind } from "./event.ts";
 import type { Rules } from "./policy.ts";
 import { policy } from "./policy.ts";
+import { WORKTREE_TIMEOUT_MS, worktreeLayer } from "./worktree.ts";
 import type { Deny, NeutralReply } from "./reply.ts";
 
 export interface HookContext {
@@ -22,6 +23,8 @@ export function mergeReplies(a: NeutralReply, b: NeutralReply): NeutralReply {
   const cont = a.continue ?? b.continue;
   if (cont) out.continue = cont;
   if (a.allow || b.allow) out.allow = true;
+  const worktree = a.worktree ?? b.worktree;
+  if (worktree) out.worktree = worktree;
   return out;
 }
 
@@ -156,4 +159,5 @@ export class Pipeline {
 
 const isReply = (v: unknown): v is NeutralReply => typeof v === "object" && v !== null && !Array.isArray(v);
 
-export const defaultPipeline = (options?: PipelineOptions): Pipeline => new Pipeline(options).use(policyLayer);
+export const defaultPipeline = (options?: PipelineOptions): Pipeline =>
+  new Pipeline(options).use(worktreeLayer, { timeoutMs: WORKTREE_TIMEOUT_MS }).use(policyLayer);

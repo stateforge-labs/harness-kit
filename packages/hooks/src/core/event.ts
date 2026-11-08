@@ -15,6 +15,8 @@ export const Kind = {
   Stop: "stop",
   PreCompact: "pre-compact",
   PostCompact: "post-compact",
+  WorktreeCreate: "worktree-create",
+  WorktreeRemove: "worktree-remove",
   Other: "other",
 } as const;
 export type NeutralKind = (typeof Kind)[keyof typeof Kind];
@@ -29,6 +31,12 @@ export interface ToolRef {
   callId: string | null;
 }
 
+export interface WorktreeRef {
+  cwd: string | null;
+  name?: string;
+  path?: string;
+}
+
 export interface NeutralEvent {
   harness: HarnessId;
   kind: NeutralKind;
@@ -36,4 +44,5 @@ export interface NeutralEvent {
   session: string | null;
   tool?: ToolRef;
   spawn?: Spawn;
+  worktree?: WorktreeRef;
 }
