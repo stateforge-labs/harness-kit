@@ -11,7 +11,7 @@ edited from here; StateForge-side steps are listed at the end for its own change
 - Update what points at the old path: the printed Claude/Codex config blocks (`scripts/install.ts`), the unit template, docs, memory notes. The installed OpenCode plugin is a copy and needs no change.
 - Create the GitLab remote (HTTPS push route) in the `homelab` group (owner, 2026-11-07).
 
-## Phase 1. Feasibility capture (gate for phases 3, 5–6) — conditional; owner decision pending (COMP-R-016 deny-as-redirect, OpenCode correlation), R-2026-11-07-10
+## Phase 1. Feasibility capture (gate for phases 3, 5–6) — Codex passes; OpenCode pending the call-matching decision (R-2026-11-07-10, built-ins off re-measured from the request body)
 
 One study (new R-id), same isolation rules as R-2026-11-07-08, Codex 0.167.0 and OpenCode 2.2.6 against a **local MCP server**:
 
