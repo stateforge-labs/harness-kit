@@ -105,6 +105,8 @@ test:unit:
   stage: test
   needs: []
   script:
+    - command -v git >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq git)
+    - bun run build
     - bun run test
 
 # The image, manifest and config scanners do not apply: this repo builds no image and ships no manifests.
