@@ -52,11 +52,13 @@ afterAll(async () => {
 });
 
 describe("e2e: the command-hook shim", () => {
-  test("a Codex payload through --harness codex is logged as codex and answered {} (passive)", async () => {
+  test("a Codex SessionStart through --harness codex is logged as codex and answered with the Codex rules", async () => {
     const body = variant(fixtureOf("codex", "SessionStart"), {}, `shim-${crypto.randomUUID()}`);
     const r = await runShim({ args: ["--harness", "codex"], stdin: JSON.stringify(body), env: { [EnvVar.HookUrl]: open.base } });
     expect(r.code).toBe(0);
-    expect(JSON.parse(r.stdout)).toEqual({});
+    const out = JSON.parse(r.stdout) as { hookSpecificOutput?: { hookEventName?: string; additionalContext?: string } };
+    expect(out.hookSpecificOutput?.hookEventName).toBe("SessionStart");
+    expect(out.hookSpecificOutput?.additionalContext).toContain("spawn_agent");
     const line = await eventually(async () => {
       const f = Bun.file(open.logFile);
       return ((await f.exists()) ? await f.text() : "").split("\n").find((l) => l.includes(body.session_id));

@@ -22,7 +22,9 @@ its own.**
        limit, or a non-Haiku model is asked for); otherwise `{}`.
 
      No handler blocks, denies, retries, edits input or output, sets `continue: false`, or returns a `systemMessage`.
-   - **Codex and OpenCode:** answered `{}` until the owner decides the wording of their rules.
+   - **Codex:** `SessionStart` gets the delegation rules and `SubagentStart` the subagent rules (the owner approved the wording on
+     2026-11-07); every other event is answered `{}`. There is no spawn advisory, since a Codex spawn names no model.
+   - **OpenCode:** answered `{}` until the plugin has a context path; it will get the Codex wording.
 2. **Rules text belongs to an adapter.** It names that harness's models and tools, so one adapter's rules never reach another's sessions,
    and an adapter without rules stays passive. The policy is pure: the same event and rules always give the same reply. The Claude text is
    kept short because every token is paid in each session and each subagent. It mirrors the dotfiles

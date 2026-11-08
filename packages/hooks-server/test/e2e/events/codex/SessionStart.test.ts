@@ -12,10 +12,13 @@ describe("e2e: codex SessionStart", () => {
     expect(entry.missing).toEqual([]);
   });
 
-  test("a numeric transcript_path is a wrong_type, still answered {}", async () => {
+  test("a numeric transcript_path is a wrong_type, still answered with the rules and never blocked", async () => {
     const body = variant(fixture("SessionStart"), { transcript_path: 5 });
     const res = await hook.post(body);
-    expect(await res.json()).toEqual({});
+    const json = (await res.json()) as { hookSpecificOutput?: { additionalContext?: string }; continue?: unknown; decision?: unknown };
+    expect(json.hookSpecificOutput?.additionalContext).toStartWith("Delegation rules");
+    expect(json.continue).toBeUndefined();
+    expect(json.decision).toBeUndefined();
     const { entry } = await hook.logFor(body.session_id);
     expect(entry.wrong_type).toEqual(["transcript_path: expected string"]);
   });

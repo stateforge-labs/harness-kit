@@ -9,14 +9,14 @@ import { handlers } from "./handlers/index.ts";
 import { hasSchema, jsonSchemas, validate } from "./index.ts";
 import { kindOf } from "./neutral.ts";
 import { spawnOf } from "./spawn.ts";
-
+import { codexRules } from "./rules.ts";
 
 const nameOf = (raw: Record<string, unknown>): string | undefined =>
   typeof raw.hook_event_name === "string" ? raw.hook_event_name : undefined;
 
 export const codex: HarnessAdapter = {
   id: Harness.Codex,
-  rules: {},
+  rules: codexRules,
 
   decode(raw): Decoded {
     const native = nameOf(raw);

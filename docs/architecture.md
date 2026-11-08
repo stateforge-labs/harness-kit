@@ -161,12 +161,14 @@ Each lives in `packages/hooks/src/adapters/<harness>/`: `adapter.ts`, `names.ts`
 | Events | 33 | 14 | 14 (5 hooks, 9 lifecycle events) |
 | Event name in the body | `hook_event_name` | `hook_event_name` | `hook_event_name` set by the plugin (`tool.execute.before`) |
 | Spawn tool | `Agent` (`subagent_type`, `model`) | `collaborationspawn_agent` (`message`; model unresolved) | `subagent` (`prompt`, optional `model`) |
-| Answers | Rules text for Delegation (model-specific); contract v1 replies | `{}` from the built-in policy (passive); contract v1 replies | `{}` from the built-in policy (passive); deny and continue, acted on by the plugin |
+| Answers | Rules text for Delegation (model-specific); contract v1 replies | Rules text for Delegation on `SessionStart` and `SubagentStart` (no model named); contract v1 replies | `{}` from the built-in policy (passive); deny and continue, acted on by the plugin |
 | Fixtures | 82, captured | 23 (22 captured, 1 synthetic) | 23 (19 captured, 4 synthetic) |
 | Evidence | R-2026-11-07-03, -05 | R-2026-11-07-04, -08 | R-2026-11-07-04, -08 |
 
-Codex and OpenCode are answered passively on purpose: the wording of their rules is the user's decision and is not made yet. Claude is
-passive too, except on three events ([ADR 0003](decisions/0003-the-server-observes-and-never-blocks-on-its-own.md)).
+Rules text exists for Claude and Codex; every other event of theirs is answered passively
+([ADR 0003](decisions/0003-the-server-observes-and-never-blocks-on-its-own.md)). Codex's rules are Claude's without the Claude-only
+parts (the Haiku model, forks, the advisor) and name no model, because whether a Codex spawn can request one is unresolved. OpenCode
+stays passive until its plugin has a context path (see Unresolved); its rules will use the same wording.
 
 ### Claude Code notes
 
@@ -377,9 +379,8 @@ into another's files, imports an undeclared package, or (hooks, adapters) uses a
 | Claude `from_model` null on Pre/PostModelSwitch | A capture of a model switch with no previous model |
 | Codex spawn: can a model be requested, under which key | Capture with a prompt that names a subagent model |
 | Codex merge order with several hooks; whether `hookEventName` is mandatory in output (the late-hook timeout is settled: fails open, R-2026-11-07-10 F7) | A run with two hooks; a run that answers context without it |
-| The Codex context-answer path on a real run (no built-in policy produces one; the middleware tests exercise the encoder). OpenCode has no context path | Rules wording decided, then a real run |
+| OpenCode has no context path in the plugin yet; `ctx.session.hook("context", ...)` can add system text before each model request but was never captured (the Codex path is settled: R-2026-11-07-10 F21) | A capture of the context hook, then the plugin |
 | Codex `SubagentStop` block on a real run (encoded from the pinned schema); Claude Code contract v1 shapes on a real run (encoded from the docs) | A live Codex run with a subagent; a `claude -p` run against the server with a deny layer |
 | OpenCode `permission.evaluate` effects (deny/ask); a reply field for it | Not needed while the pre-tool deny refuses the call |
 | How StateForge consumes the packages (registry, ADR-0181 exception); the split itself is done (ADR 0002, phase 2) | R-2026-11-07-09 follow-ups; plan phase 7 |
 | OpenCode root `session.created`, compaction hook and events, `deny`/`ask` effects, failed tool status | See R-2026-11-07-08, Open questions |
-| Rules wording for Codex and OpenCode | The user |
