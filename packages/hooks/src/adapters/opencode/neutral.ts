@@ -2,7 +2,6 @@ import { Kind, type NeutralKind } from "../../core/event.ts";
 import { OpenCodeHook } from "./names.ts";
 
 const KINDS: ReadonlyMap<string, NeutralKind> = new Map<string, NeutralKind>([
-  [OpenCodeHook.SessionCreated, Kind.SessionStart],
   [OpenCodeHook.SessionPrompt, Kind.PromptSubmit],
   [OpenCodeHook.ToolExecuteBefore, Kind.PreTool],
   [OpenCodeHook.ToolExecuteAfter, Kind.PostTool],
@@ -13,4 +12,7 @@ const KINDS: ReadonlyMap<string, NeutralKind> = new Map<string, NeutralKind>([
   [OpenCodeHook.SessionCompactionEnded, Kind.PostCompact],
 ]);
 
-export const kindOf = (native: string): NeutralKind => KINDS.get(native) ?? Kind.Other;
+export function kindOf(native: string, raw: Record<string, unknown>): NeutralKind {
+  if (native === OpenCodeHook.SessionContext) return typeof raw.parentID === "string" ? Kind.SubagentStart : Kind.SessionStart;
+  return KINDS.get(native) ?? Kind.Other;
+}

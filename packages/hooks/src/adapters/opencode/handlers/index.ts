@@ -4,6 +4,7 @@ import { handler as SessionCompaction } from "./SessionCompaction.ts";
 import { handler as SessionCompactionEnded } from "./SessionCompactionEnded.ts";
 import { handler as SessionCompactionFailed } from "./SessionCompactionFailed.ts";
 import { handler as SessionCompactionStarted } from "./SessionCompactionStarted.ts";
+import { handler as SessionContext } from "./SessionContext.ts";
 import { handler as SessionCreated } from "./SessionCreated.ts";
 import { handler as SessionExecutionFailed } from "./SessionExecutionFailed.ts";
 import { handler as SessionExecutionInterrupted } from "./SessionExecutionInterrupted.ts";
@@ -20,6 +21,7 @@ export const handlers: ReadonlyMap<string, EventHandler> = new Map([
   [SessionCompactionEnded.event, SessionCompactionEnded],
   [SessionCompactionFailed.event, SessionCompactionFailed],
   [SessionCompactionStarted.event, SessionCompactionStarted],
+  [SessionContext.event, SessionContext],
   [SessionCreated.event, SessionCreated],
   [SessionExecutionFailed.event, SessionExecutionFailed],
   [SessionExecutionInterrupted.event, SessionExecutionInterrupted],

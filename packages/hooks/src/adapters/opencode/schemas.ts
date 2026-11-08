@@ -5,6 +5,7 @@ import { schema as SessionCompaction } from "./events/SessionCompaction.ts";
 import { schema as SessionCompactionEnded } from "./events/SessionCompactionEnded.ts";
 import { schema as SessionCompactionFailed } from "./events/SessionCompactionFailed.ts";
 import { schema as SessionCompactionStarted } from "./events/SessionCompactionStarted.ts";
+import { schema as SessionContext } from "./events/SessionContext.ts";
 import { schema as SessionCreated } from "./events/SessionCreated.ts";
 import { schema as SessionExecutionFailed } from "./events/SessionExecutionFailed.ts";
 import { schema as SessionExecutionInterrupted } from "./events/SessionExecutionInterrupted.ts";
@@ -21,6 +22,7 @@ export const schemas: ReadonlyMap<string, z.ZodType> = new Map<string, z.ZodType
   [OpenCodeHook.SessionCompactionEnded, SessionCompactionEnded],
   [OpenCodeHook.SessionCompactionFailed, SessionCompactionFailed],
   [OpenCodeHook.SessionCompactionStarted, SessionCompactionStarted],
+  [OpenCodeHook.SessionContext, SessionContext],
   [OpenCodeHook.SessionCreated, SessionCreated],
   [OpenCodeHook.SessionExecutionFailed, SessionExecutionFailed],
   [OpenCodeHook.SessionExecutionInterrupted, SessionExecutionInterrupted],

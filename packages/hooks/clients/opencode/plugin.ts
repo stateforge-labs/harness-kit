@@ -3,7 +3,8 @@ import { pluginEnv } from "../../src/env.ts";
 import type { PluginContext } from "./context.ts";
 import { keepGoing } from "./continues.ts";
 import { forward } from "./forward.ts";
-import { FORWARDED_EVENTS, FORWARDED_HOOKS, splitHook } from "./hooks.ts";
+import { FORWARDED_EVENTS, FORWARDED_HOOKS, RULES_HOOK, splitHook } from "./hooks.ts";
+import { addRules, noteSession } from "./session-rules.ts";
 
 const PLUGIN_ID = "harness-hooks";
 
@@ -27,6 +28,12 @@ function register(ctx: PluginContext): void {
       continue;
     }
   }
+  const { area, name } = splitHook(RULES_HOOK);
+  try {
+    ctx[area].hook(name, addRules);
+  } catch {
+    return;
+  }
 }
 
 async function subscribe(ctx: PluginContext): Promise<void> {
@@ -34,6 +41,7 @@ async function subscribe(ctx: PluginContext): Promise<void> {
     const stream = await ctx.event.subscribe(undefined, {});
     void (async () => {
       for await (const e of stream) {
+        if (e.type === OpenCodeHook.SessionCreated) noteSession(e.data);
         if (typeof e.type === "string" && FORWARDED_EVENTS.has(e.type)) void forward(e.type, e.data);
       }
     })().catch(() => {});

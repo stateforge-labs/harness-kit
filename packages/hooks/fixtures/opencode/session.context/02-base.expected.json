@@ -1,0 +1,6 @@
+{
+  "status": 200,
+  "body": {
+    "context": "Subagent rules (harness-hooks server):\n- Return a short, structured result; honour any word limit in your brief.\n- Read file ranges, not whole files. Stay inside the tool-call budget in your brief and stop when done.\n- Do not spawn further agents unless the brief says so."
+  }
+}

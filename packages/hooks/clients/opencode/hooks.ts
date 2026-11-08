@@ -11,6 +11,8 @@ export const FORWARDED_HOOKS: readonly OpenCodeHookName[] = [
   OpenCodeHook.SessionCompaction,
 ];
 
+export const RULES_HOOK: OpenCodeHookName = OpenCodeHook.SessionContext;
+
 export const FORWARDED_EVENTS: ReadonlySet<string> = new Set<OpenCodeHookName>([
   OpenCodeHook.SessionCreated,
   OpenCodeHook.SessionExecutionStarted,

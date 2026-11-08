@@ -4,6 +4,7 @@ export const OpenCodeHook = {
   SessionCompactionEnded: "session.compaction.ended",
   SessionCompactionFailed: "session.compaction.failed",
   SessionCompactionStarted: "session.compaction.started",
+  SessionContext: "session.context",
   SessionCreated: "session.created",
   SessionExecutionFailed: "session.execution.failed",
   SessionExecutionInterrupted: "session.execution.interrupted",

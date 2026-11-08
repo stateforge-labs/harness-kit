@@ -11,7 +11,7 @@ How the pieces fit: [`docs/architecture.md`](../../docs/architecture.md). Why it
 | --- | --- |
 | `@homelab/harness-hooks` | `adapters` (registry by harness id), `handle(adapter, raw, pipeline)`, `Pipeline` (with per-layer `{ timeoutMs, onFault }`), `defaultPipeline`, `policyLayer`, `onKinds`, `mergeReplies`, `toolAllowlist`, `denyText`, `continueText`, `policy`, the neutral types (`NeutralEvent`, `NeutralReply`, `HarnessAdapter`, ...), and on-disk paths (`shimPath`, `opencodePluginPath`, `fixturesDir`, `schemasDir`) |
 | `@homelab/harness-hooks/shim` | the command shim (stdin to `POST /hook/<harness>`; fails open to `{}`, or with `HOOK_SHIM_FAIL=closed` refuses PreToolUse and PermissionRequest) |
-| `@homelab/harness-hooks/opencode-plugin` | the OpenCode plugin (throws on a deny, sends a continue as a synthetic message; fails open, or closed with `HOOK_PLUGIN_FAIL=closed`) |
+| `@homelab/harness-hooks/opencode-plugin` | the OpenCode plugin (adds the rules to each model request, throws on a deny, sends a continue as a synthetic message; fails open, or closed with `HOOK_PLUGIN_FAIL=closed`) |
 | `@homelab/harness-hooks/fixtures/*` | captured and synthetic payloads with `.expected.json` and `.log.json` snapshots |
 | `@homelab/harness-hooks/schemas/*` | generated JSON Schema per harness event |
 

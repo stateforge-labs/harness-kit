@@ -12,6 +12,7 @@ and `session_id` (a copy of OpenCode's `sessionID`). The file name is the event 
 | session.compaction.ended |  |  |
 | session.compaction.failed |  |  |
 | session.compaction.started |  |  |
+| session.context | `agent`, `model` | `parentID` |
 | session.created | `agent`, `projectID`, `slug`, `subpath`, `title`, `version`, `location`, `model` | `parentID` |
 | session.execution.failed | `error` |  |
 | session.execution.interrupted | `reason` |  |

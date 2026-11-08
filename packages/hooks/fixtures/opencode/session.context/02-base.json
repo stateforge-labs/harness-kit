@@ -1,0 +1,11 @@
+{
+  "sessionID": "fx-session.context-2",
+  "agent": "general",
+  "model": {
+    "id": "beam-free",
+    "providerID": "opencode-go"
+  },
+  "parentID": "PLACEHOLDER-parentID",
+  "session_id": "fx-session.context-2",
+  "hook_event_name": "session.context"
+}

@@ -1,0 +1,17 @@
+{
+  "harness": "opencode",
+  "event": "session.context",
+  "session_id": "fx-session.context-1",
+  "agent_type": "build",
+  "keys": [
+    "agent",
+    "hook_event_name",
+    "model",
+    "sessionID",
+    "session_id"
+  ],
+  "known": true,
+  "missing": [],
+  "wrong_type": [],
+  "is_child": false
+}

@@ -92,6 +92,7 @@ missing item (`continueText`).
 | stop, Claude/Codex `Stop`; subagent-stop, Claude/Codex `SubagentStop` | **not encoded**: a block means "go on", the opposite of a deny | not encoded | `{ decision: "block", reason }` | not encoded (context on Stop is itself a continuation) |
 | stop, OpenCode `session.experimental.idle` | not encoded | not encoded | `{ continue: text }`; the plugin sends it as a synthetic user message, at most `HOOK_PLUGIN_MAX_CONTINUES` (8) times in a row per session (the cap Claude Code puts on Stop continuations), so a layer that always says continue cannot loop forever. The count resets when an idle is not continued; a failed continuation lets the session stop. Idle is the stop point because OpenCode awaits that hook; `session.execution.*` are events the plugin cannot answer | not encoded |
 | session-start, subagent-start (Claude, Codex); prompt-submit (Codex) | not encoded | not encoded | not encoded | `hookSpecificOutput.additionalContext`, as before v1 |
+| session-start, subagent-start, OpenCode `session.context` | not encoded | not encoded | not encoded | `{ context: text }`; the plugin adds it to the model request's system text as a `{ type: "text", text }` part |
 | every other event | not encoded | not encoded | not encoded | not encoded |
 
 Evidence per row, by harness:
@@ -158,17 +159,17 @@ Each lives in `packages/hooks/src/adapters/<harness>/`: `adapter.ts`, `names.ts`
 | | Claude Code | Codex | OpenCode |
 | --- | --- | --- | --- |
 | Transport | HTTP hooks in settings; `packages/hooks/clients/shim` for SessionStart and Setup (cannot be http) | command hooks via `packages/hooks/clients/shim/hook-shim.ts --harness codex` | `packages/hooks/clients/opencode/plugin.ts` (in-process, POSTs) |
-| Events | 33 | 14 | 14 (5 hooks, 9 lifecycle events) |
+| Events | 33 | 14 | 15 (6 hooks, 9 lifecycle events) |
 | Event name in the body | `hook_event_name` | `hook_event_name` | `hook_event_name` set by the plugin (`tool.execute.before`) |
 | Spawn tool | `Agent` (`subagent_type`, `model`) | `collaborationspawn_agent` (`message`; model unresolved) | `subagent` (`prompt`, optional `model`) |
-| Answers | Rules text for Delegation (model-specific); contract v1 replies | Rules text for Delegation on `SessionStart` and `SubagentStart` (no model named); contract v1 replies | `{}` from the built-in policy (passive); deny and continue, acted on by the plugin |
-| Fixtures | 82, captured | 23 (22 captured, 1 synthetic) | 23 (19 captured, 4 synthetic) |
+| Answers | Rules text for Delegation (model-specific); contract v1 replies | Rules text for Delegation on `SessionStart` and `SubagentStart` (no model named); contract v1 replies | Rules text on `session.context` (no model named); deny and continue, acted on by the plugin |
+| Fixtures | 82, captured | 23 (22 captured, 1 synthetic) | 25 (21 captured, 4 synthetic) |
 | Evidence | R-2026-11-07-03, -05 | R-2026-11-07-04, -08 | R-2026-11-07-04, -08 |
 
-Rules text exists for Claude and Codex; every other event of theirs is answered passively
-([ADR 0003](decisions/0003-the-server-observes-and-never-blocks-on-its-own.md)). Codex's rules are Claude's without the Claude-only
-parts (the Haiku model, forks, the advisor) and name no model, because whether a Codex spawn can request one is unresolved. OpenCode
-stays passive until its plugin has a context path (see Unresolved); its rules will use the same wording.
+Every harness has rules text; every other event is answered passively
+([ADR 0003](decisions/0003-the-server-observes-and-never-blocks-on-its-own.md)). Codex's and OpenCode's rules are Claude's without the
+Claude-only parts (the Haiku model, forks, the advisor) and name no model: whether a Codex spawn can request one is unresolved, and the
+owner has not picked an OpenCode subagent model.
 
 ### Claude Code notes
 
@@ -237,8 +238,10 @@ stays passive until its plugin has a context path (see Unresolved); its rules wi
   - on `permission.evaluate`, `action` names the permission: the tool name for MCP tools (`probe_echo`), or an open set of capability
     names for built-ins (`shell`, `read`, `edit`, `subagent`). The call id is in `source.id`.
 - **Kinds:**
-  - `session.created` is `session-start` for every session, a subagent's child session included. The log shows a child as `is_child`
-    (a parent-session field is present); the kind is not split on it, because a kind comes from the name alone.
+  - `session.context` is `session-start`, or `subagent-start` when it carries `parentID`. It is the one start event per session: the
+    plugin sends it once, before the session's first model request.
+  - `session.created` is `other`. It is an event-stream notice, and `opencode run` never sends one for the root session; the log shows a
+    child as `is_child`.
   - `session.experimental.idle` is `stop`.
   - `session.execution.started/succeeded/failed/interrupted` are `other`.
 - **Failures:** `session.execution.failed` carries `error: { type, message }`. Only `provider.no-route` was captured (capture
@@ -247,6 +250,15 @@ stays passive until its plugin has a context path (see Unresolved); its rules wi
   names in the binary. All four type only the envelope (see Unresolved).
 - **Spawn:** tool `subagent`, input `{ agent, description, prompt }`, plus an optional `model` written `provider/model`. Capture
   "subagent-model" asked for `opencode-go/beam-free` and the key arrived with that value.
+- **Rules (`session.context`):** OpenCode's `ctx.session.hook("context", ...)` runs before every model request with
+  `{ sessionID, agent, model: { id, providerID, variant }, system, messages, options, tools }`; `system` is an array of
+  `{ type: "text", text }` parts, and a pushed part reaches the model, in a subagent's session too (R-2026-11-07-08, captures
+  `context-hook`, `context-hook-subagent`). The payload carries no parent id, so the plugin learns it from the child's `session.created`
+  event, which arrived about 16 ms before the child's first model request. For a session it has not seen there, the plugin waits up to
+  300 ms for that event, so a root session pays the wait once. It then posts a slim `session.context`
+  (`sessionID`, `agent`, `model { id, providerID }`, `parentID` when a child; never the system text, messages or tools), caches the
+  answer for the session, and pushes it on every model request, because the system text is rebuilt each time. A server that does not
+  answer adds nothing; the request goes on.
 - **Plugin form:** an object with `id` and `setup(ctx)`, verified on 2.2.6. Registering an unknown hook name does not fail, so a name
   that never fires looks the same as one that works. Only names seen firing are treated as verified (`session.compaction` stays
   registered but unseen). One hook failing to register does not stop the others, and without an event stream the hooks still work.
@@ -362,6 +374,8 @@ into another's files, imports an undeclared package, or (hooks, adapters) uses a
 
 **OpenCode plugin** (`packages/hooks/clients/opencode/`):
 - It posts every forwarded hook and lifecycle event, then acts on the answer as the matrix above says.
+- `session-rules.ts` handles the `context` hook: one slim `session.context` post per session, the answer cached and added to every
+  model request's system text (OpenCode notes, Rules).
 - It is bundled into one file at install time (see Code conventions).
 
 **Installer** (`packages/hooks-server/scripts/install.ts`):
@@ -379,7 +393,6 @@ into another's files, imports an undeclared package, or (hooks, adapters) uses a
 | Claude `from_model` null on Pre/PostModelSwitch | A capture of a model switch with no previous model |
 | Codex spawn: can a model be requested, under which key | Capture with a prompt that names a subagent model |
 | Codex merge order with several hooks; whether `hookEventName` is mandatory in output (the late-hook timeout is settled: fails open, R-2026-11-07-10 F7) | A run with two hooks; a run that answers context without it |
-| OpenCode has no context path in the plugin yet; `ctx.session.hook("context", ...)` can add system text before each model request but was never captured (the Codex path is settled: R-2026-11-07-10 F21) | A capture of the context hook, then the plugin |
 | Codex `SubagentStop` block on a real run (encoded from the pinned schema); Claude Code contract v1 shapes on a real run (encoded from the docs) | A live Codex run with a subagent; a `claude -p` run against the server with a deny layer |
 | OpenCode `permission.evaluate` effects (deny/ask); a reply field for it | Not needed while the pre-tool deny refuses the call |
 | How StateForge consumes the packages (registry, ADR-0181 exception); the split itself is done (ADR 0002, phase 2) | R-2026-11-07-09 follow-ups; plan phase 7 |

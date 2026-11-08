@@ -58,7 +58,7 @@ describe("e2e: the opencode plugin (fake ctx, real server)", () => {
     await plugin.setup(ctx as never);
     expect(plugin.id).toBe("harness-hooks");
     expect([...hooks.keys()].sort()).toEqual([
-      "permission.evaluate", "session.compaction", "session.experimental.idle", "session.prompt", "tool.execute.after", "tool.execute.before",
+      "permission.evaluate", "session.compaction", "session.context", "session.experimental.idle", "session.prompt", "tool.execute.after", "tool.execute.before",
     ]);
   });
 
@@ -119,5 +119,63 @@ describe("e2e: the opencode plugin (fake ctx, real server)", () => {
     const { ctx } = fakeCtx();
     const broken = { ...ctx, tool: { hook: () => { throw new Error("no such hook"); } }, event: { subscribe: async () => { throw new Error("no stream"); } } };
     await expect(plugin.setup(broken as never)).resolves.toBeUndefined();
+  });
+});
+
+describe("e2e: the opencode plugin adds the rules to the system text (fake ctx, real server)", () => {
+  type TextPart = { type: string; text: string };
+  const contextEvent = (sessionID: string, system: TextPart[] = [{ type: "text", text: "SYSTEM-PROMPT" }]) => ({
+    sessionID,
+    agent: "build",
+    model: { id: "beam-free", providerID: "opencode-go", variant: "default" },
+    system,
+    messages: [{ id: "m1", role: "user", content: [{ type: "text", text: `PROMPT ${SECRET}` }] }],
+    options: { maxTokens: 100 },
+    tools: { shell: { description: "run a command", input: {} } },
+  });
+  const linesFor = async (srv: RunningServer, sessionId: string) => {
+    const f = Bun.file(srv.logFile);
+    const text = (await f.exists()) ? await f.text() : "";
+    return text.split("\n").filter((l) => l.includes(`"session_id":"${sessionId}"`));
+  };
+
+  test("a main session gets the delegation rules as a text part, posted once and without the prompt, system text or tools", async () => {
+    restores.push(setEnv({ [EnvVar.HookUrl]: open.base, [EnvVar.HookToken]: undefined }));
+    const { ctx, hooks } = fakeCtx();
+    await plugin.setup(ctx as never);
+    const first = contextEvent("ctx-root");
+    await hooks.get("session.context")!(first);
+    expect(first.system).toHaveLength(2);
+    expect(first.system[1]!.type).toBe("text");
+    expect(first.system[1]!.text).toStartWith("Delegation rules");
+    const second = contextEvent("ctx-root");
+    await hooks.get("session.context")!(second);
+    expect(second.system[1]!.text).toStartWith("Delegation rules");
+    const line = await logLine(open, "ctx-root");
+    expect(line?.event).toBe("session.context");
+    expect(line?.is_child).toBe(false);
+    expect(line?.keys).toEqual(["agent", "hook_event_name", "model", "sessionID", "session_id"]);
+    expect(JSON.stringify(line)).not.toContain(SECRET);
+    expect(await linesFor(open, "ctx-root")).toHaveLength(1);
+  });
+
+  test("a session whose session.created names a parent gets the subagent rules", async () => {
+    restores.push(setEnv({ [EnvVar.HookUrl]: open.base, [EnvVar.HookToken]: undefined }));
+    const { ctx, hooks, push } = fakeCtx();
+    await plugin.setup(ctx as never);
+    push("session.created", { sessionID: "ctx-child", parentID: "ctx-root" });
+    const event = contextEvent("ctx-child");
+    await hooks.get("session.context")!(event);
+    expect(event.system[1]!.text).toStartWith("Subagent rules");
+    expect((await logLine(open, "ctx-child"))?.is_child).toBe(true);
+  });
+
+  test("with the server down nothing is added and the hook does not throw", async () => {
+    restores.push(setEnv({ [EnvVar.HookUrl]: "http://127.0.0.1:1", [EnvVar.HookToken]: undefined }));
+    const { ctx, hooks } = fakeCtx();
+    await plugin.setup(ctx as never);
+    const event = contextEvent("ctx-down");
+    await hooks.get("session.context")!(event);
+    expect(event.system).toHaveLength(1);
   });
 });
