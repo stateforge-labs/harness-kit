@@ -101,11 +101,14 @@ lint:generated:
     - bun run gen:check
 
 test:unit:
-  extends: .bun
   stage: test
+  image: ${IMAGE_PROXY}/library/node:22.23.3-bookworm
+  tags:
+    - kubernetes
   needs: []
   script:
-    - command -v git >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq git)
+    - npm install -g bun@1.4.4
+    - bun install --frozen-lockfile
     - bun run build
     - bun run test
 
