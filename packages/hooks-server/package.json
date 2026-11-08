@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "The developer hook server: one HTTP endpoint for Claude Code, Codex and OpenCode hooks on a machine, plus the client installers.",
+  "license": "MIT",
   "keywords": [
     "claude-code",
     "codex",
@@ -21,7 +22,7 @@
     "url": "https://github.com/stateforge-labs/harness-kit.git",
     "directory": "packages/hooks-server"
   },
-  "author": "Cristian Arrieta",
+  "author": "stateforge-labs",
   "engines": {
     "bun": ">=1.4.4"
   },

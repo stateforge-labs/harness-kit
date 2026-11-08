@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Non-interactive harness adapters behind one port. Private workspace package; contains no code yet.",
+  "description": "Non-interactive harness adapters behind one port. Private workspace package.",
+  "license": "MIT",
   "dependencies": {
     "@stateforge-labs/harness-hooks": "workspace:*"
-  }
+  },
+  "author": "stateforge-labs"
 }

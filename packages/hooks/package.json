@@ -1,9 +1,9 @@
 {
   "name": "@stateforge-labs/harness-hooks",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "description": "Neutral hook events and replies, per-harness decode/encode for Claude Code, Codex and OpenCode, and the middleware pipeline.",
+  "license": "MIT",
   "keywords": [
     "claude-code",
     "codex",
@@ -22,7 +22,7 @@
     "url": "https://github.com/stateforge-labs/harness-kit.git",
     "directory": "packages/hooks"
   },
-  "author": "Cristian Arrieta",
+  "author": "stateforge-labs",
   "engines": {
     "node": ">=22"
   },
@@ -45,10 +45,18 @@
     "./fixtures/*": "./fixtures/*",
     "./schemas/*": "./schemas/*"
   },
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true
+  },
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "gen": "bun scripts/gen-registry.ts && bun scripts/gen-json-schema.ts",
-    "gen:check": "bun scripts/gen-registry.ts --check && bun scripts/gen-json-schema.ts --check"
+    "gen:check": "bun scripts/gen-registry.ts --check && bun scripts/gen-json-schema.ts --check",
+    "prepack": "bun run build"
   },
   "dependencies": {
     "zod": "4.6.7"
@@ -62,6 +70,8 @@
     "clients",
     "dist",
     "fixtures",
-    "schemas"
+    "schemas",
+    "README.md",
+    "LICENSE"
   ]
 }

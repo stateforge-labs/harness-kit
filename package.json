@@ -36,5 +36,6 @@
   "bugs": {
     "url": "https://github.com/stateforge-labs/harness-kit/issues"
   },
-  "author": "Cristian Arrieta"
+  "author": "stateforge-labs",
+  "license": "MIT"
 }
