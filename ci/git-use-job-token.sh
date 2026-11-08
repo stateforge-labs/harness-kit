@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# Lets git clone homelab/ci-templates (private) with the job token: lint:vendored-lib compares ci/lib with the pinned tag.
-# Same script as homelab-cli ci/git-use-job-token.sh.
 set -euo pipefail
-# shellcheck source=ci/lib/common.sh
 . "${CI_PROJECT_DIR:-.}/ci/lib/common.sh"
 
 require_env CI_JOB_TOKEN CI_SERVER_HOST

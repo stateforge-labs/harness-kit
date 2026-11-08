@@ -18,7 +18,7 @@ workflow:
     - if: $DEPLOY_BRANCHES && $CI_COMMIT_BRANCH =~ $DEPLOY_BRANCHES
     - when: never
 
-stages: [lint, test, security, build]
+stages: [lint, test, security, build, publish]
 
 variables:
   GIT_SUBMODULE_STRATEGY: "none"
@@ -131,3 +131,25 @@ build:package:
     paths:
       - packages/hooks/dist/
     expire_in: 30 days
+
+publish:gitlab:
+  image: ${IMAGE_PROXY}/library/node:22.23.3-bookworm
+  tags:
+    - kubernetes
+  stage: publish
+  needs:
+    - job: lint:vendored-lib
+    - job: lint:shell
+    - job: lint:typecheck
+    - job: test:unit
+    - job: security:deps
+    - job: security:secrets
+    - job: build:package
+      artifacts: true
+  timeout: 20m
+  interruptible: false
+  resource_group: release
+  script:
+    - bash ci/publish-gitlab.sh
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
