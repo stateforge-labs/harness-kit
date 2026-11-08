@@ -1,6 +1,6 @@
 import { readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { fixturesDir } from "@homelab/harness-hooks";
+import { fixturesDir } from "@stateforge-labs/harness-hooks";
 import { eventually, startServer } from "../test/e2e/harness.ts";
 
 const root = fixturesDir;

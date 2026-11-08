@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { shimPath } from "@homelab/harness-hooks";
+import { shimPath } from "@stateforge-labs/harness-hooks";
 import { fixture as fixtureOf, variant } from "./kit.ts";
 import { hookEnvNames, startServer, type RunningServer } from "./harness.ts";
-import { EnvDefault, EnvVar, processEnv, FailMode } from "@homelab/harness-hooks";
+import { EnvDefault, EnvVar, processEnv, FailMode } from "@stateforge-labs/harness-hooks";
 
 const SHIM = shimPath;
 

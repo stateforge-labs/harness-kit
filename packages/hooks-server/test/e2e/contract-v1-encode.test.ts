@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { startServer, type RunningServer } from "./harness.ts";
 import { fixture, variant } from "./kit.ts";
-import { EnvVar } from "@homelab/harness-hooks";
+import { EnvVar } from "@stateforge-labs/harness-hooks";
 
 const mod = (name: string) => join(import.meta.dir, "middleware-modules", `${name}.ts`);
 const S: Record<string, RunningServer> = {};

@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { EnvVar, processEnv } from "@homelab/harness-hooks";
+import { EnvVar, processEnv } from "@stateforge-labs/harness-hooks";
 
 export const hookEnvNames = new Set<string>(Object.entries(EnvVar).filter(([name]) => /^(Hook|Shim|Plugin)/.test(name)).map(([, value]) => value));
 

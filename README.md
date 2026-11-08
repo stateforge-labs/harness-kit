@@ -5,8 +5,8 @@ installers that connect each harness to it.
 
 | Package | What it ships | Runtime |
 | --- | --- | --- |
-| [`@homelab/harness-hooks`](packages/hooks/README.md) | Library: neutral events and replies, per-harness decode and encode, the middleware pipeline, the command shim and the OpenCode plugin | Node 22 or later (`dist/`), or Bun (sources) |
-| [`@homelab/harness-hooks-server`](packages/hooks-server/README.md) | HTTP hook server (`POST /hook/<harness>`) and the installer that connects each harness to it | Bun 1.4.4 |
+| [`@stateforge-labs/harness-hooks`](packages/hooks/README.md) | Library: neutral events and replies, per-harness decode and encode, the middleware pipeline, the command shim and the OpenCode plugin | Node 22 or later (`dist/`), or Bun (sources) |
+| [`@stateforge-labs/harness-hooks-server`](packages/hooks-server/README.md) | HTTP hook server (`POST /hook/<harness>`) and the installer that connects each harness to it | Bun 1.4.4 |
 
 These are the workspace package names. The packages are not published to npm under these names.
 
@@ -28,7 +28,7 @@ bun run test
 Use the library in code. This example feeds a captured Claude Code `PreToolUse` payload through the default pipeline:
 
 ```ts
-import { adapters, defaultPipeline, handle } from "@homelab/harness-hooks";
+import { adapters, defaultPipeline, handle } from "@stateforge-labs/harness-hooks";
 import { readFileSync } from "node:fs";
 
 const payload = JSON.parse(readFileSync("packages/hooks/fixtures/claude/PreToolUse/02-bash.json", "utf8"));
@@ -45,7 +45,7 @@ Expected output, because the default pipeline adds no context and no decision to
 Start the hook server on loopback and send it the same payload:
 
 ```sh
-bun --filter @homelab/harness-hooks-server start
+bun --filter @stateforge-labs/harness-hooks-server start
 curl -s -X POST -H 'content-type: application/json' \
   --data-binary @packages/hooks/fixtures/claude/PreToolUse/02-bash.json \
   http://127.0.0.1:8787/hook/claude

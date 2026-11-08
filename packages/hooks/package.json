@@ -1,5 +1,5 @@
 {
-  "name": "@homelab/harness-hooks",
+  "name": "@stateforge-labs/harness-hooks",
   "version": "0.1.0",
   "private": true,
   "type": "module",

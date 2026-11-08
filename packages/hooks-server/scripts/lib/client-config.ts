@@ -1,4 +1,4 @@
-import { ClaudeHook, EnvDefault, EnvVar, Harness, WORKTREE_TIMEOUT_MS, adapters, shimPath } from "@homelab/harness-hooks";
+import { ClaudeHook, EnvDefault, EnvVar, Harness, WORKTREE_TIMEOUT_MS, adapters, shimPath } from "@stateforge-labs/harness-hooks";
 
 export interface RenderOptions {
   url: string;

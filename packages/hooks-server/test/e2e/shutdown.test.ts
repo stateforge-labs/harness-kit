@@ -4,7 +4,7 @@ import { mkdtemp, open, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startServer } from "./harness.ts";
-import { EnvVar } from "@homelab/harness-hooks";
+import { EnvVar } from "@stateforge-labs/harness-hooks";
 
 const post = (base: string, id: string) =>
   fetch(`${base}/hook`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ hook_event_name: "Stop", session_id: id }) });

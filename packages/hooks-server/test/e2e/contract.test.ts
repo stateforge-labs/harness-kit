@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { adapters } from "@homelab/harness-hooks";
+import { adapters } from "@stateforge-labs/harness-hooks";
 import { fixtures, hookServer, variant, type Fixture } from "./kit.ts";
 
 const MAY_LOG = new Set([

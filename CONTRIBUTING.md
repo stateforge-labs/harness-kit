@@ -35,7 +35,7 @@ Run these from the repository root before you open a pull request.
 | `bun run test` | `tools/check-boundaries.ts`, then `bun test` for every package |
 | `bun run typecheck` | `tsc --noEmit` over `packages/` and `tools/`, using the `bun` export condition |
 | `bun run gen:check` | fails if a generated file is stale (the handler index, `schemas.ts` and the JSON Schemas) |
-| `bun run build` | builds `dist/` for `@homelab/harness-hooks` (ESM and `.d.ts`, for Node) |
+| `bun run build` | builds `dist/` for `@stateforge-labs/harness-hooks` (ESM and `.d.ts`, for Node) |
 
 `tools/check-boundaries.ts` enforces the package boundaries. A workspace package may be imported only if it is declared, and only
 through a path in its `exports` map (no deep imports). The shipped code of `hooks` and `adapters` (`src/` and `clients/`) must not
@@ -61,9 +61,9 @@ After a schema change, run `bun run gen` in `packages/hooks`, then review the re
 
 | Path | What |
 | --- | --- |
-| [`packages/hooks`](packages/hooks/README.md) | `@homelab/harness-hooks`: the library |
-| [`packages/hooks-server`](packages/hooks-server/README.md) | `@homelab/harness-hooks-server`: the HTTP server and the installers |
-| [`packages/adapters`](packages/adapters/README.md) | `@homelab/harness-adapters`: a workspace package with no code yet; not published |
+| [`packages/hooks`](packages/hooks/README.md) | `@stateforge-labs/harness-hooks`: the library |
+| [`packages/hooks-server`](packages/hooks-server/README.md) | `@stateforge-labs/harness-hooks-server`: the HTTP server and the installers |
+| [`packages/adapters`](packages/adapters/README.md) | `@stateforge-labs/harness-adapters`: a workspace package with no code yet; not published |
 
 ### Library layout (`packages/hooks`)
 

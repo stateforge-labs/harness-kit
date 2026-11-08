@@ -1,4 +1,4 @@
-import type { Middleware } from "@homelab/harness-hooks";
+import type { Middleware } from "@stateforge-labs/harness-hooks";
 const v1Everything: Middleware = async () => ({
   context: "V1-CONTEXT",
   deny: { reason: "V1-DENY-REASON" },

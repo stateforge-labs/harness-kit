@@ -1,4 +1,4 @@
-# @homelab/harness-hooks
+# @stateforge-labs/harness-hooks
 
 Turns a hook payload from Claude Code, Codex or OpenCode into a neutral event, runs it through a middleware pipeline, and turns the
 neutral reply back into that harness's own response. It has no HTTP server and no Bun API in its shipped code, so it runs under Node
@@ -18,7 +18,7 @@ repository depends on it by name once it is published.
 ## Usage
 
 ```ts
-import { adapters, defaultPipeline, fixturesDir, handle } from "@homelab/harness-hooks";
+import { adapters, defaultPipeline, fixturesDir, handle } from "@stateforge-labs/harness-hooks";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -42,11 +42,11 @@ the middleware section of the [architecture page](https://github.com/stateforge-
 
 | Import | What |
 | --- | --- |
-| `@homelab/harness-hooks` | `adapters` (registry by harness id), `handle(adapter, raw, pipeline)`, `Pipeline` (per-layer `{ timeoutMs, onFault }`), `defaultPipeline`, `policyLayer`, `worktreeLayer`, `onKinds`, `mergeReplies`, `toolAllowlist`, `denyText`, `continueText`, `policy`, the neutral types (`NeutralEvent`, `NeutralReply`, `HarnessAdapter`, ...), and the on-disk paths `shimPath`, `opencodePluginPath`, `fixturesDir` and `schemasDir` |
-| `@homelab/harness-hooks/shim` | The command shim. It reads a hook payload from stdin and posts it to `POST /hook/<harness>`. It fails open to `{}`; with `HOOK_SHIM_FAIL=closed` it refuses PreToolUse and PermissionRequest instead |
-| `@homelab/harness-hooks/opencode-plugin` | The OpenCode plugin. It adds the rules to each model request and throws on a deny. It fails open, or closed with `HOOK_PLUGIN_FAIL=closed` |
-| `@homelab/harness-hooks/fixtures/*` | Captured and synthetic payloads, each with `.expected.json` and `.log.json` snapshots |
-| `@homelab/harness-hooks/schemas/*` | JSON Schema per harness event, generated from the zod schemas (documentation only) |
+| `@stateforge-labs/harness-hooks` | `adapters` (registry by harness id), `handle(adapter, raw, pipeline)`, `Pipeline` (per-layer `{ timeoutMs, onFault }`), `defaultPipeline`, `policyLayer`, `worktreeLayer`, `onKinds`, `mergeReplies`, `toolAllowlist`, `denyText`, `continueText`, `policy`, the neutral types (`NeutralEvent`, `NeutralReply`, `HarnessAdapter`, ...), and the on-disk paths `shimPath`, `opencodePluginPath`, `fixturesDir` and `schemasDir` |
+| `@stateforge-labs/harness-hooks/shim` | The command shim. It reads a hook payload from stdin and posts it to `POST /hook/<harness>`. It fails open to `{}`; with `HOOK_SHIM_FAIL=closed` it refuses PreToolUse and PermissionRequest instead |
+| `@stateforge-labs/harness-hooks/opencode-plugin` | The OpenCode plugin. It adds the rules to each model request and throws on a deny. It fails open, or closed with `HOOK_PLUGIN_FAIL=closed` |
+| `@stateforge-labs/harness-hooks/fixtures/*` | Captured and synthetic payloads, each with `.expected.json` and `.log.json` snapshots |
+| `@stateforge-labs/harness-hooks/schemas/*` | JSON Schema per harness event, generated from the zod schemas (documentation only) |
 
 Anything not listed is internal. The `bun` export condition points at `src/` and `clients/`. Every other runtime gets `dist/`.
 

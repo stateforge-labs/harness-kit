@@ -5,7 +5,7 @@ const argRoot = process.argv.indexOf("--root");
 const root = resolve(argRoot >= 0 ? process.argv[argRoot + 1]! : join(import.meta.dir, ".."));
 const packagesDir = join(root, "packages");
 
-const NODE_ONLY = new Set(["@homelab/harness-hooks", "@homelab/harness-adapters"]);
+const NODE_ONLY = new Set(["@stateforge-labs/harness-hooks", "@stateforge-labs/harness-adapters"]);
 const SHIPPED = ["src", "clients"];
 
 interface Pkg {
@@ -61,7 +61,7 @@ for (const pkg of pkgs) {
         if (!(target + sep).startsWith(pkg.dir + sep) && target !== pkg.dir) violations.push(`${rel}: relative import leaves ${pkg.name}: ${spec}`);
         continue;
       }
-      const ws = /^(@homelab\/[^/]+)(\/.*)?$/.exec(spec);
+      const ws = /^(@stateforge-labs\/[^/]+)(\/.*)?$/.exec(spec);
       if (ws) {
         const [, name, rest] = ws;
         if (name === pkg.name) {

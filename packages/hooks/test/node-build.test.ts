@@ -5,7 +5,7 @@ import { join } from "node:path";
 const pkg = join(import.meta.dir, "..");
 const consumer = join(pkg, "..", "hooks-server");
 
-const NAME = "@homelab/harness-hooks";
+const NAME = "@stateforge-labs/harness-hooks";
 const SCRIPT = `
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";

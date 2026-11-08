@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "./harness.ts";
-import { EnvVar } from "@homelab/harness-hooks";
+import { EnvVar } from "@stateforge-labs/harness-hooks";
 
 const CAP = 1500;
 let srv: RunningServer;

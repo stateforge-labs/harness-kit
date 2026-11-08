@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
-import { shimPath } from "@homelab/harness-hooks";
+import { shimPath } from "@stateforge-labs/harness-hooks";
 import { fixture as fixtureOf, variant } from "./kit.ts";
 import { eventually, hookEnvNames, startServer, type RunningServer } from "./harness.ts";
-import { EnvVar, processEnv } from "@homelab/harness-hooks";
+import { EnvVar, processEnv } from "@stateforge-labs/harness-hooks";
 
 const SHIM = shimPath;
 const SECRET = "tok-shim-never-print-me";

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { eventually, startServer, type RunningServer } from "./harness.ts";
-import { EnvVar } from "@homelab/harness-hooks";
+import { EnvVar } from "@stateforge-labs/harness-hooks";
 
 const TOKEN = "t0k3n";
 let srv: RunningServer;

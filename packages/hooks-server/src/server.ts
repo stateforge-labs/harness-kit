@@ -1,5 +1,5 @@
 import { ConfigError, ServerConfig } from "./config.ts";
-import { adapters as allAdapters, EnvVar, Pipeline, policyLayer, WORKTREE_TIMEOUT_MS, worktreeLayer, type HarnessAdapter, type Middleware } from "@homelab/harness-hooks";
+import { adapters as allAdapters, EnvVar, Pipeline, policyLayer, WORKTREE_TIMEOUT_MS, worktreeLayer, type HarnessAdapter, type Middleware } from "@stateforge-labs/harness-hooks";
 import { loadMiddleware } from "./middleware-loader.ts";
 import { HookHandler } from "./http/hook-handler.ts";
 import { installGracefulShutdown } from "./shutdown.ts";

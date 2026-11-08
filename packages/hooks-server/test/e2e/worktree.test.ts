@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:f
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startServer, type RunningServer } from "./harness.ts";
-import { ClaudeHook, EnvVar, WORKTREE_BRANCH_PREFIX, WORKTREE_DIR, processEnv } from "@homelab/harness-hooks";
+import { ClaudeHook, EnvVar, WORKTREE_BRANCH_PREFIX, WORKTREE_DIR, processEnv } from "@stateforge-labs/harness-hooks";
 import { OWN_PATH } from "./middleware-modules/worktree-own.ts";
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "harness-hooks-worktree-")));

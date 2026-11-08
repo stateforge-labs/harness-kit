@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { refusesToStart, startServer } from "./harness.ts";
-import { EnvVar } from "@homelab/harness-hooks";
+import { EnvVar } from "@stateforge-labs/harness-hooks";
 
 describe(`e2e: ${EnvVar.Port}`, () => {
   test.each(["", "abc", "-1", "1.5", "0x10", " 80 ", "65536", "70000", "1e3"])(`${EnvVar.Port}=%j is refused with a clear message and nothing listens`, async (port) => {

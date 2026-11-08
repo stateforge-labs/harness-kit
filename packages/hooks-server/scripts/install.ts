@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { EnvDefault, Harness, installEnv, opencodePluginPath } from "@homelab/harness-hooks";
+import { EnvDefault, Harness, installEnv, opencodePluginPath } from "@stateforge-labs/harness-hooks";
 import { claudeHooks, codexHooks, systemdUnit, type RenderOptions } from "./lib/client-config.ts";
 
 const repo = resolve(import.meta.dir, "..");

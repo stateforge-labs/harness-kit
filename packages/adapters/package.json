@@ -1,10 +1,10 @@
 {
-  "name": "@homelab/harness-adapters",
+  "name": "@stateforge-labs/harness-adapters",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Non-interactive harness adapters behind one port. Private workspace package; contains no code yet.",
   "dependencies": {
-    "@homelab/harness-hooks": "workspace:*"
+    "@stateforge-labs/harness-hooks": "workspace:*"
   }
 }

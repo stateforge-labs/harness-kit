@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { eventually, startServer } from "./harness.ts";
 import { fixture as fixtureOf, variant } from "./kit.ts";
-import { EnvVar } from "@homelab/harness-hooks";
+import { EnvVar } from "@stateforge-labs/harness-hooks";
 
 const fixture = (event: string, fragment = "") => fixtureOf("claude", event, fragment);
 

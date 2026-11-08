@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
-import { EnvVar } from "@homelab/harness-hooks";
+import { EnvVar } from "@stateforge-labs/harness-hooks";
 
 const TOKEN = "t0k3n";
 const hook = hookServer({ [EnvVar.HookToken]: TOKEN });

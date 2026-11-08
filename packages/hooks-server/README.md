@@ -1,7 +1,7 @@
-# @homelab/harness-hooks-server
+# @stateforge-labs/harness-hooks-server
 
 An HTTP service that receives the hook events of Claude Code, Codex and OpenCode and answers each one in that harness's own format.
-It puts [`@homelab/harness-hooks`](https://github.com/stateforge-labs/harness-kit/blob/main/packages/hooks/README.md) behind `POST /hook/<harness>`. On each request it checks admission (a bearer
+It puts [`@stateforge-labs/harness-hooks`](https://github.com/stateforge-labs/harness-kit/blob/main/packages/hooks/README.md) behind `POST /hook/<harness>`. On each request it checks admission (a bearer
 token, or loopback only), writes one JSON line to the log, and runs the middleware modules you name in `HOOK_MIDDLEWARE`. It shuts down
 gracefully on SIGTERM and SIGINT.
 
@@ -19,7 +19,7 @@ This package is not on npm under this name yet. In the repository, run `bun inst
 ## Run
 
 ```sh
-bun run start                                  # from this folder, or `bun --filter @homelab/harness-hooks-server start` at the root
+bun run start                                  # from this folder, or `bun --filter @stateforge-labs/harness-hooks-server start` at the root
 PORT=0 HOOK_TOKEN=change-me bun src/server.ts   # PORT=0 asks the system for a free port
 ```
 
@@ -36,7 +36,7 @@ In code, build a server from a config and the adapters. Both inputs are required
 are added outermost first. The built-in policy always runs innermost, so every layer sees its reply and can change it.
 
 ```ts
-import { adapters } from "@homelab/harness-hooks";
+import { adapters } from "@stateforge-labs/harness-hooks";
 import { ServerConfig } from "./src/config.ts";
 import { HookServerBuilder } from "./src/server.ts";
 

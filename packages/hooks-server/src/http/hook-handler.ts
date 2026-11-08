@@ -1,5 +1,5 @@
 import type { ServerConfig } from "../config.ts";
-import { Harness, handle, type HarnessAdapter, type Pipeline } from "@homelab/harness-hooks";
+import { Harness, handle, type HarnessAdapter, type Pipeline } from "@stateforge-labs/harness-hooks";
 import { logEvent } from "../log.ts";
 import { Admission } from "./admission.ts";
 

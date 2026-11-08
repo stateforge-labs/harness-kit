@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import plugin from "@homelab/harness-hooks/opencode-plugin";
+import plugin from "@stateforge-labs/harness-hooks/opencode-plugin";
 import { eventually, startServer, type RunningServer } from "./harness.ts";
-import { EnvVar, setEnv } from "@homelab/harness-hooks";
+import { EnvVar, setEnv } from "@stateforge-labs/harness-hooks";
 
 type Hook = (input: unknown) => Promise<void>;
 const SECRET = "tok-plugin-never-log-me";

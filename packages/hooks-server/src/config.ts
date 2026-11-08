@@ -1,5 +1,5 @@
 import { isAbsolute } from "node:path";
-import { EnvDefault, EnvVar, isEnabled, processEnv, type EnvSource } from "@homelab/harness-hooks";
+import { EnvDefault, EnvVar, isEnabled, processEnv, type EnvSource } from "@stateforge-labs/harness-hooks";
 import { z } from "zod";
 import { isLoopbackHost } from "./net.ts";
 

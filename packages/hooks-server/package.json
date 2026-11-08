@@ -1,5 +1,5 @@
 {
-  "name": "@homelab/harness-hooks-server",
+  "name": "@stateforge-labs/harness-hooks-server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -35,7 +35,7 @@
     "install-clients": "bun scripts/install.ts"
   },
   "dependencies": {
-    "@homelab/harness-hooks": "workspace:*",
+    "@stateforge-labs/harness-hooks": "workspace:*",
     "ipaddr.js": "2.5.0",
     "zod": "4.6.7"
   }

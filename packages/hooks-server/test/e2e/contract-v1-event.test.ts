@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
-import { adapters } from "@homelab/harness-hooks";
+import { adapters } from "@stateforge-labs/harness-hooks";
 import { startServer, type RunningServer } from "./harness.ts";
 import { fixture, variant } from "./kit.ts";
-import { EnvVar } from "@homelab/harness-hooks";
+import { EnvVar } from "@stateforge-labs/harness-hooks";
 
 let srv: RunningServer;
 beforeAll(async () => {

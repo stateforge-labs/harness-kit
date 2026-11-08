@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { opencodePluginPath } from "@homelab/harness-hooks";
+import { opencodePluginPath } from "@stateforge-labs/harness-hooks";
 import { join } from "node:path";
-import { ClaudeHook, WORKTREE_TIMEOUT_MS, adapters } from "@homelab/harness-hooks";
-import { EnvVar, processEnv } from "@homelab/harness-hooks";
+import { ClaudeHook, WORKTREE_TIMEOUT_MS, adapters } from "@stateforge-labs/harness-hooks";
+import { EnvVar, processEnv } from "@stateforge-labs/harness-hooks";
 
 const repo = join(import.meta.dir, "..", "..");
 let dir: string;

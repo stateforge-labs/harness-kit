@@ -2,14 +2,14 @@ import { afterAll, afterEach, beforeAll, describe, expect, test } from "bun:test
 import { join } from "node:path";
 import { startServer, type RunningServer } from "./harness.ts";
 import { fixture, variant } from "./kit.ts";
-import { EnvDefault, EnvVar, FailMode, setEnv } from "@homelab/harness-hooks";
+import { EnvDefault, EnvVar, FailMode, setEnv } from "@stateforge-labs/harness-hooks";
 
 type Hook = (input: unknown) => Promise<void>;
 interface Plugin {
   setup(ctx: never): Promise<void>;
 }
 
-const PLUGIN_PATH = Bun.resolveSync("@homelab/harness-hooks/opencode-plugin", import.meta.dir);
+const PLUGIN_PATH = Bun.resolveSync("@stateforge-labs/harness-hooks/opencode-plugin", import.meta.dir);
 const mod = (name: string) => join(import.meta.dir, "middleware-modules", `${name}.ts`);
 const CONTINUE_TEXT = "V1-CONTINUE-REASON\n- V1-MISSING-1\n- V1-MISSING-2";
 const restores: Array<() => void> = [];

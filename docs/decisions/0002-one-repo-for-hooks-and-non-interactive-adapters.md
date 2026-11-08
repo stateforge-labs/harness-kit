@@ -25,9 +25,9 @@ neutral-type change into two releases and a StateForge bump for a single maintai
 
   | Package | Job | May import |
   | --- | --- | --- |
-  | `@homelab/harness-hooks` | neutral event and reply, per-harness decode/encode, middleware pipeline, stock layers, shim, OpenCode plugin | nothing internal |
-  | `@homelab/harness-adapters` | the non-interactive harness port: launch, hermetic config, MCP wiring, stream to events, raw usage, resume | `harness-hooks` |
-  | `@homelab/harness-hooks-server` | the developer hook server for interactive sessions, installers | `harness-hooks` |
+  | `@stateforge-labs/harness-hooks` | neutral event and reply, per-harness decode/encode, middleware pipeline, stock layers, shim, OpenCode plugin | nothing internal |
+  | `@stateforge-labs/harness-adapters` | the non-interactive harness port: launch, hermetic config, MCP wiring, stream to events, raw usage, resume | `harness-hooks` |
+  | `@stateforge-labs/harness-hooks-server` | the developer hook server for interactive sessions, installers | `harness-hooks` |
 
 - **Stays in StateForge:** the snapshot decision layer, prompt and refusal texts, pricing, the session-storage backend, the model relay and
   credentials, images and sandbox policy, and the COMP-R-029 contract suite run against these adapters.

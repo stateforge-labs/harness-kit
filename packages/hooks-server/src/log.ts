@@ -1,6 +1,6 @@
 import { appendFile, mkdir, rename, stat } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { Handled } from "@homelab/harness-hooks";
+import type { Handled } from "@stateforge-labs/harness-hooks";
 
 let queue: Promise<void> = Promise.resolve();
 

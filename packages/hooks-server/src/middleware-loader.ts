@@ -1,5 +1,5 @@
 import { ConfigError } from "./config.ts";
-import { EnvVar, type Middleware } from "@homelab/harness-hooks";
+import { EnvVar, type Middleware } from "@stateforge-labs/harness-hooks";
 
 export async function loadMiddleware(paths: readonly string[]): Promise<Middleware[]> {
   const layers: Middleware[] = [];

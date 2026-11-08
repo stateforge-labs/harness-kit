@@ -1,8 +1,8 @@
 # harness-kit architecture
 
 This page spans the packages. Each package's own README says what it exports, its scripts and its tests:
-[`@homelab/harness-hooks`](../packages/hooks/README.md) (library), [`@homelab/harness-hooks-server`](../packages/hooks-server/README.md)
-(the HTTP service), [`@homelab/harness-adapters`](../packages/adapters/README.md) (empty until phase 5). Paths below are from the repo root.
+[`@stateforge-labs/harness-hooks`](../packages/hooks/README.md) (library), [`@stateforge-labs/harness-hooks-server`](../packages/hooks-server/README.md)
+(the HTTP service), [`@stateforge-labs/harness-adapters`](../packages/adapters/README.md) (empty until phase 5). Paths below are from the repo root.
 
 One server receives the hook events of several coding-agent harnesses (Claude Code, Codex, OpenCode), checks what they send, logs
 metadata and answers with the harness's own response format. The core knows no harness; each harness is an adapter plugged into one port.

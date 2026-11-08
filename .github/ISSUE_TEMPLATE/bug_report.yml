@@ -12,8 +12,8 @@ body:
     id: package
     attributes:
       label: Package and version
-      description: For example @homelab/harness-hooks 0.1.0, or the commit hash if you run from a clone
-      placeholder: "@homelab/harness-hooks 0.1.0"
+      description: For example @stateforge-labs/harness-hooks 0.1.0, or the commit hash if you run from a clone
+      placeholder: "@stateforge-labs/harness-hooks 0.1.0"
     validations:
       required: true
   - type: dropdown
