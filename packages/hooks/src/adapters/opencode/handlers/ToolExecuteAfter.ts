@@ -1,10 +1,10 @@
-// tool.execute.after: labels and counts only. Never the prompt, a tool's input or output, or a resource.
 import type { EventHandler } from "./types.ts";
+import { OpenCodeHook } from "../names.ts";
 
 const str = (v: unknown) => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
-  event: "tool.execute.after",
+  event: OpenCodeHook.ToolExecuteAfter,
   meta: (p) => ({
     status: str(p.status),
   }),

@@ -1,8 +1,6 @@
-// The shim is shipped to places that run Node, not Bun (StateForge's agent sandbox). This runs the real shim file with `node`
-// against a stub HTTP endpoint and checks what it prints. The full shim behaviour against the real server is in
-// packages/hooks-server/test/e2e/shim.test.ts; this file only proves the same file works on Node.
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { shimPath } from "../src/paths.ts";
+import { EnvVar, processEnv } from "../src/env.ts";
 
 let server: ReturnType<typeof Bun.serve>;
 let seen: { path: string; body: string } | undefined;
@@ -21,7 +19,7 @@ afterAll(() => server.stop(true));
 
 async function runNode(url: string, payload: string) {
   const proc = Bun.spawn(["node", shimPath, "--harness", "codex"], {
-    env: { PATH: process.env.PATH ?? "", HOOK_URL: url, HOOK_SHIM_TIMEOUT_MS: "1500" },
+    env: { [EnvVar.Path]: processEnv()[EnvVar.Path] ?? "", [EnvVar.HookUrl]: url, [EnvVar.ShimTimeoutMs]: "1500" },
     stdin: new Blob([payload]),
     stdout: "pipe",
     stderr: "pipe",

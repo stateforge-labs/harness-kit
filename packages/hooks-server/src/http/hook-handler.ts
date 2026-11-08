@@ -1,17 +1,15 @@
 import type { ServerConfig } from "../config.ts";
-import { handle, type HarnessAdapter, type Pipeline } from "@homelab/harness-hooks";
+import { Harness, handle, type HarnessAdapter, type Pipeline } from "@homelab/harness-hooks";
 import { logEvent } from "../log.ts";
 import { Admission } from "./admission.ts";
 
 type Payload = Record<string, unknown>;
 
-/** `/hook/<harness>`; `/hook` alone is the Claude Code route, kept so existing settings keep working. */
 const HOOK_ROUTE = /^\/hook(?:\/([^/]+))?$/;
-const DEFAULT_HARNESS = "claude";
+const DEFAULT_HARNESS = Harness.Claude;
 
 const text = (body: string, status: number) => new Response(body, { status });
 
-/** The request path, or null when the request URL cannot be parsed (a malformed Host header can make it unparseable). */
 function pathOf(req: Request): string | null {
   try {
     return new URL(req.url).pathname;
@@ -20,7 +18,6 @@ function pathOf(req: Request): string | null {
   }
 }
 
-/** Answers one HTTP request: route, method, admission, harness, body, then the adapter. Each step is a method that returns a refusal or lets the next run. */
 export class HookHandler {
   readonly #config: ServerConfig;
   readonly #adapters: ReadonlyMap<string, HarnessAdapter>;
@@ -45,7 +42,6 @@ export class HookHandler {
     const refused = this.#admission.check(req);
     if (refused) return refused;
 
-    // Looked up after admission, so an unauthenticated caller learns nothing about which harnesses exist.
     const adapter = this.#adapters.get(route[1] ?? DEFAULT_HARNESS);
     if (!adapter) return text("not found", 404);
 
@@ -57,7 +53,6 @@ export class HookHandler {
     return Response.json(handled.body);
   }
 
-  /** The JSON object in the body, or the 400 to send when it is not one. */
   async #readPayload(req: Request): Promise<Payload | Response> {
     let body: unknown;
     try {

@@ -1,13 +1,12 @@
-// PreModelSwitch: 4 real payloads from 3 captures (R-2026-11-07-05); judged spec: evidence/judged/PreModelSwitch.json
 import { z } from "zod";
 import { common } from "../common.ts";
 import { CacheTtl, ModelSwitchSource } from "../enums.ts";
+import { ClaudeHook } from "../names.ts";
 
 export const schema = z
   .looseObject({
     ...common,
-    hook_event_name: z.literal("PreModelSwitch"),
-    // UNRESOLVED: whether from_model can be null (always a string in the captures); allowed so it never logs as wrong_type
+    hook_event_name: z.literal(ClaudeHook.PreModelSwitch),
     from_model: z.string().nullable(),
     to_model: z.string(),
     requested_model: z.string(),

@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-/**
- * Shape of `tool_input` for the tools seen in real payloads (27 PreToolUse captures plus the other tool events).
- * Tools not listed here are accepted as any object: the policy is passive, validation only observes.
- * Keys are the fields every captured call carried; extra keys are always allowed.
- */
 const loose = z.looseObject;
 export const toolInputs: Record<string, z.ZodType> = {
   Bash: loose({ command: z.string(), description: z.string().optional() }),
@@ -27,10 +22,8 @@ export const toolInputs: Record<string, z.ZodType> = {
   SubagentHandback: loose({ message: z.string() }),
 };
 
-/** A `tool_input` that is an object; the per-tool check below adds the tool-specific keys. */
 export const anyToolInput = z.record(z.string(), z.unknown());
 
-/** Adds the per-tool `tool_input` issues to an event schema. Use as `.superRefine(checkToolInput)`. */
 export function checkToolInput(value: { tool_name?: unknown; tool_input?: unknown }, ctx: z.RefinementCtx, base: (string | number)[] = []) {
   const name = value.tool_name;
   const schema = typeof name === "string" ? toolInputs[name] : undefined;
@@ -42,5 +35,4 @@ export function checkToolInput(value: { tool_name?: unknown; tool_input?: unknow
   }
 }
 
-/** `tool_response` differs per tool and is never inspected; it only has to be present where the event carries it. */
 export const toolResponse = z.any().refine((v) => v !== undefined, { error: "required" });

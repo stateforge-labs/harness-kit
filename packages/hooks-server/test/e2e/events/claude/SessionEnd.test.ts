@@ -1,9 +1,9 @@
-// What is special about SessionEnd: the bearer token the server checks, and the reason it logs. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
 const TOKEN = "t0k3n";
-const hook = hookServer({ HOOK_TOKEN: TOKEN });
+const hook = hookServer({ [EnvVar.HookToken]: TOKEN });
 
 describe("e2e: SessionEnd", () => {
   test("the log line is known, has no missing keys, carries the reason, and no prompt or command text", async () => {

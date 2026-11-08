@@ -4,6 +4,7 @@ import { mkdtemp, open, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startServer } from "./harness.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
 const post = (base: string, id: string) =>
   fetch(`${base}/hook`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ hook_event_name: "Stop", session_id: id }) });
@@ -24,14 +25,11 @@ describe("e2e: shutdown on a signal", () => {
     }
   });
 
-  // The log is a named pipe, so every write blocks until someone reads. That makes "lines still queued when the
-  // signal arrives" certain instead of a matter of timing: a server that exits without flushing is gone after the
-  // signal, one that flushes stays up until the reader appears.
   test("the server stays up to write queued log lines, and exits 0 once they are written", async () => {
     const dir = await mkdtemp(join(tmpdir(), "harness-hooks-fifo-"));
     const fifo = join(dir, "events.jsonl");
     expect(await Bun.spawn(["mkfifo", fifo]).exited).toBe(0);
-    const srv = await startServer({ HOOK_LOG_FILE: fifo });
+    const srv = await startServer({ [EnvVar.HookLogFile]: fifo });
     let reader: Awaited<ReturnType<typeof open>> | undefined;
     try {
       for (const id of ["fifo-1", "fifo-2", "fifo-3"]) expect((await post(srv.base, id)).status).toBe(200);
@@ -39,7 +37,6 @@ describe("e2e: shutdown on a signal", () => {
       const state = await Promise.race([exited.then(() => "exited"), Bun.sleep(700).then(() => "alive")]);
       expect(state).toBe("alive");
 
-      // Opening for read and write never blocks and keeps the pipe's data after the server has gone.
       reader = await open(fifo, constants.O_RDWR);
       expect(await exited).toBe(0);
       let text = "";
@@ -56,13 +53,11 @@ describe("e2e: shutdown on a signal", () => {
     }
   }, 15000);
 
-  // Same pipe trick with a request that never finishes: the grace period ends while log lines are still queued,
-  // and the server must still write them before it leaves with 1.
   test("when the grace period runs out with log lines still queued, they are written before the exit 1", async () => {
     const dir = await mkdtemp(join(tmpdir(), "harness-hooks-fifo-"));
     const fifo = join(dir, "events.jsonl");
     expect(await Bun.spawn(["mkfifo", fifo]).exited).toBe(0);
-    const srv = await startServer({ HOOK_LOG_FILE: fifo, HOOK_SHUTDOWN_GRACE_MS: "300" });
+    const srv = await startServer({ [EnvVar.HookLogFile]: fifo, [EnvVar.HookShutdownGraceMs]: "300" });
     const sock = await Bun.connect({ hostname: "127.0.0.1", port: srv.port, socket: { data() {}, error() {}, close() {} } });
     let reader: Awaited<ReturnType<typeof open>> | undefined;
     try {
@@ -70,7 +65,6 @@ describe("e2e: shutdown on a signal", () => {
       sock.write(`POST /hook HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: 100\r\n\r\n{`);
       await Bun.sleep(100);
       const exited = srv.stopKeepingLog("SIGTERM");
-      // Well past the 300 ms grace period the server is still there, waiting on the pipe.
       expect(await Promise.race([exited.then(() => "exited"), Bun.sleep(1200).then(() => "alive")])).toBe("alive");
       reader = await open(fifo, constants.O_RDWR);
       expect(await exited).toBe(1);
@@ -102,11 +96,10 @@ describe("e2e: shutdown on a signal", () => {
   });
 
   test("a request that never finishes is closed after the grace period: exit 1, log still flushed", async () => {
-    const srv = await startServer({ HOOK_SHUTDOWN_GRACE_MS: "400" });
+    const srv = await startServer({ [EnvVar.HookShutdownGraceMs]: "400" });
     const sock = await Bun.connect({ hostname: "127.0.0.1", port: srv.port, socket: { data() {}, error() {}, close() {} } });
     try {
       expect((await post(srv.base, "stall-ok")).status).toBe(200);
-      // Headers promise 100 bytes of body; only one is sent.
       sock.write(`POST /hook HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: 100\r\n\r\n{`);
       await Bun.sleep(100);
       const started = performance.now();

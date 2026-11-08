@@ -1,10 +1,8 @@
-// What is special about PreModelSwitch. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 
 const hook = hookServer();
 
-// A realistic cache-warm /model switch, the values the log meta is checked against.
 const warm = {
   from_model: "claude-sonnet-5",
   to_model: "claude-opus-5",

@@ -1,4 +1,3 @@
-// What is special about StopFailure: the error category it logs, and that it never blocks or adds output. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

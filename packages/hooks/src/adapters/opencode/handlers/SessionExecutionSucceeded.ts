@@ -1,7 +1,7 @@
-// session.execution.succeeded: labels and counts only. Never the prompt, a tool's input or output, or a resource.
 import type { EventHandler } from "./types.ts";
+import { OpenCodeHook } from "../names.ts";
 
 export const handler: EventHandler = {
-  event: "session.execution.succeeded",
+  event: OpenCodeHook.SessionExecutionSucceeded,
   meta: () => ({}),
 };

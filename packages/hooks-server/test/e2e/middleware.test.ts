@@ -1,13 +1,13 @@
-// The middleware pipeline, through the real server: modules named in HOOK_MIDDLEWARE are loaded at start and wrap every event.
 import { afterAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { refusesToStart, startServer, type RunningServer } from "./harness.ts";
 import { fixture, variant } from "./kit.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
 const mod = (name: string) => join(import.meta.dir, "middleware-modules", `${name}.ts`);
 const started: RunningServer[] = [];
 async function server(modules: string[], env: Record<string, string> = {}) {
-  const srv = await startServer({ HOOK_MIDDLEWARE: modules.map(mod).join(","), ...env });
+  const srv = await startServer({ [EnvVar.HookMiddleware]: modules.map(mod).join(","), ...env });
   started.push(srv);
   const post = (harness: string, body: unknown) =>
     fetch(`${srv.base}/hook/${harness}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
@@ -24,7 +24,6 @@ describe("e2e: middleware", () => {
     const { post } = await server(["layer-a", "layer-b"]);
     const res = await post("codex", codexBash());
     const body = await res.json();
-    // B is inside A, so B's text is added first and A's last.
     expect(body).toEqual({ hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: "B\n\nA" } });
   });
 
@@ -55,8 +54,8 @@ describe("e2e: middleware", () => {
     expect(contextOf(await res.json())).toBe("A");
   });
 
-  test("a layer that never answers is skipped after HOOK_MIDDLEWARE_TIMEOUT_MS", async () => {
-    const { post } = await server(["hangs", "layer-a"], { HOOK_MIDDLEWARE_TIMEOUT_MS: "250" });
+  test(`a layer that never answers is skipped after ${EnvVar.HookMiddlewareTimeoutMs}`, async () => {
+    const { post } = await server(["hangs", "layer-a"], { [EnvVar.HookMiddlewareTimeoutMs]: "250" });
     const started = performance.now();
     const res = await post("codex", codexBash());
     expect(contextOf(await res.json())).toBe("A");
@@ -70,12 +69,12 @@ describe("e2e: middleware", () => {
   });
 });
 
-describe("e2e: HOOK_MIDDLEWARE is checked at start", () => {
+describe(`e2e: ${EnvVar.HookMiddleware} is checked at start`, () => {
   test.each([
-    ["a relative path", { HOOK_MIDDLEWARE: "./layer.ts" }, "absolute"],
-    ["a file that does not exist", { HOOK_MIDDLEWARE: "/nonexistent/layer.ts" }, "/nonexistent/layer.ts"],
-    ["a module that exports no function", { HOOK_MIDDLEWARE: join(import.meta.dir, "middleware-modules/not-a-function.ts") }, "must default-export"],
-    ["a bad timeout", { HOOK_MIDDLEWARE_TIMEOUT_MS: "0" }, "HOOK_MIDDLEWARE_TIMEOUT_MS"],
+    ["a relative path", { [EnvVar.HookMiddleware]: "./layer.ts" }, "absolute"],
+    ["a file that does not exist", { [EnvVar.HookMiddleware]: "/nonexistent/layer.ts" }, "/nonexistent/layer.ts"],
+    ["a module that exports no function", { [EnvVar.HookMiddleware]: join(import.meta.dir, "middleware-modules/not-a-function.ts") }, "must default-export"],
+    ["a bad timeout", { [EnvVar.HookMiddlewareTimeoutMs]: "0" }, EnvVar.HookMiddlewareTimeoutMs],
   ])("%s is refused with exit 2 and a message that names the problem", async (_n, env, text) => {
     const r = await refusesToStart(env);
     expect(r.code).toBe(2);

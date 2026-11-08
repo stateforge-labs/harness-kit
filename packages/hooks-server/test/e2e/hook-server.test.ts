@@ -1,11 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { eventually, startServer, type RunningServer } from "./harness.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
 const TOKEN = "t0k3n";
 let srv: RunningServer;
 
 beforeAll(async () => {
-  srv = await startServer({ HOOK_TOKEN: TOKEN });
+  srv = await startServer({ [EnvVar.HookToken]: TOKEN });
 });
 afterAll(() => srv.stop());
 
@@ -72,8 +73,8 @@ describe("e2e: other routes", () => {
 });
 
 describe("e2e: configuration", () => {
-  test("HOOK_LOG_PAYLOAD=1 keeps the full payload in the log", async () => {
-    const full = await startServer({ HOOK_TOKEN: TOKEN, HOOK_LOG_PAYLOAD: "1" });
+  test(`${EnvVar.HookLogPayload}=1 keeps the full payload in the log`, async () => {
+    const full = await startServer({ [EnvVar.HookToken]: TOKEN, [EnvVar.HookLogPayload]: "1" });
     try {
       await fetch(`${full.base}/hook`, {
         method: "POST",
@@ -92,7 +93,7 @@ describe("e2e: configuration", () => {
   });
 
   test("an empty token runs without auth (dev only): no Authorization header is needed, a JSON content type is", async () => {
-    const open = await startServer({ HOOK_TOKEN: "" });
+    const open = await startServer({ [EnvVar.HookToken]: "" });
     try {
       const res = await fetch(`${open.base}/hook`, {
         method: "POST",

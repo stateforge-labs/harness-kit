@@ -1,12 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { isLoopbackHost } from "../net.ts";
 
-/**
- * Who may post. With a token, only a request that carries it: a web page cannot add an Authorization header without a
- * preflight, so no further check is needed. With no token the server is open on loopback, which a web page in the user's browser
- * can also reach, so it also requires a loopback Host (stops DNS rebinding) and a JSON content type (a cross-site form or
- * no-cors fetch cannot send one).
- */
 export class Admission {
   readonly #token: string;
 
@@ -14,7 +8,6 @@ export class Admission {
     this.#token = token;
   }
 
-  /** The refusal to send, or null to admit the request. */
   check(req: Request): Response | null {
     return this.#token !== "" ? this.#checkToken(req) : this.#checkLoopback(req);
   }

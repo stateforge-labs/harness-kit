@@ -1,10 +1,10 @@
-// What is special about PermissionDenied: the classifier reason is logged, and an Agent denial is never retried. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
 const TOKEN = "t0k3n";
-const SECRET_CMD = "rm -rf SECRET-PATH-ZZ9";
-const hook = hookServer({ HOOK_TOKEN: TOKEN });
+const SECRET_CMD = `rm -rf SECRET-${EnvVar.Path}-ZZ9`;
+const hook = hookServer({ [EnvVar.HookToken]: TOKEN });
 const post = (body: unknown) => hook.post(body, { token: TOKEN });
 
 describe("e2e: PermissionDenied", () => {
@@ -18,7 +18,7 @@ describe("e2e: PermissionDenied", () => {
     expect(entry.tool_name).toBe("Bash");
     expect(entry.reason).toBe("[Irreversible Local Destruction]");
     expect(entry.permission_mode).toBe("auto");
-    expect(text).not.toContain("SECRET-PATH-ZZ9");
+    expect(text).not.toContain(`SECRET-${EnvVar.Path}-ZZ9`);
   });
 
   test("the handler stays passive: no retry, even for an Agent call with a classifier denial", async () => {

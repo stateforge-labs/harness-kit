@@ -1,4 +1,3 @@
-// What is special about SubagentStart: the subagent rules it returns for any agent type, and the agent fields it logs. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

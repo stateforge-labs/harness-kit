@@ -1,26 +1,22 @@
-// One suite that every event of every harness must pass, driven by the fixtures in @homelab/harness-hooks fixtures/<harness>.
-// Each registered adapter that has fixtures gets the whole suite; event files under test/e2e/events/<harness>/
-// hold only what is special about one event.
 import { describe, expect, test } from "bun:test";
 import { adapters } from "@homelab/harness-hooks";
 import { fixtures, hookServer, variant, type Fixture } from "./kit.ts";
 
-/** Keys whose values the server may log, because they are short identifiers or enumerations, never typed text. */
 const MAY_LOG = new Set([
   "session_id", "harness", "agent_id", "agent_type", "tool_name", "permission_mode", "prompt_id", "level",
   "source", "trigger", "event", "error", "action", "mode", "load_reason", "memory_type", "notification_type",
   "expansion_type", "command_name", "command_source", "mcp_server_name", "from_model", "to_model", "requested_model",
   "pricing", "subagent_type", "model", "message_id", "turn_id", "elicitation_id", "task_id", "teammate_name", "team_name",
-  "name", "reason", // reason: SessionEnd enum and the PermissionDenied classifier tag, both short labels
-  "effect", "delivery", "source_type", // OpenCode short labels: permission effect, prompt delivery, permission source
-  "agent", "type", "tool", // OpenCode: `agent` (build, general) is logged as agent_type, `tool` as tool_name, `type` is the source key behind source_type
-  "status", // Codex PostModelRequest outcome label ("completed", ...), a short label like `reason`
+  "name", "reason",
+  "effect", "delivery", "source_type",
+  "agent", "type", "tool",
+  "status",
 ]);
 
 
 for (const [harness, adapter] of adapters) {
   const all = fixtures(harness);
-  if (all.length === 0) continue; // an adapter without fixtures yet has nothing for this suite to drive
+  if (all.length === 0) continue;
   const hook = hookServer(harness);
   const events = [...new Set(all.map((f) => f.event))];
   const requiredKeys = (event: string): string[] =>
@@ -45,14 +41,12 @@ for (const [harness, adapter] of adapters) {
       expect(entry.known).toBe(true);
       expect(entry.missing).toEqual([]);
       expect(entry.wrong_type).toEqual([]);
-      // The whole line, byte for byte except the timestamp and the session id the test chose: keys, order and values.
       const { ts: _ts, ...line } = entry;
       line.session_id = f.log.session_id;
       expect(JSON.stringify(line)).toBe(JSON.stringify(f.log));
     });
   });
 
-  /** A damaged payload may change the answer, but never into one that stops the agent or denies the action. */
   function expectNeverBlocks(answer: unknown): void {
     expect(answer).not.toBeNull();
     expect(typeof answer).toBe("object");
@@ -76,11 +70,9 @@ for (const [harness, adapter] of adapters) {
       const f = fixtures(harness, event)[0]!;
       for (const key of requiredKeys(event)) {
         const body = variant(f, { [key]: undefined }, `miss-${event}-${key}`);
-        // session_id is how the test finds its line; keep a stand-in for it
         if (key === "session_id") continue;
         const res = await hook.post(body);
         expect(res.status).toBe(200);
-        // A damaged payload must never turn into a block: the answer may differ from the recorded one, but it never stops the agent.
         expectNeverBlocks(await res.json());
         const { entry } = await hook.logFor(body.session_id);
         expect(entry.missing).toEqual([key]);
@@ -92,7 +84,7 @@ for (const [harness, adapter] of adapters) {
       const f = fixtures(harness, event)[0]!;
       const props = (adapter.jsonSchemas()[event] as { properties?: Record<string, { enum?: unknown[] }> }).properties ?? {};
       const key = requiredKeys(event).find((k) => typeof f.payload[k] === "string" && !props[k]?.enum && !["session_id", "hook_event_name", "tool_name"].includes(k));
-      if (!key) return; // events with no string-typed key of their own: nothing to retype
+      if (!key) return;
       const body = variant(f, { [key]: 987654 }, `type-${event}`);
       const res = await hook.post(body);
       expect(res.status).toBe(200);
@@ -104,13 +96,11 @@ for (const [harness, adapter] of adapters) {
   });
 
   describe(`contract[${harness}]: a value outside a closed set is reported, never rejected`, () => {
-    /** Required or optional keys the schema types as a closed set of values. */
     const enumKeys = (event: string): string[] => {
       const props = (adapter.jsonSchemas()[event] as { properties?: Record<string, { enum?: unknown[] }> }).properties ?? {};
       return Object.keys(props).filter((k) => Array.isArray(props[k]!.enum));
     };
     test.each(events.map((e) => [e] as const))("%s: an unlisted value is logged as invalid_value without the value, and the answer stays 200", async (event) => {
-      // Every fixture of the event, and every enum key present in any of them (an optional key may be absent from the first fixture).
       const seenKeys = new Set<string>();
       for (const f of fixtures(harness, event)) {
         for (const key of enumKeys(event).filter((k) => k in f.payload && !seenKeys.has(k))) {
@@ -123,13 +113,10 @@ for (const [harness, adapter] of adapters) {
           const { entry } = await hook.logFor(body.session_id);
           expect(entry.wrong_type).toEqual([`${key}: invalid_value`]);
           expect(entry.missing).toEqual([]);
-          // The report is the path and the problem. A handler may log the value as a short label field of its own (under the key's name
-          // or another, e.g. FileChanged logs `event` as `change`); the privacy tests below decide which. It must not appear anywhere else.
           const rest = Object.fromEntries(Object.entries(entry).filter(([, v]) => v !== bad));
           expect(JSON.stringify(rest)).not.toContain(bad);
         }
       }
-      // Guard against a vacuous pass: an event whose schema has an enum key must have been exercised at least once.
       const withEnum = enumKeys(event).filter((k) => fixtures(harness, event).some((f) => k in f.payload));
       expect([...seenKeys].sort()).toEqual(withEnum.sort());
     });

@@ -1,11 +1,8 @@
-// PostModelRequest: from the pinned schema evidence/codex-primary/schemas/model-request.command.input.schema.json (oneOf branch 2),
-// and the real payloads in @homelab/harness-hooks fixtures/codex/PostModelRequest. No matcher support.
 import { z } from "zod";
 import { common } from "../common.ts";
 import { ModelRequestStatus } from "../enums.ts";
 
 const tokenUsage = z.looseObject({
-  /** Not in "required"; JSON Schema default 0. */
   cache_write_input_tokens: z.number().int().optional(),
   cached_input_tokens: z.number().int(),
   input_tokens: z.number().int(),

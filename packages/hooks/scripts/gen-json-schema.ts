@@ -1,8 +1,3 @@
-// Writes JSON Schema for every hook event of every harness to schemas/<harness>/, plus a README table of keys for each.
-// Usage: bun scripts/gen-json-schema.ts [--check] [--root <dir>]
-// The schemas under src/adapters/<harness>/events/ are the source; these files are documentation only.
-// Claude's per-tool `tool_input` checks are code, not JSON Schema, so they are listed in src/adapters/claude/tool-input.ts.
-// --check writes nothing: it exits 1 and lists the files that are stale or no longer generated. --root points at another copy of docs/.
 import { join } from "node:path";
 import { adapters } from "../src/adapters/index.ts";
 import { emit, parseArgs } from "./lib/emit.ts";
@@ -11,7 +6,6 @@ const { check, root } = parseArgs();
 const files = new Map<string, string>();
 const owned: string[] = [];
 
-/** Per harness: its display name, the keys every event carries (left out of the table), and the keys that are always listed. */
 const HARNESSES: Record<string, { title: string; common: string[]; always: string[]; intro: string }> = {
   claude: {
     title: "Claude Code",

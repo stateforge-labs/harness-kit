@@ -1,11 +1,8 @@
 import type { EventHandler } from "./types.ts";
+import { ClaudeHook } from "../names.ts";
 
-/**
- * PostToolUse fires after a tool succeeds. Passive by policy: it never blocks, never adds context and never
- * changes the tool output (no updatedToolOutput, decision or continue). HTTP hooks are supported.
- */
 export const handler: EventHandler = {
-  event: "PostToolUse",
+  event: ClaudeHook.PostToolUse,
   meta: (p) => {
     const mcp = p.mcp_server;
     const mcpName = typeof mcp === "object" && mcp !== null && "name" in mcp && typeof mcp.name === "string" ? mcp.name : null;

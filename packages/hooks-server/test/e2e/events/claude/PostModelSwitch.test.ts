@@ -1,4 +1,3 @@
-// What is special about PostModelSwitch: it is passive for every switch source, and the log keeps the model meta. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

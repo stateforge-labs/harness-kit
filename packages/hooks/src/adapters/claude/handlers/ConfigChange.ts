@@ -1,7 +1,7 @@
-// ConfigChange: passive, never blocks a settings change; http hook type is supported.
 import type { EventHandler } from "./types.ts";
+import { ClaudeHook } from "../names.ts";
 
 export const handler: EventHandler = {
-  event: "ConfigChange",
+  event: ClaudeHook.ConfigChange,
   meta: (p) => ({ source: typeof p.source === "string" ? p.source : null }),
 };

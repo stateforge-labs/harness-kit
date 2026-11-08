@@ -1,32 +1,20 @@
-// Turns the real captured hook payloads into scrubbed, de-duplicated test fixtures.
-// Usage: bun scripts/export-fixtures.ts [captures-dir] [out-dir]   (defaults: the Claude captures, fixtures/claude;
-// for Codex pass the R-2026-11-07-08 captures folder and fixtures/codex)
-// Reads captures/*/events.jsonl, keeps one payload per distinct (event, key set, discriminating values),
-// scrubs paths, ids and free text, and writes fixtures/claude/<Event>/<nn>-<label>.json.
-// Re-running replaces the fixtures, so the output is reproducible from the captures.
-// NOTE: the committed Claude and Codex fixtures were exported before `tool_response` and `command` joined FREE_TEXT, so re-exporting them
-// would replace those two kinds of text with placeholders (and nothing else). OpenCode's fixtures were exported with the final rules.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = join(import.meta.dir, "..");
 const capturesDir =
   process.argv[2] ?? join(root, "..", "..", "docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures");
-// Claude Code only: other harnesses have their own folders under fixtures/, which this script must never clear.
 const outDir = process.argv[3] ?? join(root, "fixtures/claude");
 
-/** Keys whose string values are free text typed by a person or produced by a model. */
 const FREE_TEXT = new Set([
   "prompt", "last_assistant_message", "compact_summary", "custom_instructions", "message", "content",
   "new_string", "old_string", "stdout", "stderr", "output", "error_details", "summary", "description",
   "result", "text", "title", "session_title", "expanded_prompt", "command_args", "args",
-  "tool_response", // Codex: the tool's output as a string
-  "resources", // OpenCode permission.evaluate: the command or path being asked about
-  "command", // a shell command can carry a secret (an inline token, a URL with credentials); a short one was passed through before
+  "tool_response",
+  "resources",
+  "command",
 ]);
-/** Values that pick a variant of an event; two payloads that differ here are both kept. */
 const DISCRIMINATORS = ["trigger", "source", "notification_type", "command_source", "error", "reason", "tool_name", "mode", "memory_type", "load_reason"];
-// OpenCode: its bodies use these keys as short labels that pick a variant. Claude/Codex payloads do not, and adding them there regroups their fixtures.
 const OPENCODE_DISCRIMINATORS = ["tool", "delivery", "status", "action"];
 const MAX_PER_EVENT = 8;
 
@@ -53,12 +41,11 @@ function scrubString(key: string, s: string, id: string): string {
 function scrub(v: unknown, key: string, id: string): unknown {
   if (typeof v === "string") {
     if (key === "session_id" || key === "sessionID") return id;
-    // OpenCode's ids (messageID, projectID, parentID, call and part ids) and its generated slug are random per run
     if (/(?<!provider)ID$/.test(key) || key === "id" || key === "slug") return `PLACEHOLDER-${key}`;
     return scrubString(key, v, id);
   }
   if (Array.isArray(v)) return v.map((x) => scrub(x, key, id));
-  if (key === "model" && v && typeof v === "object") return v; // OpenCode's model reference (ids and a variant label) names no one
+  if (key === "model" && v && typeof v === "object") return v;
   if (v && typeof v === "object") {
     return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, scrub(x, k, id)]));
   }
@@ -84,7 +71,6 @@ for (const name of readdirSync(capturesDir).sort()) {
   }
 }
 
-// Hand-made files survive a re-export: synthetic fixtures (<nn>-synthetic.json) and provenance.json are not derived from captures.
 const kept = new Map<string, string>();
 if (existsSync(outDir)) {
   for (const f of readdirSync(outDir, { recursive: true }) as string[]) {

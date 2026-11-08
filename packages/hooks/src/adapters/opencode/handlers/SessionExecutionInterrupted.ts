@@ -1,10 +1,10 @@
-// session.execution.interrupted: labels and counts only. Never the prompt, a tool's input or output, or a resource.
 import type { EventHandler } from "./types.ts";
+import { OpenCodeHook } from "../names.ts";
 
 const str = (v: unknown) => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
-  event: "session.execution.interrupted",
+  event: OpenCodeHook.SessionExecutionInterrupted,
   meta: (p) => ({
     reason: str(p.reason),
   }),

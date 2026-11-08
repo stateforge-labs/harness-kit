@@ -1,10 +1,10 @@
-// PostCompact: what triggered the compaction (auto seen).
 import type { EventHandler } from "./types.ts";
+import { CodexHook } from "../names.ts";
 
 const str = (v: unknown) => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
-  event: "PostCompact",
+  event: CodexHook.PostCompact,
   meta: (p) => ({
     trigger: str(p.trigger),
   }),

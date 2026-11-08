@@ -1,11 +1,10 @@
-// MessageDisplay: display-only, http supported. Passive: displayContent is allowed by the spec but not used here.
 import type { EventHandler } from "./types.ts";
+import { ClaudeHook } from "../names.ts";
 
 const str = (v: unknown) => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
-  event: "MessageDisplay",
-  // Structural identifiers only. `delta` is assistant message text and is never logged.
+  event: ClaudeHook.MessageDisplay,
   meta: (p) => ({
     index: typeof p.index === "number" ? p.index : null,
     final: typeof p.final === "boolean" ? p.final : null,

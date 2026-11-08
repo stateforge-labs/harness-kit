@@ -1,9 +1,9 @@
-// What is special about CwdChanged. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
 const TOKEN = "t0k3n";
-const hook = hookServer({ HOOK_TOKEN: TOKEN });
+const hook = hookServer({ [EnvVar.HookToken]: TOKEN });
 
 describe("e2e: CwdChanged", () => {
   test("the log line is known, has no missing keys, and no paths or prompt text", async () => {

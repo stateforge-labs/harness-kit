@@ -1,10 +1,10 @@
-// permission.evaluate: labels and counts only. Never the prompt, a tool's input or output, or a resource.
 import type { EventHandler } from "./types.ts";
+import { OpenCodeHook } from "../names.ts";
 
 const str = (v: unknown) => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
-  event: "permission.evaluate",
+  event: OpenCodeHook.PermissionEvaluate,
   meta: (p) => ({
     action: str(p.action),
     effect: str(p.effect),

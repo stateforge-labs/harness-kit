@@ -134,7 +134,7 @@ A native event with no shared meaning is `other`: it is still validated, logged 
 
 ## Adapters
 
-Each lives in `packages/hooks/src/adapters/<harness>/`: `adapter.ts`, `common.ts` (envelope keys), `enums.ts` (every closed value set), `events/<Event>.ts`
+Each lives in `packages/hooks/src/adapters/<harness>/`: `adapter.ts`, `names.ts` (every hook name and the spawn tool name, as constants), `output.ts` (Claude, Codex: where each reply field goes), `common.ts` (envelope keys), `enums.ts` (every closed value set), `events/<Event>.ts`
 (zod schema), `handlers/<Event>.ts` (log metadata), `neutral.ts` (kind table), `spawn.ts`. `packages/hooks/scripts/gen-registry.ts` generates
 `handlers/index.ts` and `schemas.ts`; `packages/hooks/scripts/gen-json-schema.ts` writes `packages/hooks/schemas/<harness>/`.
 
@@ -156,9 +156,15 @@ A schema reports; it does not decide. A missing key, a wrong type or a value out
 (`missing`, `wrong_type: ["path: expected string"]`, `["path: invalid_value"]`) and the request is answered as usual, because a new
 harness version must never stop an agent. Value sets are zod enums in one `enums.ts` per harness; a set that was only "seen so far" says so.
 
-## Configuration (`packages/hooks-server/src/config.ts`)
+## Configuration (`packages/hooks/src/env.ts`)
 
-`new ServerConfig(process.env)` validates the whole environment and throws `ConfigError` (exit 2, message never contains the token).
+Every environment variable is named, defaulted and parsed in one module, `packages/hooks/src/env.ts` (`EnvVar`, `EnvDefault`, `FailMode`),
+and it is the only file that touches `process.env`. Each consumer gets a typed view of it: `shimEnv()`, `pluginEnv()`, `installEnv()`,
+`captureEnv()`, and the server's `new ServerConfig()` (`packages/hooks-server/src/config.ts`), which validates the server's variables with
+zod and throws `ConfigError` (exit 2, message never contains the token). Tests set variables with `setEnv()` and spawn children with
+`processEnv()`.
+
+Server:
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -172,8 +178,36 @@ harness version must never stop an agent. Value sets are zod enums in one `enums
 | `HOOK_MIDDLEWARE` | empty | absolute module paths, comma-separated; each exports a `Middleware` or an array |
 | `HOOK_MIDDLEWARE_TIMEOUT_MS` | 2000 | a layer slower than this is skipped |
 
+Clients (the shim and the OpenCode plugin read them on every call):
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `HOOK_URL` | `http://127.0.0.1:8787` | the server |
+| `HOOK_TOKEN` | empty | bearer token, never printed |
+| `HOOK_SHIM_TIMEOUT_MS`, `HOOK_PLUGIN_TIMEOUT_MS` | 5000 | give up after this long |
+| `HOOK_SHIM_FAIL`, `HOOK_PLUGIN_FAIL` | `open` | `closed` refuses the pre-tool call (and the shim's `PermissionRequest`) when the server fails |
+| `HOOK_SHIM_DENY_REASON`, `HOOK_PLUGIN_DENY_REASON` | `harness-hooks: the hook server did not answer, ...` | the refusal text in closed mode |
+| `HOOK_PLUGIN_MAX_CONTINUES` | 8 | continues in a row per session |
+| `HOOK_SHIM_DEBUG` | off | `1` says on stderr why the shim failed |
+
+Installer: `XDG_CONFIG_HOME`, `XDG_STATE_HOME`, `CODEX_HOME`. Research capture tool (`tools/capture-server.ts`): `CAPTURE_LOG`,
+`CAPTURE_TOKEN`, `CAPTURE_RESPONSE`, `CAPTURE_RULES`.
+
 Loopback is decided by `packages/hooks-server/src/net.ts` with `ipaddr.js` (`range() === "loopback"`) after the URL parser has split `host[:port]`; only canonical spellings are accepted (`localhost`, `127.x.y.z`, `[::1]`), and `127.1`, `user@localhost`, `app.localhost` and `0.0.0.0` are refused. No DNS lookup is ever made.
 `HookServerBuilder` (`packages/hooks-server/src/server.ts`) wires config, adapters and the handler; `packages/hooks-server/src/shutdown.ts` drains the log on SIGTERM/SIGINT.
+
+## Code conventions
+
+- No comments in `packages/` or `tools/`. Why something is the way it is, and the evidence for it, lives in this page, the ADRs and the
+  research studies.
+- No string literal stands for a hook name, neutral kind, harness id or env variable in logic: hook names come from each harness's
+  `names.ts` (`ClaudeHook`, `CodexHook`, `OpenCodeHook`), kinds and harness ids from `packages/hooks/src/core/event.ts` (`Kind`,
+  `Harness`), variables from `packages/hooks/src/env.ts`.
+- The OpenCode plugin (`packages/hooks/clients/opencode/`: `plugin.ts` entry, `hooks.ts`, `forward.ts`, `continues.ts`, `context.ts`)
+  imports the shared modules like any other code; `bun scripts/install.ts opencode --apply` bundles it into one self-contained file,
+  `plugins/harness-hooks.js`, because OpenCode loads plugins from its own folder.
+- The shim (`packages/hooks/clients/shim/hook-shim.ts`) builds its fail-closed answer with the same encoder the server uses
+  (`packages/hooks/src/adapters/hook-output.ts`).
 
 ## Tests
 

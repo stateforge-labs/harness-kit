@@ -1,17 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import { refusesToStart, startServer } from "./harness.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
-describe("e2e: PORT", () => {
-  // Number() would turn "" into 0 (a random port), "0x10" into 16 and " 80 " into 80.
-  test.each(["", "abc", "-1", "1.5", "0x10", " 80 ", "65536", "70000", "1e3"])("PORT=%j is refused with a clear message and nothing listens", async (port) => {
-    const r = await refusesToStart({ PORT: port });
+describe(`e2e: ${EnvVar.Port}`, () => {
+  test.each(["", "abc", "-1", "1.5", "0x10", " 80 ", "65536", "70000", "1e3"])(`${EnvVar.Port}=%j is refused with a clear message and nothing listens`, async (port) => {
+    const r = await refusesToStart({ [EnvVar.Port]: port });
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain("PORT must be a whole number from 0 to 65535");
+    expect(r.stderr).toContain(`${EnvVar.Port} must be a whole number from 0 to 65535`);
     expect(r.stdout).not.toContain("listening");
   });
 
-  test("PORT=0 asks the system for a free port and the server answers there", async () => {
-    const srv = await startServer({ PORT: "0" });
+  test(`${EnvVar.Port}=0 asks the system for a free port and the server answers there`, async () => {
+    const srv = await startServer({ [EnvVar.Port]: "0" });
     try {
       expect((await fetch(`${srv.base}/healthz`)).status).toBe(200);
     } finally {
@@ -19,17 +19,16 @@ describe("e2e: PORT", () => {
     }
   });
 
-  test("a bad HOOK_LOG_MAX_BYTES is refused the same way", async () => {
+  test(`a bad ${EnvVar.HookLogMaxBytes} is refused the same way`, async () => {
     for (const v of ["", "abc", "-5", "0", "1.5"]) {
-      const r = await refusesToStart({ HOOK_LOG_MAX_BYTES: v });
+      const r = await refusesToStart({ [EnvVar.HookLogMaxBytes]: v });
       expect(r.code).toBe(2);
-      expect(r.stderr).toContain("HOOK_LOG_MAX_BYTES");
+      expect(r.stderr).toContain(EnvVar.HookLogMaxBytes);
     }
   });
 });
 
 describe("e2e: bind address", () => {
-  /** Non-internal IPv4 addresses of this machine; empty on a host with only loopback. */
   const otherAddresses = (): string[] =>
     Object.values(require("node:os").networkInterfaces() as Record<string, { address: string; family: string; internal: boolean }[]>)
       .flat()
@@ -45,11 +44,9 @@ describe("e2e: bind address", () => {
     }
   });
 
-  // Skipped (not passed) on a machine with no other IPv4 address, where there is nothing to reach the server on.
   test.skipIf(otherAddresses().length === 0)("another address of this machine does not reach a default server", async () => {
     const srv = await startServer();
     try {
-      // It would answer if the server were bound to all interfaces.
       for (const addr of otherAddresses()) {
         const res = await fetch(`http://${addr}:${srv.port}/healthz`, { signal: AbortSignal.timeout(1500) }).catch(() => null);
         expect(res).toBeNull();
@@ -61,23 +58,23 @@ describe("e2e: bind address", () => {
 
   test("a non-loopback host with an empty token is refused", async () => {
     for (const host of ["0.0.0.0", "::", "192.168.1.10", "example.test", "127.999.0.1", "127.0.0.1.evil.test", "user@localhost", "localhost/x", "128.0.0.1", "[::ffff:10.0.0.1]"]) {
-      const r = await refusesToStart({ HOOK_HOST: host });
+      const r = await refusesToStart({ [EnvVar.HookHost]: host });
       expect(r.code).toBe(2);
-      expect(r.stderr).toContain("HOOK_TOKEN is empty");
+      expect(r.stderr).toContain(`${EnvVar.HookToken} is empty`);
       expect(r.stderr).toContain(host);
       expect(r.stdout).not.toContain("listening");
     }
   });
 
-  test("an empty HOOK_HOST is refused", async () => {
-    const r = await refusesToStart({ HOOK_HOST: "" });
+  test(`an empty ${EnvVar.HookHost} is refused`, async () => {
+    const r = await refusesToStart({ [EnvVar.HookHost]: "" });
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain("HOOK_HOST must not be empty");
+    expect(r.stderr).toContain(`${EnvVar.HookHost} must not be empty`);
   });
 
   test("a non-loopback host starts when a token is set, and the error never prints the token", async () => {
     const secret = "tok-never-print-me";
-    const srv = await startServer({ HOOK_HOST: "0.0.0.0", HOOK_TOKEN: secret });
+    const srv = await startServer({ [EnvVar.HookHost]: "0.0.0.0", [EnvVar.HookToken]: secret });
     try {
       const res = await fetch(`${srv.base}/hook`, { method: "POST", body: "{}" });
       expect(res.status).toBe(401);
@@ -88,8 +85,8 @@ describe("e2e: bind address", () => {
 
   test("no refusal message prints the token, even when the token is set next to a bad value", async () => {
     const secret = "tok-never-print-me";
-    for (const env of <Record<string, string>[]>[{ PORT: "abc" }, { HOOK_LOG_MAX_BYTES: "abc" }, { HOOK_MAX_BODY_BYTES: "0" }, { HOOK_SHUTDOWN_GRACE_MS: "x" }, { HOOK_HOST: "" }]) {
-      const r = await refusesToStart({ ...env, HOOK_TOKEN: secret });
+    for (const env of <Record<string, string>[]>[{ [EnvVar.Port]: "abc" }, { [EnvVar.HookLogMaxBytes]: "abc" }, { [EnvVar.HookMaxBodyBytes]: "0" }, { [EnvVar.HookShutdownGraceMs]: "x" }, { [EnvVar.HookHost]: "" }]) {
+      const r = await refusesToStart({ ...env, [EnvVar.HookToken]: secret });
       expect(r.code).toBe(2);
       expect(r.stderr + r.stdout).not.toContain(secret);
     }
@@ -97,7 +94,7 @@ describe("e2e: bind address", () => {
 
   test("an explicit loopback host with an empty token starts", async () => {
     for (const host of ["127.0.0.1", "127.0.0.2", "localhost"]) {
-      const srv = await startServer({ HOOK_HOST: host });
+      const srv = await startServer({ [EnvVar.HookHost]: host });
       try {
         const res = await fetch(`http://${host}:${srv.port}/healthz`);
         expect(res.status).toBe(200);
@@ -119,12 +116,10 @@ describe("e2e: a server with no token only answers loopback JSON posts", () => {
       expect((await post(srv.base, { "content-type": "application/json", host: "127.0.0.1.evil.example" })).status).toBe(403);
       expect((await post(srv.base, { "content-type": "application/json", host: `localhost:${srv.port}` })).status).toBe(200);
       expect((await post(srv.base, { "content-type": "application/json", host: `127.0.0.1:${srv.port}` })).status).toBe(200);
-      // Only canonical spellings of the machine are accepted; anything the URL parser would rewrite, or that carries more than host:port, is refused.
       for (const host of ["[::1]", "LOCALHOST", `LocalHost:${srv.port}`, "127.0.0.2"]) {
         expect((await post(srv.base, { "content-type": "application/json", host })).status, host).toBe(200);
       }
       for (const host of ["127.1", "0x7f.1", "2130706433", "[0:0:0:0:0:0:0:1]", "[::ffff:127.0.0.1]", "app.localhost", "user@localhost", "localhost/x", "localhost?x", "0.0.0.0", "[::]", "128.0.0.1", "[::ffff:10.0.0.1]", "a b"]) {
-        // 403 from the Host check, or 400 when the URL the Host builds cannot even be parsed: either way it is refused, never answered or a 500
         expect([400, 403], host).toContain((await post(srv.base, { "content-type": "application/json", host })).status);
       }
     } finally {
@@ -157,7 +152,7 @@ describe("e2e: a server with no token only answers loopback JSON posts", () => {
   });
 
   test("with a token, the Authorization header is the check and the content type is not", async () => {
-    const srv = await startServer({ HOOK_TOKEN: "t0k3n" });
+    const srv = await startServer({ [EnvVar.HookToken]: "t0k3n" });
     try {
       expect((await post(srv.base, { authorization: "Bearer t0k3n" })).status).toBe(200);
       expect((await post(srv.base, { "content-type": "application/json" })).status).toBe(401);
@@ -168,8 +163,8 @@ describe("e2e: a server with no token only answers loopback JSON posts", () => {
 });
 
 describe("e2e: the body size cap", () => {
-  test("a body over HOOK_MAX_BODY_BYTES is refused with 413 and an ordinary one is answered", async () => {
-    const srv = await startServer({ HOOK_MAX_BODY_BYTES: "2000" });
+  test(`a body over ${EnvVar.HookMaxBodyBytes} is refused with 413 and an ordinary one is answered`, async () => {
+    const srv = await startServer({ [EnvVar.HookMaxBodyBytes]: "2000" });
     try {
       const send = (extra: string) =>
         fetch(`${srv.base}/hook`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ hook_event_name: "Stop", session_id: "cap-body", pad: extra }) });

@@ -1,4 +1,3 @@
-// What is special about PostCompact: the trigger is logged, the summary never is, and unsupported output fields are ignored. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

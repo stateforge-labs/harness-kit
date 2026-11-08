@@ -1,4 +1,3 @@
-// What is special about PreToolUse: advice on Agent briefs. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

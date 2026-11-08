@@ -1,4 +1,3 @@
-// What is special about PostToolUseFailure: error meta (exit code, interrupt, duration) and MCP server names are logged, never the command or error text. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

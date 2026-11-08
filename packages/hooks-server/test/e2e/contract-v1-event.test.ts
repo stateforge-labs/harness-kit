@@ -1,15 +1,13 @@
-// Contract v1 neutral event (session and tool), read back through the real server: HOOK_MIDDLEWARE=v1-sees-tool puts the event as JSON
-// into the reply fields the matrix gives a layer (deny on pre-tool, continue on stop, context on session-start), and the test parses it.
-// The permission.evaluate case is in-process because OpenCode encodes nothing for that event, so only the decoded event shows its tool.
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { adapters } from "@homelab/harness-hooks";
 import { startServer, type RunningServer } from "./harness.ts";
 import { fixture, variant } from "./kit.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
 let srv: RunningServer;
 beforeAll(async () => {
-  srv = await startServer({ HOOK_MIDDLEWARE: join(import.meta.dir, "middleware-modules", "v1-sees-tool.ts") });
+  srv = await startServer({ [EnvVar.HookMiddleware]: join(import.meta.dir, "middleware-modules", "v1-sees-tool.ts") });
 });
 afterAll(() => srv?.stop());
 
@@ -24,7 +22,6 @@ async function post(harness: string, body: unknown): Promise<Body> {
   return (await res.json()) as Body;
 }
 
-/** The neutral event as the layer saw it: the JSON the middleware wrote, read back from a reply field. */
 interface Seen {
   session: string | null;
   tool: { name: string; callId: string | null } | null;
@@ -34,12 +31,10 @@ const pick = (text: unknown): Seen => {
   return { session, tool };
 };
 
-/** Expected tool from the payload that was sent: tool name and call id keys, null when a key is missing. */
 const claudeLikeTool = (p: Any): Seen["tool"] =>
   typeof p.tool_name === "string" && p.tool_name !== "" ? { name: p.tool_name, callId: (p.tool_use_id as string | undefined) ?? null } : null;
 const claudeLikeSession = (p: Any): string | null => (p.session_id as string | undefined) ?? null;
 
-/** Claude and Codex PreToolUse: the deny reason is the layer's JSON. */
 const preToolSeen = (b: Body) => pick(b.hookSpecificOutput?.permissionDecisionReason);
 
 describe("e2e: contract v1 neutral event (claude)", () => {
@@ -119,7 +114,6 @@ describe("e2e: contract v1 neutral event (codex)", () => {
 });
 
 describe("e2e: contract v1 neutral event (opencode)", () => {
-  // OpenCode's session id is `sessionID` (the plugin also sends `session_id`); the test sets both to one fresh value.
   const freshIds = () => {
     const sid = `t-${crypto.randomUUID()}`;
     return { sid, callId: `c-${crypto.randomUUID()}` };
@@ -162,8 +156,6 @@ describe("e2e: contract v1 neutral event (opencode)", () => {
 });
 
 describe("contract v1 neutral event: opencode permission.evaluate (in-process)", () => {
-  // In-process: OpenCode encodes nothing for permission.evaluate in v1, so the answer cannot show the decoded tool.
-  // The decode is what maps `action` to tool.name and `source.id` to tool.callId.
   const base = () => fixture("opencode", "permission.evaluate", "shell").payload;
 
   test("tool name comes from action and callId from source.id", () => {

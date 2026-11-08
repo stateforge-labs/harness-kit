@@ -1,4 +1,3 @@
-// What is special about PostModelRequest: the outcome and token counts are logged; the error text never is.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

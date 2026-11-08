@@ -1,15 +1,6 @@
-// Prints, or with --apply installs, the configuration that connects a harness to the hook server.
-//   bun scripts/install.ts opencode  [--apply] [--config-dir <dir>]   copy the plugin into OpenCode's plugins/ directory
-//   bun scripts/install.ts claude                                       print the `hooks` block for Claude Code's settings.json
-//   bun scripts/install.ts codex     [--apply] [--codex-home <dir>]    print (or write) Codex's hooks.json
-//   bun scripts/install.ts service   [--apply] [--unit-dir <dir>] [--no-systemctl]   the systemd user unit that runs the server
-// Common: --url <base url> (default http://127.0.0.1:8787).
-// Nothing is changed without --apply. Claude's settings are never written: they are managed in dotfiles, so the block is printed
-// for you to merge there.
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { opencodePluginPath } from "@homelab/harness-hooks";
+import { EnvDefault, Harness, installEnv, opencodePluginPath } from "@homelab/harness-hooks";
 import { claudeHooks, codexHooks, systemdUnit, type RenderOptions } from "./lib/client-config.ts";
 
 const repo = resolve(import.meta.dir, "..");
@@ -25,7 +16,7 @@ const fail = (msg: string): never => {
   process.exit(1);
 };
 
-const url = (value("--url") ?? "http://127.0.0.1:8787").replace(/\/+$/, "");
+const url = (value("--url") ?? EnvDefault.HookUrl).replace(/\/+$/, "");
 try {
   new URL(url);
 } catch {
@@ -33,8 +24,17 @@ try {
 }
 const opts: RenderOptions = { url, repo, bun: process.execPath };
 const apply = flag("--apply");
+const env = installEnv();
+const SERVICE = "service";
+const OPENCODE_CONFIG_DIR = "opencode";
+const PLUGIN_FILE = "harness-hooks.js";
 
-/** Writes `content` to `path` (creating folders) unless it is already there; says what it did. Never replaces a different file. */
+async function bundlePlugin(): Promise<string> {
+  const built = await Bun.build({ entrypoints: [opencodePluginPath], target: "bun", format: "esm" });
+  if (!built.success || !built.outputs[0]) fail(`cannot bundle ${opencodePluginPath}: ${built.logs.join("; ")}`);
+  return built.outputs[0]!.text();
+}
+
 function writeNew(path: string, content: string): void {
   if (existsSync(path)) {
     if (readFileSync(path, "utf8") === content) return void console.log(`unchanged: ${path}`);
@@ -46,28 +46,29 @@ function writeNew(path: string, content: string): void {
 }
 
 switch (target) {
-  case "opencode": {
-    const dir = value("--config-dir") ?? join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"), "opencode");
+  case Harness.OpenCode: {
+    const dir = value("--config-dir") ?? join(env.configHome, OPENCODE_CONFIG_DIR);
     const from = opencodePluginPath;
-    const to = join(dir, "plugins", "harness-hooks.ts");
-    if (url !== "http://127.0.0.1:8787") console.error("note: the plugin reads HOOK_URL from OpenCode's environment; --url is not baked into it");
+    const to = join(dir, "plugins", PLUGIN_FILE);
+    if (url !== EnvDefault.HookUrl) console.error("note: the plugin reads HOOK_URL from OpenCode's environment; --url is not baked into it");
     if (!apply) {
       console.log(`would copy ${from}\n         to ${to}\n(re-run with --apply; restart OpenCode's background service so it loads the plugin)`);
       break;
     }
-    if (existsSync(to) && readFileSync(to, "utf8") !== readFileSync(from, "utf8")) console.log(`updating ${to} (it differs from the repository copy)`);
+    const bundle = await bundlePlugin();
+    if (existsSync(to) && readFileSync(to, "utf8") !== bundle) console.log(`updating ${to} (it differs from the repository copy)`);
     mkdirSync(join(dir, "plugins"), { recursive: true });
-    copyFileSync(from, to);
+    writeFileSync(to, bundle);
     console.log(`installed: ${to}`);
     break;
   }
-  case "claude": {
+  case Harness.Claude: {
     if (apply) fail("claude settings are managed in dotfiles; merge the printed block into settings.json there (no --apply)");
     console.log(JSON.stringify(claudeHooks(opts), null, 2));
     break;
   }
-  case "codex": {
-    const home = value("--codex-home") ?? process.env.CODEX_HOME ?? join(homedir(), ".codex");
+  case Harness.Codex: {
+    const home = value("--codex-home") ?? env.codexHome;
     const content = JSON.stringify(codexHooks(opts), null, 2) + "\n";
     if (!apply) {
       console.log(content.trimEnd());
@@ -77,9 +78,9 @@ switch (target) {
     writeNew(join(home, "hooks.json"), content);
     break;
   }
-  case "service": {
-    const unitDir = value("--unit-dir") ?? join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"), "systemd", "user");
-    const stateDir = join(process.env.XDG_STATE_HOME ?? join(homedir(), ".local", "state"), "harness-hooks");
+  case SERVICE: {
+    const unitDir = value("--unit-dir") ?? join(env.configHome, "systemd", "user");
+    const stateDir = join(env.stateHome, "harness-hooks");
     const unit = systemdUnit(opts, stateDir);
     if (!apply) {
       console.log(unit.trimEnd());

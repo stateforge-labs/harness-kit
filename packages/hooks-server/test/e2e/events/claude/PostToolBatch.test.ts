@@ -1,4 +1,3 @@
-// What is special about PostToolBatch: the batch is logged as a count and tool names, never its payloads. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

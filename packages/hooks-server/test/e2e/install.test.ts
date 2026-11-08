@@ -1,10 +1,10 @@
-// scripts/install.ts run as a real process, into throwaway directories. Nothing here touches the real home.
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { opencodePluginPath } from "@homelab/harness-hooks";
 import { join } from "node:path";
 import { adapters } from "@homelab/harness-hooks";
+import { EnvVar, processEnv } from "@homelab/harness-hooks";
 
 const repo = join(import.meta.dir, "..", "..");
 let dir: string;
@@ -14,7 +14,7 @@ beforeAll(async () => {
 afterAll(() => rm(dir, { recursive: true, force: true }));
 
 async function install(args: string[]) {
-  const proc = Bun.spawn(["bun", join(repo, "scripts/install.ts"), ...args], { cwd: repo, stdout: "pipe", stderr: "pipe", env: { ...process.env, HOME: dir, XDG_CONFIG_HOME: join(dir, "xdg") } });
+  const proc = Bun.spawn(["bun", join(repo, "scripts/install.ts"), ...args], { cwd: repo, stdout: "pipe", stderr: "pipe", env: { ...processEnv(), [EnvVar.Home]: dir, [EnvVar.XdgConfigHome]: join(dir, "xdg") } });
   const [stdout, stderr] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text()]);
   return { code: await proc.exited, stdout, stderr };
 }
@@ -31,7 +31,7 @@ describe("e2e: scripts/install.ts", () => {
       if (event === "SessionStart" || event === "Setup") {
         expect(h.type).toBe("command");
         expect(h.command).toContain("--harness claude");
-        expect(h.command).toContain("HOOK_URL=http://127.0.0.1:9999 ");
+        expect(h.command).toContain(`${EnvVar.HookUrl}=http://127.0.0.1:9999 `);
       } else {
         expect(h).toMatchObject({ type: "http", url: "http://127.0.0.1:9999/hook" });
       }
@@ -65,17 +65,23 @@ describe("e2e: scripts/install.ts", () => {
     const cfg = join(dir, "opencode-cfg");
     const dry = await install(["opencode", "--config-dir", cfg]);
     expect(dry.stdout).toContain("would copy");
-    expect(await Bun.file(join(cfg, "plugins/harness-hooks.ts")).exists()).toBe(false);
+    expect(await Bun.file(join(cfg, "plugins/harness-hooks.js")).exists()).toBe(false);
     expect((await install(["opencode", "--apply", "--config-dir", cfg])).code).toBe(0);
-    expect(await readFile(join(cfg, "plugins/harness-hooks.ts"), "utf8")).toBe(await readFile(opencodePluginPath, "utf8"));
+    const here = process.cwd();
+    process.chdir(repo);
+    const built = await Bun.build({ entrypoints: [opencodePluginPath], target: "bun", format: "esm" }).finally(() => process.chdir(here));
+    const bundled = await built.outputs[0]!.text();
+    const installed = await readFile(join(cfg, "plugins/harness-hooks.js"), "utf8");
+    expect(installed).toBe(bundled);
+    expect(installed).not.toMatch(/from "\.\.?\//);
     expect((await install(["opencode", "--apply", "--config-dir", cfg])).code).toBe(0);
   });
 
   test("service: the unit runs the server on loopback with the log under the state directory; --no-systemctl writes only the file", async () => {
     const unitDir = join(dir, "units");
     const preview = await install(["service", "--url", "http://127.0.0.1:9100"]);
-    expect(preview.stdout).toContain("Environment=PORT=9100");
-    expect(preview.stdout).toContain("Environment=HOOK_HOST=127.0.0.1");
+    expect(preview.stdout).toContain(`Environment=${EnvVar.Port}=9100`);
+    expect(preview.stdout).toContain(`Environment=${EnvVar.HookHost}=127.0.0.1`);
     expect(preview.stdout).toContain(`ExecStart=${process.execPath} ${repo}/src/server.ts`);
     const r = await install(["service", "--apply", "--no-systemctl", "--unit-dir", unitDir]);
     expect(r.code).toBe(0);

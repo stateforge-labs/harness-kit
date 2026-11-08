@@ -1,10 +1,9 @@
-// DirectoryAdded: http supported. Passive: no context injection, no blocking (the add has already completed). Returns {}.
 import type { EventHandler } from "./types.ts";
+import { ClaudeHook } from "../names.ts";
 
 const str = (v: unknown) => (typeof v === "string" ? v : null);
 
 export const handler: EventHandler = {
-  event: "DirectoryAdded",
-  // How the directory was added only. The directory path itself is not logged.
+  event: ClaudeHook.DirectoryAdded,
   meta: (p) => ({ source: str(p.source) }),
 };

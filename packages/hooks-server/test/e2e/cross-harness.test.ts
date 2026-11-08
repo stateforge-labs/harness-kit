@@ -1,4 +1,3 @@
-// The same input through different harness routes: one adapter's wording and rules never reach another's sessions.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

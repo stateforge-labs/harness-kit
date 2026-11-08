@@ -1,4 +1,3 @@
-// What is special about Codex SessionStart: `transcript_path` is null in ephemeral runs and that is not a wrong type.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

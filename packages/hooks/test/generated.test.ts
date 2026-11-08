@@ -6,14 +6,12 @@ import { join } from "node:path";
 const repo = join(import.meta.dir, "..");
 let copy: string;
 
-/** Runs a generator script as a real process and returns what it did. */
 async function run(script: string, args: string[]) {
   const proc = Bun.spawn(["bun", join(repo, "scripts", script), ...args], { cwd: repo, stdout: "pipe", stderr: "pipe" });
   const [stdout, stderr] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text()]);
   return { code: await proc.exited, stdout, stderr };
 }
 
-// A throwaway copy of the generated files and their sources, so the stale cases never touch the real tree.
 beforeAll(async () => {
   copy = await mkdtemp(join(tmpdir(), "harness-hooks-gen-"));
   for (const h of ["claude", "codex", "opencode"]) {
@@ -90,7 +88,6 @@ describe("e2e: generated files are current", () => {
     const original = await readFile(file, "utf8");
     await writeFile(file, original + "// stale\n");
     try {
-      // If the form were ignored, the check would run against the real tree and pass.
       const r = await run("gen-registry.ts", ["--check", `--root=${copy}`]);
       expect(r.code).toBe(1);
       expect(r.stderr).toContain("src/adapters/claude/handlers/index.ts (differs)");
@@ -99,7 +96,6 @@ describe("e2e: generated files are current", () => {
         expect(bad.code).not.toBe(0);
         expect(bad.stderr).toMatch(/unknown argument|--root needs a directory/);
       }
-      // A bad flag next to a root that is stale must not have rewritten it.
       expect(await readFile(file, "utf8")).toBe(original + "// stale\n");
     } finally {
       await writeFile(file, original);

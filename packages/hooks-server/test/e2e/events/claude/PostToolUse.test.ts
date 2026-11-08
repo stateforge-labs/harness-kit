@@ -1,11 +1,11 @@
-// What is special about PostToolUse: the command and output are never logged, MCP server names are, and Agent calls get no context. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
 const TOKEN = "t0k3n";
 const SECRET_CMD = "cat SECRET-FILE-PT7";
 const SECRET_OUT = "OUTPUT-BODY-PT7";
-const hook = hookServer({ HOOK_TOKEN: TOKEN });
+const hook = hookServer({ [EnvVar.HookToken]: TOKEN });
 const post = (body: unknown) => hook.post(body, { token: TOKEN });
 
 describe("e2e: PostToolUse", () => {

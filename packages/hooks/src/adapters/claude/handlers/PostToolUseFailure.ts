@@ -1,9 +1,8 @@
-// PostToolUseFailure: http supported. Passive: never blocks, never injects context (the only context review is PreToolUse Agent).
 import type { EventHandler } from "./types.ts";
+import { ClaudeHook } from "../names.ts";
 
 const str = (v: unknown) => (typeof v === "string" ? v : null);
 
-// Leading "Exit code N" line of a Bash/PowerShell failure. Only the number is kept, never the output.
 const exitCode = (error: unknown): number | null => {
   if (typeof error !== "string") return null;
   const m = /^Exit code (\d+)/.exec(error.split("\n", 1)[0] ?? "");
@@ -11,8 +10,7 @@ const exitCode = (error: unknown): number | null => {
 };
 
 export const handler: EventHandler = {
-  event: "PostToolUseFailure",
-  // Tool name, abort flag, duration, MCP server name and source, exit code. Never tool_input, error text or tool_use_id.
+  event: ClaudeHook.PostToolUseFailure,
   meta: (p) => {
     const server = typeof p.mcp_server === "object" && p.mcp_server !== null ? (p.mcp_server as Record<string, unknown>) : {};
     return {

@@ -1,4 +1,3 @@
-// Contract v1: every reply field at once, to check which one each adapter picks per event.
 import type { Middleware } from "@homelab/harness-hooks";
 const v1Everything: Middleware = async () => ({
   context: "V1-CONTEXT",

@@ -1,4 +1,3 @@
-// What is special about PreCompact. The shared checks (answer, known, missing, wrong_type, privacy) are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

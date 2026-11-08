@@ -1,4 +1,3 @@
-// What is special about Setup: it never returns context, and logs only the trigger. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

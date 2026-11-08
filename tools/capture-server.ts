@@ -1,13 +1,5 @@
-// Throwaway capture server for resolving research unknowns. Not the product server.
-// Logs every POST body (full payload) as JSONL and replies with JSON.
-// Usage: CAPTURE_LOG=<file> CAPTURE_TOKEN=<t> [CAPTURE_RESPONSE='{...}'] [CAPTURE_RULES='[...]'] bun tools/capture-server.ts
-//
-// CAPTURE_RESPONSE is the default reply (default {}). CAPTURE_RULES picks a different reply per request, first match wins:
-//   [{ "event": "PreToolUse", "tool": "mcp__probe__echo", "reply": {...}, "times": 1, "delayMs": 0 }, ...]
-// `event` matches the body's hook_event_name, `tool` (optional) its tool_name, or for OpenCode the body's `tool`. A rule with
-// `times` stops matching after that many uses. `delayMs` waits before answering (to probe a harness's hook timeout).
-// Every reply sent is also appended to replies.jsonl in the same folder as CAPTURE_LOG ({ts, event, tool, rule, reply}).
 import { appendFileSync } from "node:fs";
+import { captureEnv } from "../packages/hooks/src/env.ts";
 
 interface Rule {
   event: string;
@@ -17,11 +9,12 @@ interface Rule {
   delayMs?: number;
 }
 
-const log = process.env.CAPTURE_LOG!;
+const env = captureEnv();
+const log = env.log;
 const replyLog = log.replace(/[^/]*$/, "replies.jsonl");
-const token = process.env.CAPTURE_TOKEN!;
-const fallback: unknown = JSON.parse(process.env.CAPTURE_RESPONSE ?? "{}");
-const rules: Rule[] = JSON.parse(process.env.CAPTURE_RULES ?? "[]");
+const token = env.token;
+const fallback: unknown = JSON.parse(env.response);
+const rules: Rule[] = JSON.parse(env.rules);
 const used = new Map<number, number>();
 
 function pick(body: Record<string, unknown> | null): { index: number; rule?: Rule } {

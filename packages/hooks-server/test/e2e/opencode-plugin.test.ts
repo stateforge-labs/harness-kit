@@ -1,17 +1,11 @@
-// The OpenCode plugin (clients/opencode/plugin.ts) driven with a FAKE plugin context against the REAL server.
-//
-// DELIBERATE DEVIATION from "the real harness only over HTTP": the plugin runs inside OpenCode, which cannot be started here without
-// a model login, so the suite loads the plugin and calls its setup() with a fake ctx that records the hooks it registers and feeds it
-// events. Everything after the plugin (HTTP, admission, adapter, log) is the real server. The real OpenCode run is covered by the
-// capture step (docs/research/studies/2026-11-07-codex-opencode-real-hook-payloads, captures-opencode/) and the fixtures it produced.
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import plugin from "@homelab/harness-hooks/opencode-plugin";
 import { eventually, startServer, type RunningServer } from "./harness.ts";
+import { EnvVar, setEnv } from "@homelab/harness-hooks";
 
 type Hook = (input: unknown) => Promise<void>;
 const SECRET = "tok-plugin-never-log-me";
 
-/** A plugin context that remembers registered hooks and lets the test push events onto the stream. */
 function fakeCtx() {
   const hooks = new Map<string, Hook>();
   const queue: Array<{ type: string; data: unknown }> = [];
@@ -39,18 +33,15 @@ function fakeCtx() {
 
 let open: RunningServer;
 let guarded: RunningServer;
-const saved = { url: process.env.HOOK_URL, token: process.env.HOOK_TOKEN, timeout: process.env.HOOK_PLUGIN_TIMEOUT_MS };
+const restores: Array<() => void> = [];
 beforeAll(async () => {
   open = await startServer();
-  guarded = await startServer({ HOOK_TOKEN: SECRET });
+  guarded = await startServer({ [EnvVar.HookToken]: SECRET });
 });
 afterAll(async () => {
   await open.stop();
   await guarded.stop();
-  for (const [k, v] of [["HOOK_URL", saved.url], ["HOOK_TOKEN", saved.token], ["HOOK_PLUGIN_TIMEOUT_MS", saved.timeout]] as const) {
-    if (v === undefined) delete process.env[k];
-    else process.env[k] = v;
-  }
+  while (restores.length) restores.pop()!();
 });
 
 const logLine = (srv: RunningServer, sessionId: string) =>
@@ -72,8 +63,7 @@ describe("e2e: the opencode plugin (fake ctx, real server)", () => {
   });
 
   test("a hook call reaches the server as an opencode event with the envelope keys added", async () => {
-    process.env.HOOK_URL = open.base;
-    delete process.env.HOOK_TOKEN;
+    restores.push(setEnv({ [EnvVar.HookUrl]: open.base, [EnvVar.HookToken]: undefined }));
     const { ctx, hooks } = fakeCtx();
     await plugin.setup(ctx as never);
     await hooks.get("tool.execute.before")!({ tool: "shell", sessionID: "plug-1", agent: "build", messageID: "m", id: "c", input: { command: "echo SECRET-CMD" } });
@@ -83,8 +73,7 @@ describe("e2e: the opencode plugin (fake ctx, real server)", () => {
   });
 
   test("lifecycle events on the stream are forwarded, chatty ones are not", async () => {
-    process.env.HOOK_URL = open.base;
-    delete process.env.HOOK_TOKEN;
+    restores.push(setEnv({ [EnvVar.HookUrl]: open.base, [EnvVar.HookToken]: undefined }));
     const { ctx, push } = fakeCtx();
     await plugin.setup(ctx as never);
     push("session.text.delta", { sessionID: "plug-2-delta", delta: "hello" });
@@ -95,8 +84,7 @@ describe("e2e: the opencode plugin (fake ctx, real server)", () => {
   });
 
   test("with a token the plugin sends it as a bearer, and never writes it to the log", async () => {
-    process.env.HOOK_URL = guarded.base;
-    process.env.HOOK_TOKEN = SECRET;
+    restores.push(setEnv({ [EnvVar.HookUrl]: guarded.base, [EnvVar.HookToken]: SECRET }));
     const { ctx, hooks } = fakeCtx();
     await plugin.setup(ctx as never);
     await hooks.get("session.prompt")!({ sessionID: "plug-3", messageID: "m", delivery: "steer", prompt: { text: "SECRET-PROMPT" } });
@@ -108,23 +96,21 @@ describe("e2e: the opencode plugin (fake ctx, real server)", () => {
   test("fails open: a wrong token, a dead server and a slow server never make a hook throw or hang", async () => {
     const { ctx, hooks } = fakeCtx();
     await plugin.setup(ctx as never);
-    process.env.HOOK_URL = guarded.base;
-    process.env.HOOK_TOKEN = "wrong";
+    restores.push(setEnv({ [EnvVar.HookUrl]: guarded.base, [EnvVar.HookToken]: "wrong" }));
     await hooks.get("session.experimental.idle")!({ sessionID: "plug-4", background: [] });
     expect(await Bun.file(guarded.logFile).text()).not.toContain("plug-4");
 
-    process.env.HOOK_URL = "http://127.0.0.1:1"; // nothing listens on port 1
+    restores.push(setEnv({ [EnvVar.HookUrl]: "http://127.0.0.1:1" }));
     await hooks.get("session.experimental.idle")!({ sessionID: "plug-5", background: [] });
 
     const slow = Bun.serve({ port: 0, hostname: "127.0.0.1", fetch: () => new Promise<Response>(() => {}) });
     try {
-      process.env.HOOK_URL = `http://127.0.0.1:${slow.port}`;
-      process.env.HOOK_PLUGIN_TIMEOUT_MS = "300";
+      restores.push(setEnv({ [EnvVar.HookUrl]: `http://127.0.0.1:${slow.port}`, [EnvVar.PluginTimeoutMs]: "300" }));
       const t = performance.now();
       await hooks.get("session.experimental.idle")!({ sessionID: "plug-6", background: [] });
       expect(performance.now() - t).toBeLessThan(2000);
     } finally {
-      delete process.env.HOOK_PLUGIN_TIMEOUT_MS;
+      restores.push(setEnv({ [EnvVar.PluginTimeoutMs]: undefined }));
       await slow.stop(true);
     }
   });

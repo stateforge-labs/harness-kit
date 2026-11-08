@@ -1,8 +1,8 @@
-// session.created: labels and counts only. Never the prompt, a tool's input or output, or a resource.
 import type { EventHandler } from "./types.ts";
+import { OpenCodeHook } from "../names.ts";
 
 export const handler: EventHandler = {
-  event: "session.created",
+  event: OpenCodeHook.SessionCreated,
   meta: (p) => ({
     is_child: typeof p.parentID === "string",
   }),

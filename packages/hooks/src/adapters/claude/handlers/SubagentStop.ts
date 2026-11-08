@@ -1,11 +1,8 @@
 import type { EventHandler } from "./types.ts";
+import { ClaudeHook } from "../names.ts";
 
-/**
- * SubagentStop fires when a subagent finishes responding. HTTP hooks are supported. Passive by policy: it never
- * blocks (no decision or reason), never continues the subagent and never adds context. Always responds {}.
- */
 export const handler: EventHandler = {
-  event: "SubagentStop",
+  event: ClaudeHook.SubagentStop,
   meta: (p) => {
     const effort = typeof p.effort === "object" && p.effort !== null && "level" in p.effort ? p.effort.level : null;
     return {

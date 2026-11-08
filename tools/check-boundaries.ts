@@ -1,9 +1,3 @@
-// Fails when a package reaches outside its boundary. Rules (ADR 0002):
-//  1. A relative import never leaves its own package folder.
-//  2. A workspace package (@homelab/*) is imported only if the importing package declares it, and only through a path its
-//     `exports` map publishes (no deep imports into another package's files).
-//  3. The libraries (hooks, adapters) use no Bun API in shipped code (src/, clients/): StateForge runs them under Node.
-// Usage: bun tools/check-boundaries.ts [--root <dir>]   exit 0 clean, 1 with one line per violation.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 
@@ -11,7 +5,6 @@ const argRoot = process.argv.indexOf("--root");
 const root = resolve(argRoot >= 0 ? process.argv[argRoot + 1]! : join(import.meta.dir, ".."));
 const packagesDir = join(root, "packages");
 
-/** Packages whose shipped code must run on Node. */
 const NODE_ONLY = new Set(["@homelab/harness-hooks", "@homelab/harness-adapters"]);
 const SHIPPED = ["src", "clients"];
 
@@ -45,7 +38,6 @@ function files(dir: string): string[] {
   });
 }
 
-/** Specifiers of static imports/exports and dynamic import() with a string literal. */
 function specifiers(src: string): string[] {
   const out: string[] = [];
   for (const m of src.matchAll(/(?:^|\n)\s*(?:import|export)\s[^;]*?from\s*["']([^"']+)["']/g)) out.push(m[1]!);
@@ -54,7 +46,6 @@ function specifiers(src: string): string[] {
   return out;
 }
 
-/** Does `sub` (e.g. "./shim" or "./fixtures/x.json") match an exports key, including "./x/*" patterns? */
 function exported(pkg: Pkg, sub: string): boolean {
   return pkg.exports.some((k) => (k.endsWith("/*") ? sub.startsWith(k.slice(0, -1)) : k === sub));
 }

@@ -1,4 +1,3 @@
-// What is special about TaskCreated. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

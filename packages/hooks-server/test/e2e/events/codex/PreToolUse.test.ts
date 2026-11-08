@@ -1,5 +1,3 @@
-// What is special about Codex PreToolUse: the subagent spawn tool is recognised, but Codex sessions are answered passively
-// (no rules text until the user decides the wording), and nothing of the brief reaches the log. Shared checks: ../../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
 

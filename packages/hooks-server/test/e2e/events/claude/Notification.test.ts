@@ -1,8 +1,8 @@
-// What is special about Notification: the notification_type meta and the message that is never logged. The shared checks are in ../contract.test.ts.
 import { describe, expect, test } from "bun:test";
 import { fixture, hookServer, variant } from "./kit.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
-const hook = hookServer({ HOOK_TOKEN: "" });
+const hook = hookServer({ [EnvVar.HookToken]: "" });
 
 describe("e2e: Notification", () => {
   test("the log keeps notification_type and never the message text", async () => {

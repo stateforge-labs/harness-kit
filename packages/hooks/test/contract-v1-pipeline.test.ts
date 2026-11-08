@@ -1,6 +1,3 @@
-// Contract v1 middleware pipeline at library level: per-layer timeouts and onFault modes, deny-wins merging, use() validation,
-// failClosed, handle() fail-closed answers, and toolAllowlist through the real adapters and fixtures. These run in-process on
-// purpose: LayerOptions (timeoutMs, onFault { deny }) are only reachable through the library API, not through HOOK_MIDDLEWARE.
 import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -25,11 +22,9 @@ const adapter = (id: string): HarnessAdapter => {
   return a;
 };
 
-/** A fixture payload, read from disk and parsed. */
 const load = (harness: string, event: string, file: string): Record<string, unknown> =>
   JSON.parse(readFileSync(join(fixturesDir, harness, event, file), "utf8"));
 
-/** The pipeline context a real adapter builds from a fixture payload. */
 function ctxOf(harness: string, raw: Record<string, unknown>): HookContext {
   const a = adapter(harness);
   const event = a.decode(raw).event;

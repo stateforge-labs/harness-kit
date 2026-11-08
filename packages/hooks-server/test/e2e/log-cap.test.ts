@@ -3,11 +3,12 @@ import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { eventually, startServer, type RunningServer } from "./harness.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
 const CAP = 1500;
 let srv: RunningServer;
 beforeAll(async () => {
-  srv = await startServer({ HOOK_LOG_MAX_BYTES: String(CAP) });
+  srv = await startServer({ [EnvVar.HookLogMaxBytes]: String(CAP) });
 });
 afterAll(() => srv.stop());
 
@@ -18,7 +19,6 @@ const post = (sessionId: string) =>
     body: JSON.stringify({ hook_event_name: "Stop", session_id: sessionId, transcript_path: "/x", cwd: "/x", stop_hook_active: false }),
   });
 
-// The file is briefly absent between a rotation's rename and the append that recreates it, so a missing file reads as empty.
 const read = async (file: string) => {
   try {
     return await Bun.file(file).text();
@@ -38,12 +38,10 @@ describe("e2e: the log is capped", () => {
     expect(Buffer.byteLength(main)).toBeLessThanOrEqual(CAP);
     expect(Buffer.byteLength(old)).toBeLessThanOrEqual(CAP);
     expect(old.length).toBeGreaterThan(0);
-    // Every line is whole, and the old generation holds older events than the main file.
     const newest = sessions(main);
     const older = sessions(old);
     expect(newest.at(-1)).toBe("cap-seq-39");
     expect(Number(older.at(-1)?.split("-").at(-1))).toBeLessThan(Number(newest[0]?.split("-").at(-1)));
-    // Only one old generation is kept, so the oldest events are gone.
     expect(sessions(main + old)).not.toContain("cap-seq-0");
   });
 
@@ -65,7 +63,7 @@ describe("e2e: the log is capped", () => {
 
 describe("e2e: a line larger than the cap", () => {
   test("is still written, alone in the main file, and the next event rotates it away", async () => {
-    const tiny = await startServer({ HOOK_LOG_MAX_BYTES: "50" });
+    const tiny = await startServer({ [EnvVar.HookLogMaxBytes]: "50" });
     try {
       const send = (id: string) =>
         fetch(`${tiny.base}/hook`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ hook_event_name: "Stop", session_id: id }) });
@@ -102,9 +100,8 @@ describe("e2e: nothing is lost or left unbounded", () => {
   });
 
   test("a rotation that fails does not stop the log: events keep landing", async () => {
-    const s2 = await startServer({ HOOK_LOG_MAX_BYTES: "300" });
+    const s2 = await startServer({ [EnvVar.HookLogMaxBytes]: "300" });
     try {
-      // A non-empty directory where the old generation should go makes every rename fail.
       await mkdir(`${s2.logFile}.1/keep`, { recursive: true });
       for (let i = 0; i < 6; i++) await send(s2.base, { hook_event_name: "Stop", session_id: `rot-${i}` });
       await eventually(async () => (sessions(await read(s2.logFile)).length >= 6 ? true : undefined));
@@ -129,7 +126,7 @@ describe("e2e: nothing is lost or left unbounded", () => {
   test("the log file, and a directory the server has to create for it, are readable by their owner only", async () => {
     const root = await mkdtemp(join(tmpdir(), "harness-hooks-perm-"));
     const logFile = join(root, "fresh", "events.jsonl");
-    const s2 = await startServer({ HOOK_LOG_FILE: logFile });
+    const s2 = await startServer({ [EnvVar.HookLogFile]: logFile });
     try {
       await send(s2.base, { hook_event_name: "Stop", session_id: "perm-1" });
       await eventually(async () => ((await read(logFile)).includes("perm-1") ? true : undefined));

@@ -1,40 +1,36 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { EnvVar, processEnv } from "@homelab/harness-hooks";
 
-/** The parent environment without anything the server reads, so a stray HOOK_* or PORT never decides a test. */
+export const hookEnvNames = new Set<string>(Object.entries(EnvVar).filter(([name]) => /^(Hook|Shim|Plugin)/.test(name)).map(([, value]) => value));
+
 function cleanEnv(): Record<string, string | undefined> {
-  const env: Record<string, string | undefined> = { ...process.env };
-  for (const k of Object.keys(env)) if (k === "PORT" || k.startsWith("HOOK_")) delete env[k];
+  const env: Record<string, string | undefined> = { ...processEnv() };
+  for (const k of Object.keys(env)) if (k === EnvVar.Port || hookEnvNames.has(k)) delete env[k];
   return env;
 }
 
-/** A real `bun src/server.ts` process. Tests talk to it over HTTP only. */
 export interface RunningServer {
   base: string;
-  /** The address the server says it bound, read from its startup line. */
   host: string;
   port: number;
   logFile: string;
-  /** Sends the signal, waits for the process to leave, removes its temp dir and returns the exit code. */
   stop(signal?: "SIGTERM" | "SIGINT"): Promise<number>;
-  /** Like stop, but leaves the temp dir so the log can be read after exit; call cleanup() afterwards. */
   stopKeepingLog(signal?: "SIGTERM" | "SIGINT"): Promise<number>;
   cleanup(): Promise<void>;
 }
 
-/** What a server that was told to refuse to start did. `code` is null if it was still running at the deadline. */
 export interface Refusal {
   code: number | null;
   stdout: string;
   stderr: string;
 }
 
-/** Starts the real server expecting it to exit; kills it at the deadline so a server that wrongly listens fails the test. */
 export async function refusesToStart(env: Record<string, string>, ms = 5000): Promise<Refusal> {
   const proc = Bun.spawn(["bun", "src/server.ts"], {
     cwd: join(import.meta.dir, "..", ".."),
-    env: { ...cleanEnv(), PORT: "0", HOOK_LOG_FILE: join(tmpdir(), "harness-hooks-refusal.jsonl"), ...env },
+    env: { ...cleanEnv(), [EnvVar.Port]: "0", [EnvVar.HookLogFile]: join(tmpdir(), "harness-hooks-refusal.jsonl"), ...env },
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -54,12 +50,11 @@ export async function startServer(env: Record<string, string> = {}): Promise<Run
   const logFile = join(dir, "events.jsonl");
   const proc = Bun.spawn(["bun", "src/server.ts"], {
     cwd: join(import.meta.dir, "..", ".."),
-    env: { ...cleanEnv(), PORT: "0", HOOK_LOG_FILE: logFile, ...env },
+    env: { ...cleanEnv(), [EnvVar.Port]: "0", [EnvVar.HookLogFile]: logFile, ...env },
     stdout: "pipe",
     stderr: "pipe",
   });
 
-  // The server prints "harness-hooks listening on :<port>"; PORT=0 avoids picking a port ourselves.
   const reader = proc.stdout.getReader();
   const decoder = new TextDecoder();
   let seen = "";
@@ -83,7 +78,6 @@ export async function startServer(env: Record<string, string> = {}): Promise<Run
   reader.releaseLock();
 
   return {
-    // The tests dial loopback whatever the server bound, except where a test passes its own host.
     base: `http://127.0.0.1:${port}`,
     host,
     port,
@@ -104,7 +98,6 @@ export async function startServer(env: Record<string, string> = {}): Promise<Run
   };
 }
 
-/** Poll until `check` returns a value or the timeout passes. */
 export async function eventually<T>(check: () => Promise<T | undefined>, ms = 3000): Promise<T> {
   const end = Date.now() + ms;
   for (;;) {

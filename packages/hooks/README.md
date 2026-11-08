@@ -30,7 +30,7 @@ const { body } = await handle(adapters.get("claude")!, payload, defaultPipeline(
 | `src/core/` | neutral event, reply, policy and the pipeline; knows no harness |
 | `src/port.ts` | the `HarnessAdapter` interface every harness implements |
 | `src/adapters/<harness>/` | zod schemas (`events/`), log metadata (`handlers/`), closed value sets (`enums.ts`), kind table (`neutral.ts`), encode rules |
-| `clients/` | the shim and the OpenCode plugin; each imports nothing, so it can be copied and run alone |
+| `clients/` | the shim (runs from the package with Node or Bun) and the OpenCode plugin (bundled into one file by the installer) |
 | `fixtures/<harness>/<Event>/` | payloads and snapshots, with a `provenance.json` per harness |
 | `schemas/<harness>/` | generated; do not edit |
 | `scripts/` | `gen-registry.ts` and `gen-json-schema.ts` (generated files), `export-fixtures.ts` (captures to scrubbed fixtures) |

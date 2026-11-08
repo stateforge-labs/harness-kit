@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { eventually, startServer } from "./harness.ts";
 import { fixture as fixtureOf, variant } from "./kit.ts";
+import { EnvVar } from "@homelab/harness-hooks";
 
 const fixture = (event: string, fragment = "") => fixtureOf("claude", event, fragment);
 
@@ -14,7 +15,6 @@ describe("e2e: routes", () => {
     try {
       const body = variant(fixture("SessionStart"));
       expect((await send(srv.base, "/hook/claude", body)).status).toBe(200);
-      // Prototype keys must not resolve to an adapter, and the path shape is exact.
       for (const path of ["/hook/", "/hook/nope", "/hook/constructor", "/hook/__proto__", "/hook/toString", "/hook/claude/extra", "/hooks", "/hook/Claude"]) {
         expect((await send(srv.base, path, body)).status).toBe(404);
       }
@@ -54,7 +54,7 @@ describe("e2e: routes", () => {
   });
 
   test("with a token, every route asks for it first: no token is 401 even for a harness that does not exist", async () => {
-    const srv = await startServer({ HOOK_TOKEN: "t0k3n" });
+    const srv = await startServer({ [EnvVar.HookToken]: "t0k3n" });
     try {
       for (const path of ["/hook", "/hook/claude", "/hook/nope"]) {
         expect((await send(srv.base, path, {})).status).toBe(401);

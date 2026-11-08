@@ -1,7 +1,3 @@
-// Delegation rules injected as additionalContext. Keep short: every token is
-// paid in each session and in each subagent. Mirrors dotfiles
-// config/claude-code/hooks/delegation-rules.sh (the offline fallback).
-
 export const SESSION_START_RULES = `Delegation rules (harness-hooks server):
 - Delegate to a subagent, model haiku (ask the user before using any other model), when: you only need the conclusion of a web/docs fetch or search; a task needs 3+ reads of files you don't already know; or output is likely >5K tokens. Do trivial lookups yourself.
 - Launch independent lookups in parallel, in one message.
@@ -17,7 +13,6 @@ export const SUBAGENT_START_RULES = `Subagent rules (harness-hooks server):
 import type { Rules } from "../../core/policy.ts";
 import { spawnAdvice } from "./spawn.ts";
 
-/** What the Claude adapter gives the core policy to say. */
 export const claudeRules: Rules = {
   sessionStart: SESSION_START_RULES,
   subagentStart: SUBAGENT_START_RULES,

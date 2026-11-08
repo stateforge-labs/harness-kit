@@ -2,7 +2,8 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { shimPath } from "@homelab/harness-hooks";
 import { fixture as fixtureOf, variant } from "./kit.ts";
-import { eventually, startServer, type RunningServer } from "./harness.ts";
+import { eventually, hookEnvNames, startServer, type RunningServer } from "./harness.ts";
+import { EnvVar, processEnv } from "@homelab/harness-hooks";
 
 const SHIM = shimPath;
 const SECRET = "tok-shim-never-print-me";
@@ -14,10 +15,9 @@ interface ShimRun {
   ms: number;
 }
 
-/** Runs the real shim as a process with a payload on stdin. Killed at the deadline, which shows up as code null. */
 async function runShim(opts: { args?: string[]; stdin: string; env?: Record<string, string>; deadlineMs?: number }): Promise<ShimRun> {
-  const env: Record<string, string | undefined> = { ...process.env };
-  for (const k of Object.keys(env)) if (k.startsWith("HOOK_")) delete env[k];
+  const env: Record<string, string | undefined> = { ...processEnv() };
+  for (const k of Object.keys(env)) if (hookEnvNames.has(k)) delete env[k];
   const started = performance.now();
   const proc = Bun.spawn(["bun", SHIM, ...(opts.args ?? ["--harness", "claude"])], {
     env: { ...env, ...opts.env },
@@ -38,13 +38,13 @@ async function runShim(opts: { args?: string[]; stdin: string; env?: Record<stri
 
 const fixture = (event: string) => fixtureOf("claude", event);
 const sessionStart = () => JSON.stringify(variant(fixture("SessionStart"), {}, `shim-${crypto.randomUUID()}`));
-const NEVER_BLOCKS = [0, 1]; // exit 2 means "block" to Codex; the shim must never use it
+const NEVER_BLOCKS = [0, 1];
 
 let open: RunningServer;
 let guarded: RunningServer;
 beforeAll(async () => {
   open = await startServer();
-  guarded = await startServer({ HOOK_TOKEN: SECRET });
+  guarded = await startServer({ [EnvVar.HookToken]: SECRET });
 });
 afterAll(async () => {
   await open.stop();
@@ -54,10 +54,9 @@ afterAll(async () => {
 describe("e2e: the command-hook shim", () => {
   test("a Codex payload through --harness codex is logged as codex and answered {} (passive)", async () => {
     const body = variant(fixtureOf("codex", "SessionStart"), {}, `shim-${crypto.randomUUID()}`);
-    const r = await runShim({ args: ["--harness", "codex"], stdin: JSON.stringify(body), env: { HOOK_URL: open.base } });
+    const r = await runShim({ args: ["--harness", "codex"], stdin: JSON.stringify(body), env: { [EnvVar.HookUrl]: open.base } });
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toEqual({});
-    // the server writes its log line after answering, so wait for it
     const line = await eventually(async () => {
       const f = Bun.file(open.logFile);
       return ((await f.exists()) ? await f.text() : "").split("\n").find((l) => l.includes(body.session_id));
@@ -66,7 +65,7 @@ describe("e2e: the command-hook shim", () => {
   });
 
   test("prints the server's answer and exits 0", async () => {
-    const r = await runShim({ stdin: sessionStart(), env: { HOOK_URL: open.base } });
+    const r = await runShim({ stdin: sessionStart(), env: { [EnvVar.HookUrl]: open.base } });
     expect(r.code).toBe(0);
     const out = JSON.parse(r.stdout) as { hookSpecificOutput?: { hookEventName?: string; additionalContext?: string } };
     expect(out.hookSpecificOutput?.hookEventName).toBe("SessionStart");
@@ -74,20 +73,20 @@ describe("e2e: the command-hook shim", () => {
   });
 
   test("an event the server answers {} prints {} (Codex needs a JSON object for some events)", async () => {
-    const r = await runShim({ stdin: JSON.stringify(variant(fixture("PreCompact"))), env: { HOOK_URL: open.base } });
+    const r = await runShim({ stdin: JSON.stringify(variant(fixture("PreCompact"))), env: { [EnvVar.HookUrl]: open.base } });
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toEqual({});
   });
 
   test("sends the token when one is set, and the guarded server then answers", async () => {
-    const r = await runShim({ stdin: sessionStart(), env: { HOOK_URL: guarded.base, HOOK_TOKEN: SECRET } });
+    const r = await runShim({ stdin: sessionStart(), env: { [EnvVar.HookUrl]: guarded.base, [EnvVar.HookToken]: SECRET } });
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout).hookSpecificOutput.hookEventName).toBe("SessionStart");
     expect(r.stdout + r.stderr).not.toContain(SECRET);
   });
 
   test("fails open when the server is not running: {} and exit 0", async () => {
-    const r = await runShim({ stdin: sessionStart(), env: { HOOK_URL: "http://127.0.0.1:1", HOOK_TOKEN: SECRET, HOOK_SHIM_DEBUG: "1" } });
+    const r = await runShim({ stdin: sessionStart(), env: { [EnvVar.HookUrl]: "http://127.0.0.1:1", [EnvVar.HookToken]: SECRET, [EnvVar.ShimDebug]: "1" } });
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toEqual({});
     expect(r.stderr).toContain("server unreachable");
@@ -95,8 +94,8 @@ describe("e2e: the command-hook shim", () => {
   });
 
   test("fails open when the server refuses the token (401), and does not print it", async () => {
-    for (const env of <Record<string, string>[]>[{ HOOK_TOKEN: "wrong" }, {}]) {
-      const r = await runShim({ stdin: sessionStart(), env: { HOOK_URL: guarded.base, HOOK_SHIM_DEBUG: "1", ...env } });
+    for (const env of <Record<string, string>[]>[{ [EnvVar.HookToken]: "wrong" }, {}]) {
+      const r = await runShim({ stdin: sessionStart(), env: { [EnvVar.HookUrl]: guarded.base, [EnvVar.ShimDebug]: "1", ...env } });
       expect(r.code).toBe(0);
       expect(JSON.parse(r.stdout)).toEqual({});
       expect(r.stderr).toContain("server answered 401");
@@ -105,14 +104,14 @@ describe("e2e: the command-hook shim", () => {
   });
 
   test("fails open when the server answers an error status, such as 400 for a body that is not JSON", async () => {
-    const r = await runShim({ stdin: "this is not json", env: { HOOK_URL: open.base, HOOK_SHIM_DEBUG: "1" } });
+    const r = await runShim({ stdin: "this is not json", env: { [EnvVar.HookUrl]: open.base, [EnvVar.ShimDebug]: "1" } });
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toEqual({});
     expect(r.stderr).toContain("server answered 400");
   });
 
   test("an empty stdin fails open too", async () => {
-    const r = await runShim({ stdin: "", env: { HOOK_URL: open.base } });
+    const r = await runShim({ stdin: "", env: { [EnvVar.HookUrl]: open.base } });
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toEqual({});
   });
@@ -121,7 +120,7 @@ describe("e2e: the command-hook shim", () => {
     const sockets: unknown[] = [];
     const silent = Bun.listen({ hostname: "127.0.0.1", port: 0, socket: { open: (s) => void sockets.push(s), data() {}, close() {}, error() {} } });
     try {
-      const r = await runShim({ stdin: sessionStart(), env: { HOOK_URL: `http://127.0.0.1:${silent.port}`, HOOK_SHIM_TIMEOUT_MS: "300", HOOK_SHIM_DEBUG: "1" } });
+      const r = await runShim({ stdin: sessionStart(), env: { [EnvVar.HookUrl]: `http://127.0.0.1:${silent.port}`, [EnvVar.ShimTimeoutMs]: "300", [EnvVar.ShimDebug]: "1" } });
       expect(r.code).toBe(0);
       expect(JSON.parse(r.stdout)).toEqual({});
       expect(r.stderr).toContain("timeout");
@@ -135,7 +134,7 @@ describe("e2e: the command-hook shim", () => {
     for (const answer of ["plain text", "[1,2]", "null", ""]) {
       const odd = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(answer) });
       try {
-        const r = await runShim({ stdin: sessionStart(), env: { HOOK_URL: `http://127.0.0.1:${odd.port}` } });
+        const r = await runShim({ stdin: sessionStart(), env: { [EnvVar.HookUrl]: `http://127.0.0.1:${odd.port}` } });
         expect(r.code).toBe(0);
         expect(JSON.parse(r.stdout)).toEqual({});
       } finally {
@@ -146,7 +145,7 @@ describe("e2e: the command-hook shim", () => {
 
   test("a call without a harness is a visible error (exit 1), never a block (exit 2)", async () => {
     for (const args of [[], ["--harness"], ["--harness", "../x"], ["--harness", "A B"]]) {
-      const r = await runShim({ args, stdin: sessionStart(), env: { HOOK_URL: open.base } });
+      const r = await runShim({ args, stdin: sessionStart(), env: { [EnvVar.HookUrl]: open.base } });
       expect(r.code).toBe(1);
       expect(r.stderr).toContain("usage:");
       expect(r.stdout).toBe("");
@@ -155,16 +154,16 @@ describe("e2e: the command-hook shim", () => {
 
   test("no outcome above uses exit 2", async () => {
     const runs = await Promise.all([
-      runShim({ stdin: sessionStart(), env: { HOOK_URL: open.base } }),
-      runShim({ stdin: sessionStart(), env: { HOOK_URL: "http://127.0.0.1:1" } }),
-      runShim({ stdin: "{", env: { HOOK_URL: open.base } }),
+      runShim({ stdin: sessionStart(), env: { [EnvVar.HookUrl]: open.base } }),
+      runShim({ stdin: sessionStart(), env: { [EnvVar.HookUrl]: "http://127.0.0.1:1" } }),
+      runShim({ stdin: "{", env: { [EnvVar.HookUrl]: open.base } }),
       runShim({ args: [], stdin: "{}", env: {} }),
     ]);
     for (const r of runs) expect(NEVER_BLOCKS).toContain(r.code as number);
   });
 
   test("a harness name the server does not know fails open (404)", async () => {
-    const r = await runShim({ args: ["--harness", "nope"], stdin: sessionStart(), env: { HOOK_URL: open.base, HOOK_SHIM_DEBUG: "1" } });
+    const r = await runShim({ args: ["--harness", "nope"], stdin: sessionStart(), env: { [EnvVar.HookUrl]: open.base, [EnvVar.ShimDebug]: "1" } });
     expect(r.code).toBe(0);
     expect(JSON.parse(r.stdout)).toEqual({});
     expect(r.stderr).toContain("server answered 404");

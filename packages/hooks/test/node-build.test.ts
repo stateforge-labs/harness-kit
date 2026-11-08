@@ -1,15 +1,10 @@
-// StateForge imports this library from Node, not Bun. This builds dist/ with the real build script, then has `node` import
-// `@homelab/harness-hooks` BY NAME (so Node's own resolution walks the exports map and must pick dist/, not src/) and run every
-// fixture of every harness through handle() + defaultPipeline(). Each answer must equal the body in its `.expected.json`, the
-// same snapshot the server's contract suite checks over HTTP. It also checks the built paths point at files that exist.
 import { beforeAll, describe, expect, test } from "bun:test";
+import { EnvVar, processEnv } from "../src/env.ts";
 import { join } from "node:path";
 
 const pkg = join(import.meta.dir, "..");
-// A package that depends on @homelab/harness-hooks, so `node_modules/@homelab/harness-hooks` resolves from its folder.
 const consumer = join(pkg, "..", "hooks-server");
 
-// The name is interpolated so tools/check-boundaries.ts does not read this child-process script as an import of this file.
 const NAME = "@homelab/harness-hooks";
 const SCRIPT = `
 import { readdirSync, readFileSync, existsSync } from "node:fs";
@@ -62,7 +57,7 @@ describe("the Node build", () => {
 
   test("the built shim runs under node and fails open with {} when nothing listens", async () => {
     const proc = Bun.spawn(["node", result.paths.shimPath!.p, "--harness", "codex"], {
-      env: { PATH: process.env.PATH ?? "", HOOK_URL: "http://127.0.0.1:9", HOOK_SHIM_TIMEOUT_MS: "1500" },
+      env: { [EnvVar.Path]: processEnv()[EnvVar.Path] ?? "", [EnvVar.HookUrl]: "http://127.0.0.1:9", [EnvVar.ShimTimeoutMs]: "1500" },
       stdin: new Blob(["{}"]),
       stdout: "pipe",
       stderr: "pipe",

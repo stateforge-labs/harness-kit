@@ -1,12 +1,11 @@
 import type { EventHandler, MetaValue } from "./types.ts";
+import { ClaudeHook } from "../names.ts";
 
-// Passive: never overrides the user's accept/decline/cancel or its content, and never blocks.
-// http hooks are supported for this event; the response is {} (no context or action override).
 const scalar = (v: unknown): MetaValue | undefined =>
   typeof v === "string" || typeof v === "number" || typeof v === "boolean" || v === null ? v : undefined;
 
 export const handler: EventHandler = {
-  event: "ElicitationResult",
+  event: ClaudeHook.ElicitationResult,
   meta: (p) => {
     const out: Record<string, MetaValue> = {};
     for (const k of ["mcp_server_name", "action", "mode", "elicitation_id"]) {
