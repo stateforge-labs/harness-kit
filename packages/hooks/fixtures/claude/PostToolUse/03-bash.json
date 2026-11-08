@@ -10,7 +10,7 @@
   "hook_event_name": "PostToolUse",
   "tool_name": "Bash",
   "tool_input": {
-    "command": "echo hi",
+    "command": "PLACEHOLDER-command",
     "description": "PLACEHOLDER-description"
   },
   "tool_response": {

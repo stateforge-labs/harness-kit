@@ -15,7 +15,7 @@
         "file_path": "/tmp/work/f1.txt"
       },
       "tool_use_id": "toolu_012UkUMYEtNGCJLcUf1BBU17",
-      "tool_response": "1\thello 1\n2\t"
+      "tool_response": "PLACEHOLDER-tool_response"
     }
   ]
 }

@@ -17,7 +17,7 @@
         "content": "PLACEHOLDER-content"
       },
       "tool_use_id": "toolu_01HBgqwLUyEuNrmZqXnGQ1vR",
-      "tool_response": "File created successfully at: /tmp/work/y.txt (file state is current in your context — no need to Read it back)"
+      "tool_response": "PLACEHOLDER-tool_response"
     }
   ]
 }

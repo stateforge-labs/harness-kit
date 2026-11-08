@@ -23,6 +23,7 @@ const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
 function scrubString(key: string, s: string, id: string): string {
   if (FREE_TEXT.has(key)) return `PLACEHOLDER-${key}`;
   let out = s
+    .replace(/(^|[\s"'=:])~(?=\/)/g, "$1/home/user")
     .replace(/CAPTURE_TOKEN=\S+/g, "CAPTURE_TOKEN=REDACTED")
     .replace(/Bearer\s+\S+/g, "Bearer REDACTED")
     .replace(/\/home\/[A-Za-z0-9_-]+/g, "/home/user")

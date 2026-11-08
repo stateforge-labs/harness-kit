@@ -10,7 +10,7 @@
   "permission_mode": "bypassPermissions",
   "tool_name": "Bash",
   "tool_input": {
-    "command": "head -n 1 /tmp/codex-capture/work/notes.txt"
+    "command": "PLACEHOLDER-command"
   },
   "tool_use_id": "exec-00000000-0000-4000-8000-000000000000"
 }

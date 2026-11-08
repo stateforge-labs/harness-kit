@@ -43,8 +43,9 @@ may be written.
 6. **Fixtures follow the same rule.** `packages/hooks/scripts/export-fixtures.ts` replaces free text (typed by a person or produced by a model, Codex
    tool output, OpenCode `permission.evaluate` commands and paths), scrubs random ids (`messageID`, `projectID`, `parentID`, call and part
    ids) and the generated slug. OpenCode's object-valued `model` reference is kept as it is, because it names no one. A short shell command was once passed through, and a command can carry a secret.
-   - The committed Claude and Codex fixtures were exported before `tool_response` and `command` joined the free-text list. Re-exporting them
-     would replace those two kinds of text with placeholders and change nothing else.
+   - The captures are masked (home → `~`) before they are committed, so the exporter reads a leading `~/` as the home directory and the
+     path rules still apply. All fixtures were re-exported on 2026-11-07 with the full free-text list; the answer and log snapshots did not
+     change.
 
 ### Confirmation
 

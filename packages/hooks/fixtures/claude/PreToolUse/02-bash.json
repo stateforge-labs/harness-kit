@@ -10,7 +10,7 @@
   "hook_event_name": "PreToolUse",
   "tool_name": "Bash",
   "tool_input": {
-    "command": "rm -rf /tmp/build-nonexistent-dir-xyz",
+    "command": "PLACEHOLDER-command",
     "description": "PLACEHOLDER-description"
   },
   "tool_use_id": "toolu_0165wZ7gYdkJZTm3qBkXScGJ"

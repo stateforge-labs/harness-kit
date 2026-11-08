@@ -16,7 +16,7 @@
   "last_assistant_message": "PLACEHOLDER-last_assistant_message",
   "background_tasks": [
     {
-      "id": "tfxaiivk8",
+      "id": "PLACEHOLDER-id",
       "type": "teammate",
       "status": "running",
       "description": "PLACEHOLDER-description"

@@ -10,7 +10,7 @@
   "hook_event_name": "PostToolUseFailure",
   "tool_name": "Bash",
   "tool_input": {
-    "command": "ls ./nonexistent_dir",
+    "command": "PLACEHOLDER-command",
     "description": "PLACEHOLDER-description"
   },
   "tool_use_id": "toolu_01UqoNxN8oYJwk3HRks9b4KE",

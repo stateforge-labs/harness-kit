@@ -12,7 +12,7 @@
   "hook_event_name": "PreToolUse",
   "tool_name": "Bash",
   "tool_input": {
-    "command": "rm -rf ./decoy-build-dir",
+    "command": "PLACEHOLDER-command",
     "description": "PLACEHOLDER-description"
   },
   "tool_use_id": "toolu_01TZoCw7uxMVB41H5nrJrEnn"
