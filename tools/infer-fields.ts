@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-const dir = process.argv[2] ?? "docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures";
+const dir = process.argv[2] ?? "captures";
 
 type Stat = { types: Set<string>; seen: number; children?: Map<string, Stat>; example?: unknown };
 

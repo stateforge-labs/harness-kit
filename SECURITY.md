@@ -25,13 +25,7 @@ Do not open a public issue or pull request for a vulnerability until it is fixed
 
 ## Supported versions
 
-The project is on `0.y.z`. Security fixes go to the latest released minor version only. Earlier versions do not receive fixes; upgrade to
-the latest release.
-
-| Version | Supported |
-| --- | --- |
-| latest `0.y` release | yes |
-| older `0.y` releases | no |
+Security fixes go to the latest released version only.
 
 ## Scope
 

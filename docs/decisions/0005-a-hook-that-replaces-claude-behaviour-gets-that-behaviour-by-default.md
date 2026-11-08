@@ -1,9 +1,7 @@
 # A hook that replaces Claude Code's own behaviour gets that behaviour by default
 
-Status: **accepted** (owner decided on 2026-11-07). Amends [ADR 0003](0003-the-server-observes-and-never-blocks-on-its-own.md).
-Research: Claude Code's hooks reference as captured in
-[R-2026-11-07-03](../research/studies/2026-11-07-claude-code-hook-surface/README.md) (`evidence/docs/hooks.md`, WorktreeCreate and
-WorktreeRemove), and the probes below.
+Status: **accepted** (maintainers decided on 2026-11-07). Amends [ADR 0003](0003-the-server-observes-and-never-blocks-on-its-own.md).
+Evidence: Claude Code's hooks reference (WorktreeCreate and WorktreeRemove), and the probes below.
 
 ## Context and Problem Statement
 
@@ -14,7 +12,7 @@ ADR 0003 says the server only observes and answers passively. For two Claude Cod
   `claude --worktree` and every worktree a subagent asked for, and the default installed hooks block includes the event.
 - `WorktreeRemove` counts a successful answer as "removed" and reads nothing else, so `{}` left the directory on disk.
 
-The owner wants the hooks to handle every event they install, even when no consumer uses it.
+The maintainers want the hooks to handle every event they install, even when no consumer uses it.
 
 ## Decision Outcome
 

@@ -1,17 +1,8 @@
 #!/usr/bin/env bash
-# Run a real headless Claude Code session with http hooks pointed at a throwaway capture server,
-# then print what the server received. Resolves "unknown property / does it fire" questions by observation.
-#   tools/capture.sh <OutName> "<prompt>" [claude args...]
-# Env: CAPTURE_EVENTS=Event1,Event2 (events to hook; default: all http-capable ones + SessionStart via curl shim)
-#      CAPTURE_RESPONSE='{json}'   (what the hook replies; default {})
-#      CAPTURE_MATCHER=<matcher>   (optional matcher for every hook)
-#      CAPTURE_CWD=<dir>           (run claude from here; default: a fresh temp dir)
-# Output: evidence dir  docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/<OutName>/
-#         events.jsonl (full payloads), settings.json (the hooks used), stream.jsonl (claude stream-json), cmd.txt
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT_NAME="$1"; PROMPT="$2"; shift 2
-OUT="$ROOT/docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures/$OUT_NAME"
+OUT="$ROOT/captures/$OUT_NAME"
 mkdir -p "$OUT"; : > "$OUT/events.jsonl"
 TOKEN="$(head -c 18 /dev/urandom | base64 | tr -d '/+=')"
 export CAPTURE_LOG="$OUT/events.jsonl" CAPTURE_TOKEN="$TOKEN"

@@ -14,13 +14,17 @@ gracefully on SIGTERM and SIGINT.
 
 ## Install
 
-This package is not on npm under this name yet. In the repository, run `bun install` at the root, then start the server from this folder.
+This package is not published to npm. In the repository, run `bun install` at the root, then start the server from this folder.
+
+## License
+
+MIT. See [LICENSE](../../LICENSE).
 
 ## Run
 
 ```sh
-bun run start                                  # from this folder, or `bun --filter @stateforge-labs/harness-hooks-server start` at the root
-PORT=0 HOOK_TOKEN=change-me bun src/server.ts   # PORT=0 asks the system for a free port
+bun run start
+PORT=0 HOOK_TOKEN=change-me bun src/server.ts
 ```
 
 On start the server prints the listening address, for example:

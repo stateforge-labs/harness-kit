@@ -63,7 +63,7 @@ After a schema change, run `bun run gen` in `packages/hooks`, then review the re
 | --- | --- |
 | [`packages/hooks`](packages/hooks/README.md) | `@stateforge-labs/harness-hooks`: the library |
 | [`packages/hooks-server`](packages/hooks-server/README.md) | `@stateforge-labs/harness-hooks-server`: the HTTP server and the installers |
-| [`packages/adapters`](packages/adapters/README.md) | `@stateforge-labs/harness-adapters`: a workspace package with no code yet; not published |
+| [`packages/adapters`](packages/adapters/README.md) | `@stateforge-labs/harness-adapters`: a private workspace package; not published |
 
 ### Library layout (`packages/hooks`)
 
@@ -104,7 +104,7 @@ fixture was `captured` or `synthetic`, with where it came from.
   to `CAPTURE_LOG` (JSONL; a body that is not JSON gives `payload: null`), and `{ ts, event, tool, rule, reply }` to `replies.jsonl` beside
   it. `CAPTURE_RULES` is a first-match list of `{ event, tool?, reply, times?, delayMs? }`: `tool` matches `tool_name` (or the body's
   `tool` for OpenCode), `times` limits uses, and `delayMs` probes a harness's hook timeout.
-- `capture.sh <OutName> "<prompt>"`: runs a headless Claude Code session with its hooks pointed at the capture server, then prints what the server received. Its evidence goes to `docs/research/studies/.../evidence/captures/<OutName>/`.
+- `capture.sh <OutName> "<prompt>"`: runs a headless Claude Code session with its hooks pointed at the capture server, then prints what the server received. Its evidence goes to `captures/<OutName>/`.
 - `infer-fields.ts`: measures payload shapes from `captures/*/events.jsonl` (JSON types seen, how often each key is present, nested up to
   three levels, including objects inside arrays), and prints them as JSON.
 - `check-boundaries.ts`: see Checks above.
@@ -113,14 +113,18 @@ Captures carry the home path, user name and email of the machine they came from.
 
 ## Releases
 
-Releases follow [Semantic Versioning](https://semver.org). The project is on `0.y.z`, so any minor release may change the API.
+Releases follow [Semantic Versioning](https://semver.org).
 
-1. Move the `Unreleased` entries in [CHANGELOG.md](CHANGELOG.md) under a new version heading, with the date.
+1. Add a version heading with the date to [CHANGELOG.md](CHANGELOG.md).
 2. Bump `version` in the package's `package.json`. Only the packages that changed need a bump.
 3. Run the checks above, and `npm pack --dry-run` in `packages/hooks` and `packages/hooks-server` to confirm what would ship.
 4. Tag the commit `vX.Y.Z` and push the tag.
 
-Publishing is done by a maintainer. This repository has no publishing workflow yet.
+Publishing runs from a version tag. `.github/workflows/publish.yml` publishes `@stateforge-labs/harness-hooks` to npm, and `ci/publish-gitlab.sh` publishes it to the GitLab registry. The tag must equal `v<version>` for the version in `packages/hooks/package.json`.
+
+## License
+
+MIT. See [LICENSE](LICENSE). A copy is in `packages/hooks/LICENSE` so the npm tarball carries it.
 
 ## Style
 

@@ -12,8 +12,15 @@ neutral reply back into that harness's own response. It has no HTTP server and n
 
 ## Install
 
-This package is not on npm under these names yet. In the repository, `bun install` links it into the workspace; a consumer outside the
-repository depends on it by name once it is published.
+```sh
+npm install @stateforge-labs/harness-hooks
+```
+
+With Bun:
+
+```sh
+bun add @stateforge-labs/harness-hooks
+```
 
 ## Usage
 
@@ -22,7 +29,6 @@ import { adapters, defaultPipeline, fixturesDir, handle } from "@stateforge-labs
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-// fixturesDir is the package's own fixtures folder; any Claude Code PreToolUse payload works here.
 const payload = JSON.parse(readFileSync(join(fixturesDir, "claude/PreToolUse/02-bash.json"), "utf8"));
 const { body } = await handle(adapters.get("claude")!, payload, defaultPipeline());
 console.log(JSON.stringify(body));
@@ -75,5 +81,4 @@ Questions and bug reports go to [GitHub issues](https://github.com/stateforge-la
 
 ## License
 
-This package has no license file yet, so no right to use, copy, modify or distribute it is granted. See the
-[repository README](https://github.com/stateforge-labs/harness-kit#license).
+MIT. See [LICENSE](LICENSE).

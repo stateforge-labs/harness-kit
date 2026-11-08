@@ -1,6 +1,10 @@
 # @stateforge-labs/harness-adapters
 
-A private workspace package. It is not published and currently contains no code.
+A private workspace package. It is not published.
+
+## License
+
+MIT. See [LICENSE](../../LICENSE).
 
 Its shipped code must not use a Bun API, because the library it depends on runs under Node. `tools/check-boundaries.ts` enforces this
 for every package whose code ships.

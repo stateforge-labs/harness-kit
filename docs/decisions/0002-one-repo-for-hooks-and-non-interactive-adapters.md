@@ -1,10 +1,10 @@
 # One repository, harness-kit, for hooks and the non-interactive harness adapters
 
-Status: **proposed** (2026-11-07). Amends [ADR 0001](0001-library-layers-service-boundary.md): the harness adapters move from "StateForge owns" to this repository. Research: [R-2026-11-07-09](../research/studies/2026-11-07-harness-hooks-in-the-stateforge-runner/README.md).
+Status: **proposed** (2026-11-07). Amends [ADR 0001](0001-library-layers-service-boundary.md): the harness adapters move from "StateForge owns" to this repository. Evidence: a 2026-11-07 study of reusing the hook server inside an agent host.
 
 ## Context and Problem Statement
 
-StateForge is built on ports and adapters; its harness port (`HarnessPort` in `packages/agent-host`) has one adapter, Claude. The owner
+StateForge is built on ports and adapters; its harness port (`HarnessPort` in `packages/agent-host`) has one adapter, Claude. The StateForge team
 extracts one concern at a time into its own repository to see it clearly, and wants the harness part stripped out of StateForge. The
 question was whether the hook-server repository should also hold the harness adapters for non-interactive use.
 
@@ -20,7 +20,7 @@ Chosen option 3, because the Codex and OpenCode adapters are mostly hook knowled
 hermetic home, the shim and plugin) plus a launcher, they depend directly on the hook package, and two repositories would turn every
 neutral-type change into two releases and a StateForge bump for a single maintainer.
 
-- **Name: `harness-kit`, scope `@homelab`** (owner, 2026-11-07: not `@stateforge/*`, which in StateForge means a package inside its monorepo and would hide an external dependency). The repository holds more than hooks; the hook server becomes one binary in it.
+- **Name: `harness-kit`, scope `@stateforge-labs`**. The repository holds more than hooks; the hook server becomes one binary in it.
 - **Packages, with enforced import rules:**
 
   | Package | Job | May import |
@@ -30,7 +30,7 @@ neutral-type change into two releases and a StateForge bump for a single maintai
   | `@stateforge-labs/harness-hooks-server` | the developer hook server for interactive sessions, installers | `harness-hooks` |
 
 - **Stays in StateForge:** the snapshot decision layer, prompt and refusal texts, pricing, the session-storage backend, the model relay and
-  credentials, images and sandbox policy, and the COMP-R-029 contract suite run against these adapters.
+  credentials, images and sandbox policy, and the StateForge contract suite run against these adapters.
 - **Split later only** if the adapters need a different release pace, visibility or licence; a history-preserving split is cheap.
 
 ### Confirmation

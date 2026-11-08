@@ -1,7 +1,7 @@
 # The server observes; it never blocks, denies or stops an agent on its own
 
 Status: **accepted**, amended by [ADR 0005](0005-a-hook-that-replaces-claude-behaviour-gets-that-behaviour-by-default.md) for the
-worktree events (recorded 2026-11-07 from the code comments it was written in; the decisions date from the builds of R-2026-11-07-03, -05 and -08). Research: [R-2026-11-07-03](../research/studies/2026-11-07-claude-code-hook-surface/README.md), [R-2026-11-07-05](../research/studies/2026-11-07-claude-hook-surface-verified/README.md), [R-2026-11-07-08](../research/studies/2026-11-07-codex-opencode-real-hook-payloads/README.md), [R-2026-11-07-10](../research/studies/2026-11-07-mcp-hooks-feasibility-codex-opencode/README.md).
+worktree events (recorded 2026-11-07 from the code comments it was written in; the decisions rest on four 2026-11-07 studies of the hook surface and captured payloads).
 
 ## Context and Problem Statement
 
@@ -23,7 +23,7 @@ its own.**
        limit, or a non-Haiku model is asked for); otherwise `{}`.
 
      No handler blocks, denies, retries, edits input or output, sets `continue: false`, or returns a `systemMessage`.
-   - **Codex:** `SessionStart` gets the delegation rules and `SubagentStart` the subagent rules (the owner approved the wording on
+   - **Codex:** `SessionStart` gets the delegation rules and `SubagentStart` the subagent rules (the maintainers approved the wording on
      2026-11-07); every other event is answered `{}`. There is no spawn advisory, since a Codex spawn names no model.
    - **OpenCode:** `session.context` gets the delegation rules, or the subagent rules in a child session, with the Codex wording naming
      the `subagent` tool; the plugin adds the text to each model request. Every other event is answered `{}`.

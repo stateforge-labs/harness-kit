@@ -1,6 +1,6 @@
 # The event log is an allowlist of labels and counts
 
-Status: **accepted** (recorded 2026-11-07 from the code comments it was written in). Research: [R-2026-11-07-05](../research/studies/2026-11-07-claude-hook-surface-verified/README.md), [R-2026-11-07-08](../research/studies/2026-11-07-codex-opencode-real-hook-payloads/README.md).
+Status: **accepted** (recorded 2026-11-07 from the code comments it was written in). Evidence: captured hook payloads from Claude Code, Codex and OpenCode (2026-11-07).
 
 ## Context and Problem Statement
 

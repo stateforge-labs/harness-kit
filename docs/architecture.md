@@ -2,7 +2,7 @@
 
 This page spans the packages. Each package's own README says what it exports, its scripts and its tests:
 [`@stateforge-labs/harness-hooks`](../packages/hooks/README.md) (library), [`@stateforge-labs/harness-hooks-server`](../packages/hooks-server/README.md)
-(the HTTP service), [`@stateforge-labs/harness-adapters`](../packages/adapters/README.md) (empty until phase 5). Paths below are from the repo root.
+(the HTTP service), [`@stateforge-labs/harness-adapters`](../packages/adapters/README.md) (a private workspace package). Paths below are from the repo root.
 
 One server receives the hook events of several coding-agent harnesses (Claude Code, Codex, OpenCode), checks what they send, logs
 metadata and answers with the harness's own response format. The core knows no harness; each harness is an adapter plugged into one port.
@@ -67,7 +67,7 @@ Every event passes through a pipeline between decode and encode. A layer is `(ct
 - **Order through the server.** With `HOOK_MIDDLEWARE=A,B`, B is inside A, so B's text is added first and A's last.
 - **Two ways in.** In code: `new HookServerBuilder().use(mw)`. In a running server: `HOOK_MIDDLEWARE=/abs/a.ts,/abs/b.ts`, each module's
   default export a `Middleware` or an array of them; a module that fails to import, or exports anything else, is a start-up error naming the file (exit 2), never a silent skip. Module loading runs
-  arbitrary code and is a service feature only (R-2026-11-07-09).
+  arbitrary code and is a service feature only .
 - **Same layer, every harness.** A layer returns a `NeutralReply`; each adapter encodes it by its own rules (the matrix below), so one
   layer reaches all three harnesses. Tool names still differ per harness (`mcp__sf__submit` on Claude Code and Codex, `sf_submit` on
   OpenCode), so a layer that matches tool names is built once per harness.
@@ -75,7 +75,7 @@ Every event passes through a pipeline between decode and encode. A layer is `(ct
 ## Contract v1 (ADR 0001)
 
 The neutral event carries `session` (the harness's session id or null) and, on tool events, `tool { name, callId }`. `callId` is
-`tool_use_id` on Claude Code and Codex (on Codex it equals the MCP `_meta.callId`, R-2026-11-07-10 F17), and on OpenCode the hook's `id`
+`tool_use_id` on Claude Code and Codex (on Codex it equals the MCP `_meta.callId`), and on OpenCode the hook's `id`
 (`source.id` on `permission.evaluate`): the model's tool-call id, which never reaches an MCP server, and which calls made inside codemode's
 `execute` share with the outer call. Tool arguments are not on the event.
 
@@ -101,9 +101,9 @@ Evidence per row, by harness:
 
 | Shape | Claude Code | Codex 0.167.0 | OpenCode 2.2.6 |
 | --- | --- | --- | --- |
-| pre-tool deny | documented (Claude Code hook-surface study specs) | captured, `codex/q4-deny-and-stop` (R-2026-11-07-10); live through the product, `codex/v1-live-deny-continue` (F20) | captured, `opencode/q4-throw-deny`; live, `opencode/v1-live-deny-continue` (F20) |
+| pre-tool deny | documented (Claude Code hook-surface study specs) | captured, `codex/q4-deny-and-stop`; live through the product, `codex/v1-live-deny-continue` | captured, `opencode/q4-throw-deny`; live, `opencode/v1-live-deny-continue` |
 | permission-request allow | documented | captured, `codex/q1-permission-allow` | n/a |
-| permission-request deny | documented | live, `codex/v1-live-perm-deny` (R-2026-11-07-10 F20) | n/a |
+| permission-request deny | documented | live, `codex/v1-live-perm-deny` | n/a |
 | stop continue | documented | captured, `codex/q4-deny-and-stop` | captured, `opencode/q4-idle-continue` |
 | subagent-stop continue | documented | pinned output schema | n/a |
 
@@ -118,11 +118,11 @@ Each stage must give up before the one that called it, with a margin, or the cal
 | A layer's own work | 2000 ms | `LayerOptions.timeoutMs`, `PipelineOptions.timeoutMs`, `HOOK_MIDDLEWARE_TIMEOUT_MS` |
 | The service's pipeline (n `HOOK_MIDDLEWARE` layers + the built-in policy) | at most (n + 1) × `HOOK_MIDDLEWARE_TIMEOUT_MS`; with the defaults, n ≥ 2 already exceeds the shim's 5000 ms, so lower the layer timeout or raise the shim's | |
 | Shim (`HOOK_SHIM_TIMEOUT_MS`), plugin (`HOOK_PLUGIN_TIMEOUT_MS`) | 5000 ms | environment |
-| Codex handler `timeout` | its own default | `hooks.json`; set it well above the shim's (R-2026-11-07-10 F7: a late Codex hook fails **open**) |
+| Codex handler `timeout` | its own default | `hooks.json`; set it well above the shim's (a late Codex hook fails **open**) |
 | Claude Code | its own hook `timeout` (the installer writes 10 s); a non-2xx or unreachable http hook is non-blocking by default. PreToolUse goes over HTTP, not the shim, so `HOOK_SHIM_FAIL` does not cover it: fail-closed there is Claude's own `onFailure: "block"` (per its docs) | settings |
-| OpenCode | waits as long as the hook takes (75 s seen, R-2026-11-07-10 F14) | none; the plugin's timeout decides |
+| OpenCode | waits as long as the hook takes (75 s seen) | none; the plugin's timeout decides |
 
-A pre-tool layer registered with `onFault: { deny }` that times out was refused on a live Codex run (`codex/v1-live-fault-deny`, F20).
+A pre-tool layer registered with `onFault: { deny }` that times out was refused on a live Codex run (`codex/v1-live-fault-deny`).
 When the shim or plugin gives up, it answers `{}` (fail open, the default) or, with `HOOK_SHIM_FAIL=closed` / `HOOK_PLUGIN_FAIL=closed`,
 a refusal on the pre-tool events (and on `PermissionRequest` for the shim). An engine that a layer calls (StateForge's snapshot engine)
 must have its own bound below that layer's timeout.
@@ -132,8 +132,8 @@ must have its own bound below that layer's timeout.
 `toolAllowlist({ allow, deny })` (`packages/hooks/src/core/layers.ts`), opt-in: denies pre-tool and permission-request events for a tool
 not on the list (or with no tool name), without asking the layers below (their deny would win anyway), and answers allow on
 permission-request for a listed tool. It is the second line behind each
-harness's built-ins-off configuration (R-2026-11-07-10 F15, F16), and it refuses Codex `request_user_input` and
-`request_user_input_async` unless they are listed (owner decision 2026-11-07). Names are the harness's own (`mcp__sf__x` vs `sf_x`).
+harness's built-ins-off configuration, and it refuses Codex `request_user_input` and
+`request_user_input_async` unless they are listed (maintainer decision 2026-11-07). Names are the harness's own (`mcp__sf__x` vs `sf_x`).
 
 ## The port (`packages/hooks/src/port.ts`)
 
@@ -169,12 +169,11 @@ Each lives in `packages/hooks/src/adapters/<harness>/`: `adapter.ts`, `names.ts`
 | Spawn tool | `Agent` (`subagent_type`, `model`) | `collaborationspawn_agent` (`message`; model unresolved) | `subagent` (`prompt`, optional `model`) |
 | Answers | Rules text for Delegation (model-specific); contract v1 replies | Rules text for Delegation on `SessionStart` and `SubagentStart` (no model named); contract v1 replies | Rules text on `session.context` (no model named); deny and continue, acted on by the plugin |
 | Fixtures | 82, captured | 23 (22 captured, 1 synthetic) | 25 (21 captured, 4 synthetic) |
-| Evidence | R-2026-11-07-03, -05 | R-2026-11-07-04, -08 | R-2026-11-07-04, -08 |
 
 Every harness has rules text; every other event is answered passively
 ([ADR 0003](decisions/0003-the-server-observes-and-never-blocks-on-its-own.md)). Codex's and OpenCode's rules are Claude's without the
 Claude-only parts (the Haiku model, forks, the advisor) and name no model: whether a Codex spawn can request one is unresolved, and the
-owner has not picked an OpenCode subagent model.
+maintainers have not picked an OpenCode subagent model.
 
 ### Claude Code notes
 
@@ -182,7 +181,7 @@ owner has not picked an OpenCode subagent model.
   are the ones every captured call carried; extra keys are allowed, and an unlisted tool accepts any object. `tool_response` differs per
   tool and is never inspected; it only has to be present where the event carries it. These checks are code, so the generated JSON Schema
   does not include them.
-- **Fields typed looser than the captures** (so they never log a false `wrong_type`; R-2026-11-07-05):
+- **Fields typed looser than the captures** (so they never log a false `wrong_type`):
   - `PreModelSwitch`/`PostModelSwitch` `from_model` may be null. It was always a string in the 4 `PreModelSwitch` and 3 `PostModelSwitch`
     payloads, so null is unresolved.
   - `SubagentStop` `last_assistant_message` is optional: seen in 20 of 21 payloads, so judged required, but one capture lacked it.
@@ -207,7 +206,7 @@ owner has not picked an OpenCode subagent model.
 ### Codex notes
 
 - **Source:** the 13 pinned command input schemas (`*.command.input.schema.json`, openai/codex @ `57e64682f8ef83c09cc868c39010733dd6760805`,
-  R-2026-11-07-04) plus real payloads. Fourteen events, because `PreModelRequest` and `PostModelRequest` are the two `oneOf` branches of
+  plus real payloads). Fourteen events, because `PreModelRequest` and `PostModelRequest` are the two `oneOf` branches of
   the one `model-request` schema. Neither takes a matcher, and `PreModelRequest` has no keys beyond the shared ones.
 - **Envelope:** `session_id`, `transcript_path`, `cwd` and `hook_event_name` are required in all 13 schemas (`model-request` types the path
   as `AbsolutePathBuf`, still a string). Everything else is per event. `turn_id` is a Codex extension that exposes the active turn to
@@ -223,14 +222,14 @@ owner has not picked an OpenCode subagent model.
 - **Closed sets seen** (the rest only listed by the schema): `SessionStart` source `startup` and `compact`, compaction trigger `auto`,
   `agent_type` `default`.
 - **Spawn:** the brief is read from `tool_input.message` of `collaborationspawn_agent` with plain reads that cannot throw. The model is
-  reported null because the one capture named none (R-2026-11-07-08, capture "subagent"); see Unresolved.
+  reported null because the one capture named none (capture "subagent"); see Unresolved.
 - **Output:** `additionalContext` is written only on `PreToolUse`, `SessionStart`, `SubagentStart` and `UserPromptSubmit`. The output
   schemas also define `hookSpecificOutput` for `PostToolUse` and `PermissionRequest`; the adapter writes only the contract v1
   `PermissionRequest` decision there. Every other event, `SessionEnd` included (it has no output schema), is answered `{}`.
 
 ### OpenCode notes
 
-- **No typings:** 2.2.6 ships none for its hooks, so every closed set in `enums.ts` is what the R-2026-11-07-08 captures showed, not
+- **No typings:** 2.2.6 ships none for its hooks, so every closed set in `enums.ts` is what the captures showed, not
   exhaustive:
   - permission effect: only `allow` (every capture ran with `--auto`);
   - tool status: only `completed` (a failed tool call was never captured);
@@ -258,7 +257,7 @@ owner has not picked an OpenCode subagent model.
   "subagent-model" asked for `opencode-go/beam-free` and the key arrived with that value.
 - **Rules (`session.context`):** OpenCode's `ctx.session.hook("context", ...)` runs before every model request with
   `{ sessionID, agent, model: { id, providerID, variant }, system, messages, options, tools }`; `system` is an array of
-  `{ type: "text", text }` parts, and a pushed part reaches the model, in a subagent's session too (R-2026-11-07-08, captures
+  `{ type: "text", text }` parts, and a pushed part reaches the model, in a subagent's session too (captures
   `context-hook`, `context-hook-subagent`). The payload carries no parent id, so the plugin learns it from the child's `session.created`
   event, which arrived about 16 ms before the child's first model request. For a session it has not seen there, the plugin waits up to
   300 ms for that event, so a root session pays the wait once. It then posts a slim `session.context`
@@ -398,8 +397,8 @@ into another's files, imports an undeclared package, or (hooks, adapters) uses a
 | Whether Claude Code calls `WorktreeRemove` on an interactive exit (a `claude -p` `ExitWorktree` call used its git fallback instead, ADR 0005) | An interactive worktree session exited with "remove" |
 | Claude `from_model` null on Pre/PostModelSwitch | A capture of a model switch with no previous model |
 | Codex spawn: can a model be requested, under which key | Capture with a prompt that names a subagent model |
-| Codex merge order with several hooks; whether `hookEventName` is mandatory in output (the late-hook timeout is settled: fails open, R-2026-11-07-10 F7) | A run with two hooks; a run that answers context without it |
+| Codex merge order with several hooks; whether `hookEventName` is mandatory in output (the late-hook timeout is settled: fails open) | A run with two hooks; a run that answers context without it |
 | Codex `SubagentStop` block on a real run (encoded from the pinned schema); Claude Code contract v1 shapes on a real run (encoded from the docs) | A live Codex run with a subagent; a `claude -p` run against the server with a deny layer |
 | OpenCode `permission.evaluate` effects (deny/ask); a reply field for it | Not needed while the pre-tool deny refuses the call |
-| How StateForge consumes the packages (registry, ADR-0181 exception); the split itself is done (ADR 0002, phase 2) | R-2026-11-07-09 follow-ups; plan phase 7 |
-| OpenCode root `session.created`, compaction hook and events, `deny`/`ask` effects, failed tool status | See R-2026-11-07-08, Open questions |
+| How consumers embed the packages; the split itself is done (ADR 0002, phase 2) | See ADR 0001 |
+| OpenCode root `session.created`, compaction hook and events, `deny`/`ask` effects, failed tool status | See Unresolved |

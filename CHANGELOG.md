@@ -1,16 +1,9 @@
 # Changelog
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and the project uses [Semantic Versioning](https://semver.org). The project is on `0.y.z`, so a minor release may change the API.
+and the project uses [Semantic Versioning](https://semver.org).
 
-## [Unreleased]
-
-### Added
-
-- `CONTRIBUTING.md`, `SECURITY.md`, `SUPPORT.md`, `CODE_OF_CONDUCT.md`, the GitHub issue forms and a GitLab merge request template.
-- A public README for the repository, and README files for each package that describe only what the code does.
-
-## [0.1.0] - not yet released
+## 0.1.0 - 2026-11-08
 
 The first version. It ships the following.
 
@@ -36,4 +29,4 @@ The first version. It ships the following.
 
 ### `@stateforge-labs/harness-adapters`
 
-- Workspace package with no code yet. It is not published.
+- Private workspace package, not published.

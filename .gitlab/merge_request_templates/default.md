@@ -13,7 +13,7 @@
 
 - [ ] No private data in the diff: no tokens, home paths, private hostnames, or email addresses
 - [ ] Each README describes only what the current version ships
-- [ ] CHANGELOG.md has an entry under Unreleased, if the change is visible to users
+- [ ] CHANGELOG.md has an entry for the change, if the change is visible to users
 - [ ] Docs and examples match the code they describe
 
 Closes #

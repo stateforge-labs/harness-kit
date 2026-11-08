@@ -8,7 +8,13 @@ installers that connect each harness to it.
 | [`@stateforge-labs/harness-hooks`](packages/hooks/README.md) | Library: neutral events and replies, per-harness decode and encode, the middleware pipeline, the command shim and the OpenCode plugin | Node 22 or later (`dist/`), or Bun (sources) |
 | [`@stateforge-labs/harness-hooks-server`](packages/hooks-server/README.md) | HTTP hook server (`POST /hook/<harness>`) and the installer that connects each harness to it | Bun 1.4.4 |
 
-These are the workspace package names. The packages are not published to npm under these names.
+Install the library from npm with `npm install @stateforge-labs/harness-hooks`. The server package is not published to npm; run it from the repository.
+
+## Install
+
+```sh
+npm install @stateforge-labs/harness-hooks
+```
 
 ## Requirements
 
@@ -20,7 +26,7 @@ These are the workspace package names. The packages are not published to npm und
 Clone the repository, then install and run the test suite:
 
 ```sh
-mise install        # Bun 1.4.4, from mise.toml
+mise install
 bun install
 bun run test
 ```
@@ -76,4 +82,4 @@ The server prints `harness-hooks listening on 127.0.0.1:8787` when it starts. Th
 
 ## License
 
-This repository has no license file yet. Until one is added, no right to use, copy, modify or distribute the code is granted.
+MIT. See [LICENSE](LICENSE).

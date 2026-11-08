@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 const root = join(import.meta.dir, "..");
 const capturesDir =
-  process.argv[2] ?? join(root, "..", "..", "docs/research/studies/2026-11-07-claude-code-hook-surface/evidence/captures");
+  process.argv[2] ?? join(root, "..", "..", "captures");
 const outDir = process.argv[3] ?? join(root, "fixtures/claude");
 
 const FREE_TEXT = new Set([
