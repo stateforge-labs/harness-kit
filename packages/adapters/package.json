@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Runs a coding-agent harness non-interactively behind one port (phase 5 of docs/plans/2026-11-07-harness-kit.md). Empty for now.",
+  "description": "Non-interactive harness adapters behind one port. Private workspace package; contains no code yet.",
   "dependencies": {
     "@homelab/harness-hooks": "workspace:*"
   }

@@ -4,6 +4,32 @@
   "private": true,
   "type": "module",
   "description": "The developer hook server: one HTTP endpoint for Claude Code, Codex and OpenCode hooks on a machine, plus the client installers.",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "opencode",
+    "hooks",
+    "http-server",
+    "bun"
+  ],
+  "homepage": "https://github.com/stateforge-labs/harness-kit/tree/main/packages/hooks-server#readme",
+  "bugs": {
+    "url": "https://github.com/stateforge-labs/harness-kit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stateforge-labs/harness-kit.git",
+    "directory": "packages/hooks-server"
+  },
+  "author": "Cristian Arrieta",
+  "engines": {
+    "bun": ">=1.4.4"
+  },
+  "files": [
+    "src",
+    "scripts",
+    "README.md"
+  ],
   "scripts": {
     "start": "bun src/server.ts",
     "install-clients": "bun scripts/install.ts"

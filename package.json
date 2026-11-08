@@ -1,5 +1,6 @@
 {
   "name": "harness-kit",
+  "description": "Hook events from Claude Code, Codex and OpenCode in one neutral form, with a middleware pipeline, a hook server and installers.",
   "type": "module",
   "private": true,
   "scripts": {
@@ -18,5 +19,22 @@
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "keywords": [
+    "claude-code",
+    "codex",
+    "opencode",
+    "hooks",
+    "coding-agent",
+    "middleware"
+  ],
+  "homepage": "https://github.com/stateforge-labs/harness-kit#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stateforge-labs/harness-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stateforge-labs/harness-kit/issues"
+  },
+  "author": "Cristian Arrieta"
 }

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/stateforge-labs/harness-kit/security/advisories/new
+    about: Report a security problem privately. Do not open a public issue for it.
+  - name: Questions and support
+    url: https://github.com/stateforge-labs/harness-kit/blob/main/SUPPORT.md
+    about: Read the support guide before you ask a question.

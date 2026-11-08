@@ -1,9 +1,9 @@
 # @homelab/harness-adapters
 
-Empty for now. It will run a coding-agent harness (Claude Code, Codex, OpenCode) non-interactively behind one port, so a caller such as
-StateForge's Runner knows no harness by name. The Claude adapter moves here from StateForge in phase 5, Codex and OpenCode follow in
-phase 6: [`docs/plans/2026-11-07-harness-kit.md`](../../docs/plans/2026-11-07-harness-kit.md). Why it lives in this repo:
-[ADR 0002](../../docs/decisions/0002-one-repo-for-hooks-and-non-interactive-adapters.md).
+A private workspace package. It is not published and currently contains no code.
 
-It depends on [`@homelab/harness-hooks`](../hooks/README.md) for the neutral event and reply types. Like that package, its shipped code
-must not use a Bun API; `tools/check-boundaries.ts` enforces it.
+Its shipped code must not use a Bun API, because the library it depends on runs under Node. `tools/check-boundaries.ts` enforces this
+for every package whose code ships.
+
+It depends on [`@homelab/harness-hooks`](https://github.com/stateforge-labs/harness-kit/blob/main/packages/hooks/README.md) for the neutral event and reply types. The repository's
+[README](https://github.com/stateforge-labs/harness-kit#readme) lists the packages that are in use.

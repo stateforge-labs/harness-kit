@@ -4,6 +4,28 @@
   "private": true,
   "type": "module",
   "description": "Neutral hook events and replies, per-harness decode/encode for Claude Code, Codex and OpenCode, and the middleware pipeline.",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "opencode",
+    "hooks",
+    "coding-agent",
+    "middleware",
+    "zod"
+  ],
+  "homepage": "https://github.com/stateforge-labs/harness-kit/tree/main/packages/hooks#readme",
+  "bugs": {
+    "url": "https://github.com/stateforge-labs/harness-kit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stateforge-labs/harness-kit.git",
+    "directory": "packages/hooks"
+  },
+  "author": "Cristian Arrieta",
+  "engines": {
+    "node": ">=22"
+  },
   "exports": {
     ".": {
       "bun": "./src/index.ts",

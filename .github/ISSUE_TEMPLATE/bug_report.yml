@@ -1,0 +1,55 @@
+name: Bug report
+description: Something does not work as the documentation says
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Do not report a security vulnerability here; follow SECURITY.md instead.
+        Remove private data (prompts, tokens, your home path, email addresses) from anything you paste.
+  - type: input
+    id: package
+    attributes:
+      label: Package and version
+      description: For example @homelab/harness-hooks 0.1.0, or the commit hash if you run from a clone
+      placeholder: "@homelab/harness-hooks 0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: harness
+    attributes:
+      label: Harness
+      options:
+        - Claude Code
+        - Codex
+        - OpenCode
+        - Not applicable
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: A minimal payload or script is the most useful thing you can add
+      placeholder: |
+        1. Start the server with HOOK_TOKEN unset
+        2. POST the payload to /hook/claude
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Bun and Node versions, operating system
+      placeholder: "Bun 1.4.4, Node 22.x, Linux"
+    validations:
+      required: false

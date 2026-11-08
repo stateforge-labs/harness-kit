@@ -1,32 +1,79 @@
 # harness-kit
 
-One place for what a coding-agent harness (Claude Code, Codex, OpenCode) needs from the outside: its hook events turned into one
-neutral form and answered in its own format, and, later, running it non-interactively behind one port. Built as small packages so
-StateForge reuses them without copying code.
+Hook events from Claude Code, Codex and OpenCode in one neutral form, with a middleware pipeline, a local hook server and the
+installers that connect each harness to it.
 
-| Package | What |
-| --- | --- |
-| [`@homelab/harness-hooks`](packages/hooks/README.md) | library: neutral events, per-harness decode/encode, the middleware pipeline, the shim and OpenCode plugin. Runs on Bun and Node |
-| [`@homelab/harness-hooks-server`](packages/hooks-server/README.md) | the HTTP hook server and the installer that connects each harness to it |
-| [`@homelab/harness-adapters`](packages/adapters/README.md) | non-interactive harness adapters (empty until phase 5) |
+| Package | What it ships | Runtime |
+| --- | --- | --- |
+| [`@homelab/harness-hooks`](packages/hooks/README.md) | Library: neutral events and replies, per-harness decode and encode, the middleware pipeline, the command shim and the OpenCode plugin | Node 22 or later (`dist/`), or Bun (sources) |
+| [`@homelab/harness-hooks-server`](packages/hooks-server/README.md) | HTTP hook server (`POST /hook/<harness>`) and the installer that connects each harness to it | Bun 1.4.4 |
+
+These are the workspace package names. The packages are not published to npm under these names.
+
+## Requirements
+
+- Bun 1.4.4 for development (pinned in [`mise.toml`](mise.toml)) and for `harness-hooks-server`.
+- Node 22 or later to run the built `harness-hooks` package from `dist/`.
+
+## Quick start
+
+Clone the repository, then install and run the test suite:
 
 ```sh
+mise install        # Bun 1.4.4, from mise.toml
 bun install
-bun run test        # boundary check, then every package's tests
-bun run typecheck
-bun run gen:check
-bun run build       # dist/ of @homelab/harness-hooks for Node
-bun run start       # the hook server
+bun run test
 ```
 
-- How it fits together: [`docs/architecture.md`](docs/architecture.md)
-- Decisions: [`docs/decisions/`](docs/decisions/) · plan: [`docs/plans/2026-11-07-harness-kit.md`](docs/plans/2026-11-07-harness-kit.md) · studies: [`docs/research/`](docs/research/index.md)
-- `tools/` holds dev-only scripts; nothing in a package imports them:
-  - `capture-server.ts`: a throwaway research server, not the product. For every request with the bearer `CAPTURE_TOKEN` it appends
-    `{ ts, payload }` to `CAPTURE_LOG` (JSONL; a body that is not JSON gives `payload: null`) and `{ ts, event, tool, rule, reply }` to
-    `replies.jsonl` beside it. `CAPTURE_RULES` is a first-match list of `{ event, tool?, reply, times?, delayMs? }`: `tool` matches
-    `tool_name` (or the body's `tool` for OpenCode), `times` limits uses, and `delayMs` probes a harness's hook timeout.
-  - `infer-fields.ts`: measures real payload shapes from `captures/*/events.jsonl` (JSON types seen, how often each key is present, nested up to three levels, including objects inside arrays) and prints them as JSON. Its default input is the Claude hook-surface study's captures.
-  - `check-boundaries.ts`: runs before `bun test`. A workspace package may be imported only if declared, and only through a path in its
-    `exports` map (no deep imports). Static and string-literal dynamic imports are checked. The shipped code of `hooks` and `adapters` (`src/`, `clients/`) must not import a `bun*` module
-    or call `Bun.*`, because StateForge runs them under Node. Exit 0 is clean; exit 1 prints one line per violation; `--root` checks another tree.
+Use the library in code. This example feeds a captured Claude Code `PreToolUse` payload through the default pipeline:
+
+```ts
+import { adapters, defaultPipeline, handle } from "@homelab/harness-hooks";
+import { readFileSync } from "node:fs";
+
+const payload = JSON.parse(readFileSync("packages/hooks/fixtures/claude/PreToolUse/02-bash.json", "utf8"));
+const { body } = await handle(adapters.get("claude")!, payload, defaultPipeline());
+console.log(JSON.stringify(body));
+```
+
+Expected output, because the default pipeline adds no context and no decision to this event:
+
+```text
+{}
+```
+
+Start the hook server on loopback and send it the same payload:
+
+```sh
+bun --filter @homelab/harness-hooks-server start
+curl -s -X POST -H 'content-type: application/json' \
+  --data-binary @packages/hooks/fixtures/claude/PreToolUse/02-bash.json \
+  http://127.0.0.1:8787/hook/claude
+```
+
+Expected output:
+
+```text
+{}
+```
+
+The server prints `harness-hooks listening on 127.0.0.1:8787` when it starts. The configuration and the installers are in the
+[server README](packages/hooks-server/README.md).
+
+## Documentation
+
+- [Architecture](docs/architecture.md): request path, middleware order, log and shutdown behaviour, configuration.
+- [Decisions](docs/decisions/): architecture decision records, from the first (library layers) to the log allowlist.
+- [Library README](packages/hooks/README.md) and [server README](packages/hooks-server/README.md): exports, installers, environment variables.
+
+## Contributing, security and support
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): development setup, scripts, layout and how changes are reviewed.
+- [SECURITY.md](SECURITY.md): how to report a vulnerability. Do not open a public issue for one.
+- [SUPPORT.md](SUPPORT.md): where to ask questions and report bugs.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): expected behaviour in project spaces.
+- [CHANGELOG.md](CHANGELOG.md): what changed in each release.
+
+## License
+
+This repository has no license file yet. Until one is added, no right to use, copy, modify or distribute the code is granted.
