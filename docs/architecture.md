@@ -264,7 +264,7 @@ owner has not picked an OpenCode subagent model.
   300 ms for that event, so a root session pays the wait once. It then posts a slim `session.context`
   (`sessionID`, `agent`, `model { id, providerID }`, `parentID` when a child; never the system text, messages or tools), caches the
   answer for the session, and pushes it on every model request, because the system text is rebuilt each time. A server that does not
-  answer adds nothing; the request goes on.
+  answer adds nothing; the request goes on, and that session stays without rules (the failed answer is cached too).
 - **Plugin form:** an object with `id` and `setup(ctx)`, verified on 2.2.6. Registering an unknown hook name does not fail, so a name
   that never fires looks the same as one that works. Only names seen firing are treated as verified (`session.compaction` stays
   registered but unseen). One hook failing to register does not stop the others, and without an event stream the hooks still work.

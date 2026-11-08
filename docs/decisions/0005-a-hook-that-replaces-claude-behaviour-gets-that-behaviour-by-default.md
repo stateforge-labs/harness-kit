@@ -43,8 +43,9 @@ because a checkout can take longer than the other layers' 2 s.
 ### Consequences
 
 - Good: installing the default hooks block no longer changes how Claude Code's worktrees behave.
-- Cost: the server now changes files, in the repository Claude names. It must share a filesystem with Claude Code, which the loopback
-  rule already implies. A consumer that wants no worktree effect must answer the event itself.
+- Cost: the server now changes files, in the repository Claude names. It must run on the same machine **and as the same OS user** as
+  Claude Code: git writes the worktree as the server's user, and a different user gets files Claude cannot own, or git refuses the
+  repository as "dubious ownership" and the creation fails. A consumer that wants no worktree effect must answer the event itself.
 - Not covered: Claude's `worktree.baseRef: "head"` setting (the layer always takes the remote branch when there is one), and Claude's
   session lock.
 - Observed once: in a `claude -p` run, `ExitWorktree` with `discard_changes: true` removed a hook-created worktree through Claude's git
