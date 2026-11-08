@@ -1,6 +1,8 @@
 import type { NeutralEvent } from "../../core/event.ts";
 import type { NeutralReply } from "../../core/reply.ts";
 import type { Common, Decoded, HarnessAdapter } from "../../port.ts";
+import { continueText, denyText } from "../../core/reply.ts";
+import { str, toolOf } from "../shared.ts";
 import { handlers } from "./handlers/index.ts";
 import { hasSchema, jsonSchemas, validate } from "./index.ts";
 import { kindOf } from "./neutral.ts";
@@ -19,7 +21,13 @@ export const opencode: HarnessAdapter = {
     const h = native ? handlers.get(native) : undefined;
     if (!native || !h || !hasSchema(h.event)) return { event: null, known: false, missing: [], wrong_type: [], meta: {} };
     const v = validate(raw) ?? { missing: [], wrong_type: [] };
-    const event: NeutralEvent = { harness: "opencode", kind: kindOf(native), native };
+    const kind = kindOf(native);
+    const event: NeutralEvent = { harness: "opencode", kind, native, session: str(raw.sessionID) ?? str(raw.session_id) };
+    // permission.evaluate names the permission in `action` (the tool's name for MCP tools, e.g. `probe_echo`; a permission name
+    // such as `shell` for built-ins) and the call in `source.id`.
+    const source = (raw.source ?? {}) as Record<string, unknown>;
+    const tool = native === "permission.evaluate" ? toolOf(kind, raw.action, source.id) : toolOf(kind, raw.tool, raw.id);
+    if (tool) event.tool = tool;
     if (native === "tool.execute.before") {
       const spawn = spawnOf(raw);
       if (spawn) event.spawn = spawn;
@@ -28,10 +36,18 @@ export const opencode: HarnessAdapter = {
   },
 
   /**
-   * Always `{}`. The plugin does not read the answer: OpenCode's hooks are changed by mutating their arguments, and this server
-   * only reports. A reply with context has nowhere to go until the plugin and a policy exist for it.
+   * OpenCode hooks change things by what the plugin does, so the answer is an instruction to the plugin
+   * (clients/opencode/plugin.ts), not a harness wire format. Measured in R-2026-11-07-10 (`opencode/q4-throw-deny`,
+   * `opencode/q4-idle-continue`):
+   * - `tool.execute.before` with a deny: `{ deny: text }`; the plugin throws it, the tool does not run and the model sees the text.
+   * - `session.experimental.idle` with a continue: `{ continue: text }`; the plugin sends it as a synthetic user message.
+   * Everything else is `{}`: context has nowhere to go yet, and `permission.evaluate` is not acted on in v1 (the pre-tool deny
+   * already refuses the call).
    */
-  encode(_reply: NeutralReply, _raw): unknown {
+  encode(reply: NeutralReply, raw): unknown {
+    const native = nameOf(raw);
+    if (native === "tool.execute.before" && reply.deny) return { deny: denyText(reply.deny) };
+    if (native === "session.experimental.idle" && reply.continue) return { continue: continueText(reply.continue) };
     return {};
   },
 

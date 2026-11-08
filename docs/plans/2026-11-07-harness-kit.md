@@ -35,6 +35,11 @@ One study (new R-id), same isolation rules as R-2026-11-07-08, Codex 0.167.0 and
 
 Starts after phase 1 (owner, 2026-11-07), so the deny/continue encoders land for every harness phase 1 allows, in one change.
 
+**Status (2026-11-07): built.** What landed and where it differs from the list below is in ADR 0001 ("The contract, version 1") and
+`docs/architecture.md` ("Contract v1"): `continue` carries a `reason`; `allow` added for Codex `PermissionRequest`; a layer's timeout
+counts only its own work; fail-closed modes for the shim and the plugin; `toolAllowlist` (the second line, refusing Codex
+`request_user_input`). Live pass through the product server: see R-2026-11-07-10, "Contract v1 live pass".
+
 
 - Event: `session`, `tool { name, callId }`.
 - Reply: `deny { reason, hint? }`, `continue { missing[] }`; deny wins in composition.

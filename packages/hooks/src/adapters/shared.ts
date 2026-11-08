@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Common } from "../port.ts";
-import type { MetaValue } from "../core/event.ts";
+import type { MetaValue, NeutralKind, ToolRef } from "../core/event.ts";
+import { continueText, denyText, type NeutralReply } from "../core/reply.ts";
 
 /** What a validation says about one payload: paths only, never values, so it is safe to log. */
 export interface Validation {
@@ -59,4 +60,51 @@ export interface EventHandler {
   event: string;
   /** Non-sensitive scalars for the log line. Never prompt text, tool input or tool output. */
   meta(p: HookPayload): Record<string, MetaValue>;
+}
+
+/** Where a Claude-style harness (Claude Code, Codex: same output shapes) takes each reply field, by native event name. */
+export interface HookOutputRules {
+  /** Events whose answer may carry `hookSpecificOutput.additionalContext`. */
+  context: ReadonlySet<string>;
+  /** Events where `{ decision: "block", reason }` keeps the agent going (a continue). */
+  stop: ReadonlySet<string>;
+}
+
+/**
+ * The answer body for a Claude-style harness (contract v1; the matrix is in docs/architecture.md):
+ * - PreToolUse: deny is `permissionDecision: "deny"` with the reason, and wins over context; allow is never encoded here,
+ *   because it would skip the user's own permission prompts.
+ * - PermissionRequest: deny is `decision.behavior "deny"` with `message`; allow is `decision.behavior "allow"`. Only these keys:
+ *   Codex fails closed on `updatedInput`, `updatedPermissions` or `interrupt: true`.
+ * - stop events: continue is `decision: "block"` with the reason. Deny and context are not encoded: a block means "go on",
+ *   the opposite of a deny, and context on Stop is itself a continuation.
+ * - context on the events in `rules.context`, as before contract v1.
+ * Everything else is `{}`.
+ */
+export function encodeHookOutput(reply: NeutralReply, native: string | undefined, rules: HookOutputRules): Record<string, unknown> {
+  if (!native) return {};
+  if (native === "PreToolUse" && reply.deny) {
+    return { hookSpecificOutput: { hookEventName: native, permissionDecision: "deny", permissionDecisionReason: denyText(reply.deny) } };
+  }
+  if (native === "PermissionRequest") {
+    if (reply.deny) return { hookSpecificOutput: { hookEventName: native, decision: { behavior: "deny", message: denyText(reply.deny) } } };
+    if (reply.allow) return { hookSpecificOutput: { hookEventName: native, decision: { behavior: "allow" } } };
+    return {};
+  }
+  if (rules.stop.has(native)) return reply.continue ? { decision: "block", reason: continueText(reply.continue) } : {};
+  if (reply.context && rules.context.has(native)) return { hookSpecificOutput: { hookEventName: native, additionalContext: reply.context } };
+  return {};
+}
+
+/** A string field, or null. */
+export const str = (v: unknown): string | null => (typeof v === "string" && v !== "" ? v : null);
+
+/** Neutral kinds whose event names a tool. */
+export const TOOL_KINDS: ReadonlySet<NeutralKind> = new Set<NeutralKind>(["pre-tool", "post-tool", "post-tool-failure", "permission-request"]);
+
+/** The tool a tool event is about, from the payload's tool-name and call-id keys; undefined when it names no tool. */
+export function toolOf(kind: NeutralKind, name: unknown, callId: unknown): ToolRef | undefined {
+  if (!TOOL_KINDS.has(kind)) return undefined;
+  const n = str(name);
+  return n ? { name: n, callId: str(callId) } : undefined;
 }

@@ -28,16 +28,17 @@ one layer that wraps its `SnapshotHookEngine`.
 | Adapters: decode, encode, schemas, enums, captured fixtures; shim and OpenCode plugin; `handle()`; `Pipeline`; stock layers; an embeddable endpoint | `Middleware = (ctx, next) => NeutralReply`, registered with `pipeline.use(layer, { timeoutMs?, onFault })` | StateForge: `snapshotLayer(engine)`, its `HarnessPort` adapters, hermetic harness config, MCP bridge wiring, refusal events, the rule on what may listen in a sandbox |
 | harness-hooks (service): HTTP front, admission, log, `HOOK_MIDDLEWARE`, installers, the built-in rules text as a layer | | The developer: their own layers through `HOOK_MIDDLEWARE` |
 
-### The contract, version 1 (to be built; shapes are proposals)
+### The contract, version 1 (built in phase 3, 2026-11-07; the matrix and timeout table are in `docs/architecture.md`, "Contract v1")
 
-- `HookContext.event` gains `session` and `tool { name, callId }`. The arguments are not part of it: StateForge's engine never reads them.
-- `NeutralReply` gains `deny { reason, hint? }` and `continue { missing: string[] }`. Each adapter encodes them by its harness's rules.
-- **Deny wins.** A layer above cannot remove a deny that came from below; `continue` beats `context`.
-- **Per-layer failure mode.** `onFault: "skip"` (default; the service) or `{ deny: { reason, hint? } }` (StateForge: `state-unavailable`). If the pipeline itself throws, `handle()` encodes that layer's deny instead of an empty answer.
-- **Per-layer timeout**, and a written ordering rule: engine bound < layer timeout < shim timeout < harness hook timeout, each with a margin.
+- `HookContext.event` gains `session` (string or null) and `tool { name, callId }` (callId null when the payload has none). The arguments are not part of it: StateForge's engine never reads them.
+- `NeutralReply` gains `deny { reason, hint? }`, `continue { reason, missing? }` and `allow`. **Changed from the proposal:** `continue` carries a `reason`, because Claude Code and Codex require a reason string on a stop block and OpenCode needs the text of the synthetic message; with only `missing[]` the adapter would be writing policy prose. `allow` is new: a headless Codex run needs `PermissionRequest` answered allow to call an MCP tool at all (R-2026-11-07-10 F1). Each adapter encodes the fields by its harness's rules, only on the events where they mean something; a deny on a stop event is never encoded (a block means "go on").
+- **Deny wins.** A layer above cannot remove a deny that came from below (the pipeline puts it back); `continue` beats `context`; deny beats allow.
+- **Per-layer failure mode.** `pipeline.use(layer, { timeoutMs, onFault })`: `onFault: "skip"` (default; the service) or `{ deny: { reason, hint? } }` (StateForge: `state-unavailable`). If decode or the pipeline itself throws, `handle()` encodes the outermost such layer's deny instead of an empty answer.
+- **Per-layer timeout, own work only.** A layer's clock stops while it waits on `next()`, so a slow layer below cannot make a healthy deny-on-fault layer above it refuse. The ordering rule is: engine bound < layer timeout, and the sum of layer timeouts < shim or plugin timeout (now 5000 ms by default) < harness hook timeout, each with a margin.
+- **Fail-closed clients (opt-in).** `HOOK_SHIM_FAIL=closed` and `HOOK_PLUGIN_FAIL=closed` refuse the pre-tool call (and, for the shim, `PermissionRequest`) when the server does not answer, instead of `{}`.
 - **The built-in policy is the service's layer, not the pipeline's.** A consumer builds a pipeline without it.
 - **Per-run state belongs to the consumer.** StateForge composes a new pipeline per attempt, so a stop counter or "already injected" flag lives in the layer's closure. The library keeps no session store for it.
-- **Stock layers** (optional export): `stopGuard({ limit })`, `once(inject)`, `stripToolPrefix(prefix)`. StateForge passes 3, its session text and `mcp__sf__`.
+- **Stock layers** (optional export): `toolAllowlist({ allow, deny })` (built with contract v1: the second line behind built-ins off, refusing Codex `request_user_input`, owner decision 2026-11-07); `stopGuard({ limit })`, `once(inject)`, `stripToolPrefix(prefix)` (phase 4). StateForge passes 3, its session text and `mcp__sf__`.
 
 ### Owner decisions recorded 2026-11-07
 
@@ -55,6 +56,8 @@ one layer that wraps its `SnapshotHookEngine`.
 
 The contract is real when: a Codex and an OpenCode run against a local MCP server shows hooks fire for MCP calls (study section E); e2e tests drive a `deny` through each harness and see it blocked; a layer that times out under `onFault: deny` is refused, not allowed; a StateForge-shaped fixture layer passes the same fixtures in-process and over the endpoint.
 
+Status 2026-11-07: the first three hold for Codex and OpenCode (R-2026-11-07-10 F1, F8; live runs through the product server, shim and plugin in F20; 146 contract v1 tests). Claude Code's shapes are encoded from its documentation and not yet run live. The StateForge-shaped fixture layer waits for the embeddable endpoint (phase 7).
+
 ### Order of work
 
 1. The MCP capture (feasibility of Codex and OpenCode under ADR-0420). Nothing is frozen before it.
@@ -66,4 +69,4 @@ The contract is real when: a Codex and an OpenCode run against a local MCP serve
 ### Still open
 
 - StateForge: package delivery (registry, git tag), the ADR-0181 exception, in-sandbox listeners.
-- Captures: Codex deny and stop-block, OpenCode deny and prompt-submit context, MCP tool names and failed-call hooks.
+- Captures still missing: Codex `SubagentStop` block on a real run (encoded from the pinned schema); every Claude Code shape on a real run (encoded from its documentation); OpenCode prompt-submit context (no encoder in v1).

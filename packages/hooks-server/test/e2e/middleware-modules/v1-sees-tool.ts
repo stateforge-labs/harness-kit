@@ -1,0 +1,8 @@
+// Contract v1: reports the event's session and tool as JSON in the context (every event; read it from any harness's answer).
+import type { Middleware } from "@homelab/harness-hooks";
+const v1SeesTool: Middleware = async (ctx) => ({
+  context: JSON.stringify({ kind: ctx.event.kind, session: ctx.event.session, tool: ctx.event.tool ?? null }),
+  continue: { reason: JSON.stringify({ kind: ctx.event.kind, session: ctx.event.session, tool: ctx.event.tool ?? null }) },
+  deny: ctx.event.kind === "pre-tool" ? { reason: JSON.stringify({ kind: ctx.event.kind, session: ctx.event.session, tool: ctx.event.tool ?? null }) } : undefined,
+});
+export default v1SeesTool;
