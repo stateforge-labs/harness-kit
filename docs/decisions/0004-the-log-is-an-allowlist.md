@@ -35,8 +35,9 @@ may be written.
    - A common field is logged only when it is a string; an object or array from a damaged or hostile payload would otherwise be written whole.
    - Strings are cut at 256 characters, and at most 100 key names are listed.
    - The validation result carries dotted paths and expected types, never values.
-   - By convention (no test enforces it) a `meta` key is not named `event`: `meta` is spread after the common fields, so it would overwrite
-     the line's event. That is why `FileChanged` logs its event as `change`.
+   - `meta` never changes a line field: it is spread after the common fields, so a key named `event` would overwrite the line's event.
+     That is why `FileChanged` logs its event as `change`. A handler may repeat a common field (`tool_name`, `agent_id`, `agent_type`,
+     `session_id`) only with the same value, `null` when the payload's value is not a string.
 5. **The file.** It is created readable by its owner only, because `HOOK_LOG_PAYLOAD=1` stores whole bodies. That mode exists only to
    study real payload shapes before a feature is built.
 6. **Fixtures follow the same rule.** `packages/hooks/scripts/export-fixtures.ts` replaces free text (typed by a person or produced by a model, Codex
@@ -49,4 +50,5 @@ may be written.
 
 `packages/hooks-server/test/e2e/contract.test.ts` writes `SECRET<key>` into every string key of every fixture and checks that none of it
 reaches the log, apart from the keys on its allowlist (`MAY_LOG`). Each fixture's `.log.json` pins the whole entry (keys, order and
-values) except the timestamp and the session id. `log-cap.test.ts` checks the 256-character cut; no test checks the 100-key limit yet.
+values) except the timestamp and the session id. `log-cap.test.ts` checks the 256-character cut and the 100-key limit. `packages/hooks/test/log-meta-keys.test.ts` checks, for
+every fixture, that no handler's `meta` uses a reserved line field or changes a common field.

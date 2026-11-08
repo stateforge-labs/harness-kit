@@ -123,6 +123,21 @@ describe("e2e: nothing is lost or left unbounded", () => {
     }
   });
 
+  test("a payload with many keys lists at most 100 key names in the metadata log", async () => {
+    const s2 = await startServer();
+    try {
+      const extra = Object.fromEntries(Array.from({ length: 150 }, (_, i) => [`k${String(i).padStart(3, "0")}`, i]));
+      await send(s2.base, { hook_event_name: "Stop", session_id: "keys-1", ...extra });
+      const line = await eventually(async () => {
+        const text = await read(s2.logFile);
+        return text.includes("keys-1") ? (JSON.parse(text.trim().split("\n").at(-1)!) as { keys: string[] }) : undefined;
+      });
+      expect(line.keys).toHaveLength(100);
+    } finally {
+      await s2.stop();
+    }
+  });
+
   test("the log file, and a directory the server has to create for it, are readable by their owner only", async () => {
     const root = await mkdtemp(join(tmpdir(), "harness-hooks-perm-"));
     const logFile = join(root, "fresh", "events.jsonl");

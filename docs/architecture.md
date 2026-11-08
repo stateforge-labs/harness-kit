@@ -57,7 +57,7 @@ Every event passes through a pipeline between decode and encode. A layer is `(ct
   answer, so a slow layer below cannot trip the timeout of a healthy one above it. The worst case for one event is the sum of all layer
   timeouts; that sum is what the timeout ordering below compares.
 - **A throwing fault reporter is contained.** `PipelineOptions.onFault` (default `console.error`) is called inside a try/catch, so a
-  reporter that throws cannot change the answer or break the pipeline; its error is dropped. No test passes a throwing reporter yet.
+  reporter that throws cannot change the answer or break the pipeline; its error is dropped (`contract-v1-pipeline.test.ts`).
 - **Deny wins.** Whatever a layer returns, a deny that came from the layers below it stays in the answer (the pipeline puts it back).
   This holds for layers that call `next()`: an outer layer that answers alone never runs the layers below it, so a layer that must
   always be consulted (StateForge's snapshot layer) is registered outermost.
@@ -338,6 +338,7 @@ Deliberate deviations from "real server over HTTP", each because the thing under
 | `packages/hooks-server/test/e2e/opencode-plugin.test.ts`, `opencode-plugin-acts.test.ts` | The plugin runs inside OpenCode, which cannot start in the suite without a model login: a fake plugin context, against the real server. The continue counter is per plugin module, so tests use distinct session ids. |
 | The `permission.evaluate` case in `contract-v1-event.test.ts` | OpenCode encodes nothing there, so only the decoded event shows its tool (in-process `decode`). |
 | `packages/hooks/test/contract-v1-pipeline.test.ts` | Per-layer `timeoutMs` and `onFault`, and `handle()`'s fail-closed path, are library API that `HOOK_MIDDLEWARE` cannot express. |
+| `packages/hooks/test/log-meta-keys.test.ts` | It checks every handler's `meta` against the log line's field names; over HTTP a clash would only show as an overwritten field. |
 
 Encoding is tested only over the wire (`contract-v1-encode.test.ts`, one server per `v1-*` middleware module). The shim is a process by
 design and is tested only as one. Tests that need it shorten `HOOK_SHUTDOWN_GRACE_MS` and other timers.

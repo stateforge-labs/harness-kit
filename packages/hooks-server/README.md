@@ -45,6 +45,6 @@ never replaced (merge it by hand); the plugin bundle is the installer's own file
 ## Tests
 
 End to end only: `test/e2e/harness.ts` spawns `bun src/server.ts` and every test talks to it over HTTP. `contract.test.ts` loops over
-every harness and fixture (answer and log line as recorded, timestamp and session id aside, missing and retyped keys reported, no typed text logged);
+every harness and fixture (answer and log line as recorded, timestamp and session id aside, no typed text logged), and on the first fixture of each event (missing, retyped and out-of-set keys reported, never a block);
 `events/<harness>/` holds cases unique to one event. The deliberate deviations (the two OpenCode plugin suites with a fake context, and
 one in-process decode) are listed with their reasons under Tests in `docs/architecture.md`.

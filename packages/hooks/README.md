@@ -76,5 +76,7 @@ Fixtures (`scripts/export-fixtures.ts`):
   `tools/check-boundaries.ts` does not read it as an import.
 - `contract-v1-pipeline.test.ts`: per-layer timeouts and fault modes, deny-wins, `handle()` fail-closed and `toolAllowlist`, in-process,
   because `HOOK_MIDDLEWARE` cannot express layer options.
+- `log-meta-keys.test.ts`: for every fixture, a handler's `meta` uses no reserved log line field and repeats a common field only with its
+  value (ADR 0004).
 
 The behaviour over HTTP (contract suite, per-event cases, privacy) is tested in the server package against the real server.

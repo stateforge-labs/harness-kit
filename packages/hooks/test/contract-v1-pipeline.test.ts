@@ -97,6 +97,19 @@ describe("fault modes per layer", () => {
     expect(faults.join("\n")).toContain("skipped");
   });
 
+  test("a fault reporter that throws is contained: the answer is unchanged and run() does not throw", async () => {
+    const p = new Pipeline({
+      onFault: () => {
+        throw new Error("reporter down");
+      },
+    });
+    p.use(() => {
+      throw new Error("boom");
+    });
+    p.use(answers({ context: "below" }));
+    expect(await p.run(ctxOf("codex", codexPre()))).toEqual({ context: "below" });
+  });
+
   test("a timed-out layer with skip gives the answer of the layers below", async () => {
     const p = quiet();
     p.use(never, { timeoutMs: 100, onFault: "skip" });
