@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { EnvDefault, Harness, installEnv, opencodePluginPath } from "@homelab/harness-hooks";
 import { claudeHooks, codexHooks, systemdUnit, type RenderOptions } from "./lib/client-config.ts";
@@ -28,6 +28,7 @@ const env = installEnv();
 const SERVICE = "service";
 const OPENCODE_CONFIG_DIR = "opencode";
 const PLUGIN_FILE = "harness-hooks.js";
+const LEGACY_PLUGIN_FILE = "harness-hooks.ts";
 
 async function bundlePlugin(): Promise<string> {
   const built = await Bun.build({ entrypoints: [opencodePluginPath], target: "bun", format: "esm" });
@@ -59,6 +60,11 @@ switch (target) {
     if (existsSync(to) && readFileSync(to, "utf8") !== bundle) console.log(`updating ${to} (it differs from the repository copy)`);
     mkdirSync(join(dir, "plugins"), { recursive: true });
     writeFileSync(to, bundle);
+    const legacy = join(dir, "plugins", LEGACY_PLUGIN_FILE);
+    if (existsSync(legacy)) {
+      rmSync(legacy);
+      console.log(`removed: ${legacy} (replaced by ${PLUGIN_FILE})`);
+    }
     console.log(`installed: ${to}`);
     break;
   }

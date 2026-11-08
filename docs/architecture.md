@@ -17,16 +17,28 @@ harness ──(client)──> POST /hook/<harness> ──> admission ──> ada
 
 | Step | Where | What it does |
 | --- | --- | --- |
-| Route | `packages/hooks-server/src/http/hook-handler.ts` | `POST /hook/<harness>`; `/hook` alone is the Claude route; `/healthz`; anything else 404/405. |
-| Admission | `packages/hooks-server/src/http/admission.ts` | With a token: the bearer must match. Without one: loopback `Host` and a JSON content type (stops DNS rebinding and cross-site posts). Runs **before** the harness lookup, so an unauthenticated caller cannot learn which harnesses exist. |
+| Route | `packages/hooks-server/src/http/hook-handler.ts` | `POST /hook/<harness>` (exact shape); `/hook` alone is the Claude route; `/healthz`; anything else 404/405. The adapter registry is a `Map`, so a prototype key in the URL (`/hook/constructor`, `/hook/__proto__`) never resolves to an adapter. |
+| Admission | `packages/hooks-server/src/http/admission.ts` | With a token: the bearer must match, and nothing else is needed, because a web page cannot add an `Authorization` header without a CORS preflight. Without one the server is open on loopback, which a page in the user's browser can also reach, so it also requires a loopback `Host` (stops DNS rebinding) and a JSON content type (a cross-site form or no-cors fetch cannot send one). A non-canonical `Host` is 403; one that makes the request URL unparseable is 400; never a 500 or an answer. Runs **before** the harness lookup, so an unauthenticated caller cannot learn which harnesses exist. |
 | Decode | `adapter.decode(raw)` | Validates the payload with the event's zod schema (reports `missing` and `wrong_type`, never rejects), builds the neutral event and the log metadata. |
 | Middleware | `packages/hooks/src/core/pipeline.ts` | The layers registered with `HookServerBuilder.use()` or `HOOK_MIDDLEWARE`; the built-in policy is always the innermost one (see Middleware below). |
-| Policy | `packages/hooks/src/core/policy.ts` | Pure: neutral event + the adapter's rules to a neutral reply (`{ context? }`). |
+| Policy | `packages/hooks/src/core/policy.ts` | Pure: neutral event + the adapter's rules to context text only. Deny, continue and allow come from consumer layers, never from the policy (ADR 0003). |
 | Encode | `adapter.encode(reply, raw)` | Turns the reply into the harness's response, following its per-event output rules. |
-| Log | `packages/hooks-server/src/log.ts` | One JSONL line per request: harness, event, session, labels and counts. Never prompt text, tool input or output. |
+| Log | `packages/hooks-server/src/log.ts` | One JSONL line per request: harness, event, session, labels and counts. What may be written is an allowlist ([ADR 0004](decisions/0004-the-log-is-an-allowlist.md)). |
 
 `packages/hooks/src/handle.ts` `handle()` wraps decode, the pipeline and encode: if any of them throws, the answer is `200 {}`. A broken adapter never stops an agent.
 The exception is a pipeline built to fail closed (a layer with `onFault: { deny }`): if decode or the pipeline throws, `handle()` encodes that deny.
+
+**The log writer.**
+- Every write goes through one chain, so appends never overlap and a rotation never races an append. One failed write does not break the
+  chain, and write failures never reach the hook response.
+- The line is built before it is queued, so the queue holds small strings and not request bodies.
+- Rotation keeps one old generation (`.1`), so disk use stays near twice `HOOK_LOG_MAX_BYTES`; one line bigger than the cap is written on
+  its own. The main file is briefly absent between the rename and the next append. A failed rotation keeps appending and says so on stderr.
+
+**Shutdown** (`packages/hooks-server/src/shutdown.ts`).
+- On SIGTERM or SIGINT the server stops accepting, flushes the queued log lines and exits 0.
+- Requests still open after `HOOK_SHUTDOWN_GRACE_MS` are closed and the exit code is 1; the queued lines are written either way.
+- A second signal exits at once.
 
 ## Middleware (`packages/hooks/src/core/pipeline.ts`)
 
@@ -44,15 +56,19 @@ Every event passes through a pipeline between decode and encode. A layer is `(ct
 - **A layer's timeout counts only its own work.** The clock stops while the layer waits on `next()` and starts again when the layers below
   answer, so a slow layer below cannot trip the timeout of a healthy one above it. The worst case for one event is the sum of all layer
   timeouts; that sum is what the timeout ordering below compares.
+- **A throwing fault reporter is contained.** `PipelineOptions.onFault` (default `console.error`) is called inside a try/catch, so a
+  reporter that throws cannot change the answer or break the pipeline; its error is dropped. No test passes a throwing reporter yet.
 - **Deny wins.** Whatever a layer returns, a deny that came from the layers below it stays in the answer (the pipeline puts it back).
   This holds for layers that call `next()`: an outer layer that answers alone never runs the layers below it, so a layer that must
   always be consulted (StateForge's snapshot layer) is registered outermost.
-  `mergeReplies(below, mine)` keeps `below`'s deny and continue, joins the contexts and keeps `allow` from either.
+  `mergeReplies(below, mine)` keeps `below`'s deny and continue, joins the contexts (below first) and keeps `allow` from either; that is safe because no adapter encodes allow next to a deny.
+- **Order through the server.** With `HOOK_MIDDLEWARE=A,B`, B is inside A, so B's text is added first and A's last.
 - **Two ways in.** In code: `new HookServerBuilder().use(mw)`. In a running server: `HOOK_MIDDLEWARE=/abs/a.ts,/abs/b.ts`, each module's
-  default export a `Middleware` or an array of them; a module that fails to import is a start-up error (exit 2). Module loading runs
+  default export a `Middleware` or an array of them; a module that fails to import, or exports anything else, is a start-up error naming the file (exit 2), never a silent skip. Module loading runs
   arbitrary code and is a service feature only (R-2026-11-07-09).
 - **Same layer, every harness.** A layer returns a `NeutralReply`; each adapter encodes it by its own rules (the matrix below), so one
-  layer reaches all three harnesses.
+  layer reaches all three harnesses. Tool names still differ per harness (`mcp__sf__submit` on Claude Code and Codex, `sf_submit` on
+  OpenCode), so a layer that matches tool names is built once per harness.
 
 ## Contract v1 (ADR 0001)
 
@@ -71,10 +87,10 @@ missing item (`continueText`).
 | --- | --- | --- | --- | --- |
 | pre-tool, Claude/Codex `PreToolUse` | `hookSpecificOutput { hookEventName, permissionDecision: "deny", permissionDecisionReason }`; wins over context | not encoded (it would skip the user's own permission prompts) | not encoded | `hookSpecificOutput.additionalContext` |
 | pre-tool, OpenCode `tool.execute.before` | `{ deny: text }`; the plugin throws it | not encoded | not encoded | not encoded |
-| permission-request, Claude/Codex `PermissionRequest` | `hookSpecificOutput { hookEventName, decision: { behavior: "deny", message } }` | `hookSpecificOutput { hookEventName, decision: { behavior: "allow" } }`; deny wins | not encoded | not encoded |
+| permission-request, Claude/Codex `PermissionRequest` | `hookSpecificOutput { hookEventName, decision: { behavior: "deny", message } }` | `hookSpecificOutput { hookEventName, decision: { behavior: "allow" } }`; deny wins. Only `behavior` and `message` are ever written: Codex fails closed on `updatedInput`, `updatedPermissions` or `interrupt: true` (pinned output schema) | not encoded | not encoded |
 | permission-request, OpenCode `permission.evaluate` | not encoded in v1 (the pre-tool deny refuses the call) | not encoded | not encoded | not encoded |
 | stop, Claude/Codex `Stop`; subagent-stop, Claude/Codex `SubagentStop` | **not encoded**: a block means "go on", the opposite of a deny | not encoded | `{ decision: "block", reason }` | not encoded (context on Stop is itself a continuation) |
-| stop, OpenCode `session.experimental.idle` | not encoded | not encoded | `{ continue: text }`; the plugin sends it as a synthetic user message, at most `HOOK_PLUGIN_MAX_CONTINUES` (8) times in a row per session | not encoded |
+| stop, OpenCode `session.experimental.idle` | not encoded | not encoded | `{ continue: text }`; the plugin sends it as a synthetic user message, at most `HOOK_PLUGIN_MAX_CONTINUES` (8) times in a row per session (the cap Claude Code puts on Stop continuations), so a layer that always says continue cannot loop forever. The count resets when an idle is not continued; a failed continuation lets the session stop. Idle is the stop point because OpenCode awaits that hook; `session.execution.*` are events the plugin cannot answer | not encoded |
 | session-start, subagent-start (Claude, Codex); prompt-submit (Codex) | not encoded | not encoded | not encoded | `hookSpecificOutput.additionalContext`, as before v1 |
 | every other event | not encoded | not encoded | not encoded | not encoded |
 
@@ -100,7 +116,7 @@ Each stage must give up before the one that called it, with a margin, or the cal
 | The service's pipeline (n `HOOK_MIDDLEWARE` layers + the built-in policy) | at most (n + 1) × `HOOK_MIDDLEWARE_TIMEOUT_MS`; with the defaults, n ≥ 2 already exceeds the shim's 5000 ms, so lower the layer timeout or raise the shim's | |
 | Shim (`HOOK_SHIM_TIMEOUT_MS`), plugin (`HOOK_PLUGIN_TIMEOUT_MS`) | 5000 ms | environment |
 | Codex handler `timeout` | its own default | `hooks.json`; set it well above the shim's (R-2026-11-07-10 F7: a late Codex hook fails **open**) |
-| Claude Code | its own hook `timeout`; PreToolUse goes over HTTP, not the shim, so `HOOK_SHIM_FAIL` does not cover it: Claude's own hook-failure setting (`onFailure: "block"`, per its docs) decides fail-closed there | settings |
+| Claude Code | its own hook `timeout` (the installer writes 10 s); a non-2xx or unreachable http hook is non-blocking by default. PreToolUse goes over HTTP, not the shim, so `HOOK_SHIM_FAIL` does not cover it: fail-closed there is Claude's own `onFailure: "block"` (per its docs) | settings |
 | OpenCode | waits as long as the hook takes (75 s seen, R-2026-11-07-10 F14) | none; the plugin's timeout decides |
 
 A pre-tool layer registered with `onFault: { deny }` that times out was refused on a live Codex run (`codex/v1-live-fault-deny`, F20).
@@ -111,7 +127,8 @@ must have its own bound below that layer's timeout.
 ### Stock layer
 
 `toolAllowlist({ allow, deny })` (`packages/hooks/src/core/layers.ts`), opt-in: denies pre-tool and permission-request events for a tool
-not on the list (or with no tool name), and answers allow on permission-request for a listed tool. It is the second line behind each
+not on the list (or with no tool name), without asking the layers below (their deny would win anyway), and answers allow on
+permission-request for a listed tool. It is the second line behind each
 harness's built-ins-off configuration (R-2026-11-07-10 F15, F16), and it refuses Codex `request_user_input` and
 `request_user_input_async` unless they are listed (owner decision 2026-11-07). Names are the harness's own (`mcp__sf__x` vs `sf_x`).
 
@@ -148,13 +165,97 @@ Each lives in `packages/hooks/src/adapters/<harness>/`: `adapter.ts`, `names.ts`
 | Fixtures | 82, captured | 23 (22 captured, 1 synthetic) | 23 (19 captured, 4 synthetic) |
 | Evidence | R-2026-11-07-03, -05 | R-2026-11-07-04, -08 | R-2026-11-07-04, -08 |
 
-Codex and OpenCode are answered passively on purpose: the wording of their rules is the user's decision and is not made yet.
+Codex and OpenCode are answered passively on purpose: the wording of their rules is the user's decision and is not made yet. Claude is
+passive too, except on three events ([ADR 0003](decisions/0003-the-server-observes-and-never-blocks-on-its-own.md)).
+
+### Claude Code notes
+
+- **Per-tool `tool_input`** (`tool-input.ts`): shapes come from the 27 `PreToolUse` captures plus the other tool events. The keys listed
+  are the ones every captured call carried; extra keys are allowed, and an unlisted tool accepts any object. `tool_response` differs per
+  tool and is never inspected; it only has to be present where the event carries it. These checks are code, so the generated JSON Schema
+  does not include them.
+- **Fields typed looser than the captures** (so they never log a false `wrong_type`; R-2026-11-07-05):
+  - `PreModelSwitch`/`PostModelSwitch` `from_model` may be null. It was always a string in the 4 `PreModelSwitch` and 3 `PostModelSwitch`
+    payloads, so null is unresolved.
+  - `SubagentStop` `last_assistant_message` is optional: seen in 20 of 21 payloads, so judged required, but one capture lacked it.
+  - `UserPromptExpansion` `prompt_id` and `permission_mode` are optional (the spec marks them so), though every capture had them.
+- **What a reply can do per event** (from the hook specs; "measured" means a capture showed it). The handlers use none of this beyond the
+  three context events:
+
+| Event | What a reply can do | Measured |
+| --- | --- | --- |
+| `SubagentStart` | context only; cannot block | `systemMessage` shows only as a subagent-transcript `hook_system_message` and never reaches the model; `continue: false` does not stop the subagent (captures SubagentStart-1, -4, -5). Strings over 10,000 chars are spilled to a file, not truncated |
+| `UserPromptExpansion` | block or add context | `hookSpecificOutput.additionalContext` is injected (UserPromptExpansion-8); a top-level `additionalContext` is not (-9) |
+| `TaskCreated` | exit 2 or `decision: "block"` cancels the task; `additionalContext` is not a documented output | block cancels (TaskCreated-5) |
+| `TaskCompleted` | `continue: false` only from a teammate turn-end; ignored when `TaskUpdate` triggers the event | capture 7 consistent |
+| `PreCompact` | `decision`/`reason` can abort a manual compaction; an HTTP `hookSpecificOutput` is rejected | abort captured |
+| `PermissionDenied` | fires only in auto mode, when it denies a tool call (with or without a classifier verdict); only `hookSpecificOutput.retry` is read, and it is ignored when there was no classifier verdict | |
+| `StopFailure` | output ignored except `terminalSequence` (interactive only) | |
+| `InstructionsLoaded` | async; all JSON output discarded | |
+| `CwdChanged` | no decision control | a `hookSpecificOutput` reply was not surfaced (CwdChanged-3) |
+| `WorktreeCreate` | over HTTP the answer must carry `worktreePath`, or creation fails | see Unresolved |
+
+### Codex notes
+
+- **Source:** the 13 pinned command input schemas (`*.command.input.schema.json`, openai/codex @ `57e64682f8ef83c09cc868c39010733dd6760805`,
+  R-2026-11-07-04) plus real payloads. Fourteen events, because `PreModelRequest` and `PostModelRequest` are the two `oneOf` branches of
+  the one `model-request` schema. Neither takes a matcher, and `PreModelRequest` has no keys beyond the shared ones.
+- **Envelope:** `session_id`, `transcript_path`, `cwd` and `hook_event_name` are required in all 13 schemas (`model-request` types the path
+  as `AbsolutePathBuf`, still a string). Everything else is per event. `turn_id` is a Codex extension that exposes the active turn to
+  turn-scoped hooks, not part of the envelope.
+- **JSON Schema mapping:**
+  - `NullableString` is a required key with a nullable value.
+  - A JSON Schema `true` is a required key with any value.
+  - A key with a schema default (the `PostModelRequest` counts) is optional.
+  - `agent_id` and `agent_type` are required on `SubagentStart` and `SubagentStop`, because those schemas list them, though they are
+    optional elsewhere.
+  - The `SessionEnd` reason is `const "other"` and the only value seen, but it is typed as a string.
+- **Kinds:** `PreModelRequest`, `PostModelRequest` and `Interrupt` have no neutral meaning (`other`).
+- **Closed sets seen** (the rest only listed by the schema): `SessionStart` source `startup` and `compact`, compaction trigger `auto`,
+  `agent_type` `default`.
+- **Spawn:** the brief is read from `tool_input.message` of `collaborationspawn_agent` with plain reads that cannot throw. The model is
+  reported null because the one capture named none (R-2026-11-07-08, capture "subagent"); see Unresolved.
+- **Output:** `additionalContext` is written only on `PreToolUse`, `SessionStart`, `SubagentStart` and `UserPromptSubmit`. The output
+  schemas also define `hookSpecificOutput` for `PostToolUse` and `PermissionRequest`; the adapter writes only the contract v1
+  `PermissionRequest` decision there. Every other event, `SessionEnd` included (it has no output schema), is answered `{}`.
+
+### OpenCode notes
+
+- **No typings:** 2.2.6 ships none for its hooks, so every closed set in `enums.ts` is what the R-2026-11-07-08 captures showed, not
+  exhaustive:
+  - permission effect: only `allow` (every capture ran with `--auto`);
+  - tool status: only `completed` (a failed tool call was never captured);
+  - interrupt source: only `user` (SIGINT of `opencode run`);
+  - permission source type: `tool`;
+  - prompt delivery: `steer`.
+- **Envelope:** the plugin adds `hook_event_name` (the hook name, `tool.execute.before`, or the event type, `session.created`) and
+  `session_id`, a copy of OpenCode's own `sessionID`, so every harness's body has the same session key. The rest is OpenCode's payload or
+  event data, untouched:
+  - `tool` is the tool name and `agent` the agent name (`build`, `general`);
+  - on `permission.evaluate`, `action` names the permission: the tool name for MCP tools (`probe_echo`), or an open set of capability
+    names for built-ins (`shell`, `read`, `edit`, `subagent`). The call id is in `source.id`.
+- **Kinds:**
+  - `session.created` is `session-start` for every session, a subagent's child session included. The log shows a child as `is_child`
+    (a parent-session field is present); the kind is not split on it, because a kind comes from the name alone.
+  - `session.experimental.idle` is `stop`.
+  - `session.execution.started/succeeded/failed/interrupted` are `other`.
+- **Failures:** `session.execution.failed` carries `error: { type, message }`. Only `provider.no-route` was captured (capture
+  "bad-model", a model that does not exist), and only `error.type` is logged (as `error_type`).
+- **Compaction:** the `session.compaction` hook never fired in a capture, and `session.compaction.started/ended/failed` were seen only as
+  names in the binary. All four type only the envelope (see Unresolved).
+- **Spawn:** tool `subagent`, input `{ agent, description, prompt }`, plus an optional `model` written `provider/model`. Capture
+  "subagent-model" asked for `opencode-go/beam-free` and the key arrived with that value.
+- **Plugin form:** an object with `id` and `setup(ctx)`, verified on 2.2.6. Registering an unknown hook name does not fail, so a name
+  that never fires looks the same as one that works. Only names seen firing are treated as verified (`session.compaction` stays
+  registered but unseen). One hook failing to register does not stop the others, and without an event stream the hooks still work.
 
 ### Validation never rejects
 
 A schema reports; it does not decide. A missing key, a wrong type or a value outside a closed set is written to the log
 (`missing`, `wrong_type: ["path: expected string"]`, `["path: invalid_value"]`) and the request is answered as usual, because a new
 harness version must never stop an agent. Value sets are zod enums in one `enums.ts` per harness; a set that was only "seen so far" says so.
+A validation result carries dotted paths and expected types, never values, which is why it may be logged. The JSON Schemas under
+`packages/hooks/schemas/` are generated from the zod schemas (draft 2020-12) for documentation only; checks that are code are not in them.
 
 ## Configuration (`packages/hooks/src/env.ts`)
 
@@ -193,7 +294,15 @@ Clients (the shim and the OpenCode plugin read them on every call):
 Installer: `XDG_CONFIG_HOME`, `XDG_STATE_HOME`, `CODEX_HOME`. Research capture tool (`tools/capture-server.ts`): `CAPTURE_LOG`,
 `CAPTURE_TOKEN`, `CAPTURE_RESPONSE`, `CAPTURE_RULES`.
 
-Loopback is decided by `packages/hooks-server/src/net.ts` with `ipaddr.js` (`range() === "loopback"`) after the URL parser has split `host[:port]`; only canonical spellings are accepted (`localhost`, `127.x.y.z`, `[::1]`), and `127.1`, `user@localhost`, `app.localhost` and `0.0.0.0` are refused. No DNS lookup is ever made.
+Whole-number settings accept only plain digits inside their range. `""`, `" 80"`, `"0x10"`, `"1.5"` and `"-1"` are refused, because
+`Number()` would turn `""` into 0 (a random port), `"0x10"` into 16 and `" 80 "` into 80. `ServerConfig` throws one `ConfigError` listing
+every invalid setting (and, separately, refuses a non-loopback host with an empty token), so a `ServerConfig` that exists is a valid one.
+
+Loopback is decided by `packages/hooks-server/src/net.ts` with `ipaddr.js` (`range() === "loopback"`) after the URL parser has split
+`host[:port]`. Only canonical spellings are accepted (`localhost` in any case, `127.x.y.z`, `[::1]`). Anything the URL parser would rewrite or add
+to is refused rather than interpreted (`127.1`, `0x7f.1`, `2130706433`, `[0:0:0:0:0:0:0:1]`, `[::ffff:127.0.0.1]`, `user@localhost`, a path
+or query, `app.localhost`, `0.0.0.0`): real clients send the canonical form, and not guessing keeps the check small. `ipaddr.js` alone
+would class the IPv4-mapped form as loopback; the canonical rule refuses it first (`test/e2e/server-config.test.ts`). No DNS lookup is ever made.
 `HookServerBuilder` (`packages/hooks-server/src/server.ts`) wires config, adapters and the handler; `packages/hooks-server/src/shutdown.ts` drains the log on SIGTERM/SIGINT.
 
 ## Code conventions
@@ -213,23 +322,61 @@ Loopback is decided by `packages/hooks-server/src/net.ts` with `ipaddr.js` (`ran
 
 Service behaviour is tested end to end only: the real server over HTTP (`packages/hooks-server/test/e2e/harness.ts`). One fixture folder per harness (`packages/hooks/fixtures/<harness>/<Event>/NN-label.json`,
 with `.expected.json` and `.log.json` snapshots and a `provenance.json`: `captured` or `synthetic (...)`). `packages/hooks-server/test/e2e/contract.test.ts` loops over the
-adapter registry, so a new harness gets the same checks for free: answered as recorded, log line byte for byte, every required key reported
+adapter registry, so a new harness gets the same checks for free: answered as recorded, log line as recorded (timestamp and session id aside), every required key reported
 missing, a retyped key reported, a value outside a set reported, no typed text in the log. Per-event files (`packages/hooks-server/test/e2e/events/<harness>/`) hold only what
-is unique to an event. The one deliberate deviation is `packages/hooks-server/test/e2e/opencode-plugin.test.ts`, which drives the plugin with a fake context
-against the real server (OpenCode cannot be started in the suite without a model login).
+is unique to an event.
 
-The library's own tests (`packages/hooks/test/`) run its shipped files under Node: the shim with `node`, and the built `dist/` imported
-by name with every fixture answering its snapshot. `tools/check-boundaries.ts` runs before `bun test` and fails when a package reaches
+The contract suite guards against a vacuous pass: every event whose schema has an enum key is exercised at least once (all fixtures are
+scanned, because an optional enum key may be absent from the first), and an adapter with no fixtures is skipped, not passed. Snapshots pin
+the server's behaviour, so a schema or refactor change cannot alter an answer without a visible diff; regenerate them only from trusted code.
+Fixture ids repeat across harnesses, so log lines are matched by harness plus session id.
+
+Deliberate deviations from "real server over HTTP", each because the thing under test has no HTTP surface:
+
+| Test | Why |
+| --- | --- |
+| `packages/hooks-server/test/e2e/opencode-plugin.test.ts`, `opencode-plugin-acts.test.ts` | The plugin runs inside OpenCode, which cannot start in the suite without a model login: a fake plugin context, against the real server. The continue counter is per plugin module, so tests use distinct session ids. |
+| The `permission.evaluate` case in `contract-v1-event.test.ts` | OpenCode encodes nothing there, so only the decoded event shows its tool (in-process `decode`). |
+| `packages/hooks/test/contract-v1-pipeline.test.ts` | Per-layer `timeoutMs` and `onFault`, and `handle()`'s fail-closed path, are library API that `HOOK_MIDDLEWARE` cannot express. |
+
+Encoding is tested only over the wire (`contract-v1-encode.test.ts`, one server per `v1-*` middleware module). The shim is a process by
+design and is tested only as one. Tests that need it shorten `HOOK_SHUTDOWN_GRACE_MS` and other timers.
+
+The library's own tests (`packages/hooks/test/`) run its shipped files under Node, because StateForge imports the library from Node and
+ships the shim to Node-only places (its agent sandbox): the shim with `node`, and the built `dist/` imported by name (so Node's
+`exports` resolution must pick `dist/`, not `src/`) with every fixture answering its snapshot. `tools/check-boundaries.ts` runs before `bun test` and fails when a package reaches
 into another's files, imports an undeclared package, or (hooks, adapters) uses a Bun API in shipped code.
+
+## Clients
+
+**Shim** (`packages/hooks/clients/shim/hook-shim.ts`):
+- It reads one payload on stdin, posts it to `/hook/<harness>` and prints the answer. Failure modes are ADR 0003, point 4.
+- It waits for the stdout write to finish before exiting, because exiting straight after a write to a pipe can cut the answer short.
+- Its failure messages (`HOOK_SHIM_DEBUG=1`) never contain a header, so they cannot carry the token.
+- It uses no Bun API. Node 22.18+ runs the `.ts` from a checkout, but an installed copy runs `dist/clients/shim/hook-shim.js`, because
+  Node does not strip types under `node_modules`; `shimPath` picks the right one. `paths.ts` itself runs from `src/` (Bun) and
+  `dist/src/` (Node).
+
+**OpenCode plugin** (`packages/hooks/clients/opencode/`):
+- It posts every forwarded hook and lifecycle event, then acts on the answer as the matrix above says.
+- It is bundled into one file at install time (see Code conventions).
+
+**Installer** (`packages/hooks-server/scripts/install.ts`):
+- Nothing changes without `--apply`.
+- It never replaces a different existing file; it writes only when the file is absent and says what it did. The plugin bundle is the
+  exception, because it is the installer's own file: it is updated, and an older `harness-hooks.ts` copy is removed so OpenCode does not
+  load the plugin twice.
+- Claude's settings are only printed, because they live in dotfiles.
 
 ## Unresolved (kept, with what would settle each)
 
 | Unresolved | Settles it |
 | --- | --- |
-| Codex `PermissionRequest` real payload | Interactive Codex session that triggers an approval |
+| Claude `WorktreeCreate` over HTTP: the passive `{}` lacks `worktreePath`, which per Claude's docs fails the creation (ADR 0003) | Leave it out of the installed hooks or answer a `worktreePath`; a capture |
+| Claude `from_model` null on Pre/PostModelSwitch | A capture of a model switch with no previous model |
 | Codex spawn: can a model be requested, under which key | Capture with a prompt that names a subagent model |
-| Codex hook timeout, merge order, failure modes; `hookEventName` mandatory in output | Timed runs; a run that answers with context |
-| The Codex context-answer path on a real run (no built-in policy produces one; the middleware tests exercise the encoder). OpenCode has no answer path | Rules wording decided, then a real run |
+| Codex merge order with several hooks; whether `hookEventName` is mandatory in output (the late-hook timeout is settled: fails open, R-2026-11-07-10 F7) | A run with two hooks; a run that answers context without it |
+| The Codex context-answer path on a real run (no built-in policy produces one; the middleware tests exercise the encoder). OpenCode has no context path | Rules wording decided, then a real run |
 | Codex `SubagentStop` block on a real run (encoded from the pinned schema); Claude Code contract v1 shapes on a real run (encoded from the docs) | A live Codex run with a subagent; a `claude -p` run against the server with a deny layer |
 | OpenCode `permission.evaluate` effects (deny/ask); a reply field for it | Not needed while the pre-tool deny refuses the call |
 | How StateForge consumes the packages (registry, ADR-0181 exception); the split itself is done (ADR 0002, phase 2) | R-2026-11-07-09 follow-ups; plan phase 7 |

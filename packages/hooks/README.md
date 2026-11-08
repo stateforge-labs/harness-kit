@@ -43,7 +43,27 @@ Run from this folder, or from the repo root through `bun --filter @homelab/harne
 | --- | --- |
 | `bun run build` | `dist/` for Node: ESM `.js` and `.d.ts`, `.ts` specifiers rewritten to `.js` |
 | `bun run gen` | regenerate `handlers/index.ts`, `schemas.ts` and `schemas/` after a schema change |
-| `bun run gen:check` | fail if any generated file is stale |
+| `bun run gen:check` | fail if any generated file is stale; exits 1 listing stale or no-longer-generated files |
+| `bun scripts/export-fixtures.ts` | captures to scrubbed fixtures (see below) |
+
+Generators (`scripts/gen-registry.ts`, `scripts/gen-json-schema.ts`, shared helpers in `scripts/lib/emit.ts`):
+- An unknown flag is an error, because a silently ignored flag (`--root`) would make a write run rewrite the real tree.
+- `--root <dir>` runs against another copy of the tree. The tests run the stale cases on a throwaway copy, and a bad flag next to a stale
+  root leaves it untouched.
+- Owned directories (`schemas/<harness>/`) hold only generated files, so a write replaces them whole and a check reports unexpected extras.
+- Every handler must have a schema and every schema a handler. A file's event name comes from the harness's `names.ts`, so a name that
+  cannot be a file name (`tool.execute.before`) is fine.
+- The JSON Schemas are documentation only. Their source is the zod schemas, and checks that are code (Claude's per-tool `tool_input`,
+  `src/adapters/claude/tool-input.ts`) are not in them.
+
+Fixtures (`scripts/export-fixtures.ts`):
+- It keeps one payload per distinct (event, key set, discriminating values). OpenCode body keys act as variant labels; adding them to
+  Claude or Codex would regroup those fixtures.
+- A re-run replaces the fixtures (they are reproducible from the captures). Hand-made `<nn>-synthetic.json` files and `provenance.json`
+  survive it.
+- It exports Claude by default and never clears another harness's folder. Codex needs the R-2026-11-07-08 captures folder.
+- Each harness's `provenance.json` has a default and per-`<Event>/<name>` overrides: `captured`, or `synthetic (where it came from)`.
+- What it scrubs, and why, is [ADR 0004](../../docs/decisions/0004-the-log-is-an-allowlist.md), point 6.
 
 ## Tests
 
@@ -52,6 +72,9 @@ Run from this folder, or from the repo root through `bun --filter @homelab/harne
 - `generated.test.ts`: generated files match their generators.
 - `shim-node.test.ts`: the shim run with `node` against a stub endpoint, and failing open with no server.
 - `node-build.test.ts`: builds `dist/`, has `node` import the package by name (it must resolve to `dist/`), and runs every fixture
-  through `handle()`; each answer must equal its `.expected.json`.
+  through `handle()`; each answer must equal its `.expected.json`. The package name is interpolated into the child script, so
+  `tools/check-boundaries.ts` does not read it as an import.
+- `contract-v1-pipeline.test.ts`: per-layer timeouts and fault modes, deny-wins, `handle()` fail-closed and `toolAllowlist`, in-process,
+  because `HOOK_MIDDLEWARE` cannot express layer options.
 
 The behaviour over HTTP (contract suite, per-event cases, privacy) is tested in the server package against the real server.

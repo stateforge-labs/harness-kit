@@ -77,6 +77,16 @@ describe("e2e: scripts/install.ts", () => {
     expect((await install(["opencode", "--apply", "--config-dir", cfg])).code).toBe(0);
   });
 
+  test("opencode: --apply removes an older harness-hooks.ts copy so the plugin is not loaded twice", async () => {
+    const cfg = join(dir, "opencode-legacy");
+    await Bun.write(join(cfg, "plugins/harness-hooks.ts"), "export default {};\n");
+    const r = await install(["opencode", "--apply", "--config-dir", cfg]);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain("removed:");
+    expect(await Bun.file(join(cfg, "plugins/harness-hooks.ts")).exists()).toBe(false);
+    expect(await Bun.file(join(cfg, "plugins/harness-hooks.js")).exists()).toBe(true);
+  });
+
   test("service: the unit runs the server on loopback with the log under the state directory; --no-systemctl writes only the file", async () => {
     const unitDir = join(dir, "units");
     const preview = await install(["service", "--url", "http://127.0.0.1:9100"]);
