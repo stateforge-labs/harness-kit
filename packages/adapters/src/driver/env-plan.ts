@@ -18,8 +18,6 @@ export interface ChildEnvInput {
   readonly base: EnvBase;
   readonly plan: CredentialPlan;
   readonly nestedEnv: readonly string[];
-  readonly homeVar: string;
-  readonly isolationDir: string | null;
 }
 
 export interface ChildEnv {
@@ -137,10 +135,6 @@ export function buildChildEnv(input: ChildEnvInput): ChildEnv {
   }
 
   const set: string[] = [...input.base.set];
-  if (input.isolationDir !== null) {
-    env[input.homeVar] = input.isolationDir;
-    set.push(input.homeVar);
-  }
 
   return { env, secrets, scrubbed, injected, set };
 }

@@ -28,10 +28,6 @@ export function binaryMissing(): RunFailure {
   return { kind: "unavailable", message: SuperviseMessage.BinaryMissing, reason: UnavailableReason.BinaryMissing };
 }
 
-export function versionRejected(): RunFailure {
-  return { kind: "unavailable", message: HandleMessage.VersionRejected, reason: UnavailableReason.VersionNotAccepted };
-}
-
 export function helpUnavailable(): RunFailure {
   return { kind: "unavailable", message: HandleMessage.HelpUnavailable, reason: UnavailableReason.SpawnFailed };
 }
@@ -55,8 +51,6 @@ export function driversFailure(): RunFailure {
 export function credentialEvidence(plan: CredentialPlan, scrubbed: readonly string[]): CredentialEvidence {
   return {
     requested: plan.mode,
-    observed: null,
-    verified: false,
     scrubbed,
     billing: plan.billing,
     acknowledgement: plan.acknowledgement,

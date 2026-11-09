@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { TOOLS_DEFAULT } from "../../src/core/policy.ts";
 import { ok } from "../../src/core/result.ts";
 import type { RunEvent } from "../../src/core/run.ts";
 import { makeHandle } from "../../src/driver/handle.ts";
@@ -43,7 +44,7 @@ describe("an engine that is not a process", () => {
 
   test("stream yields started, text and finished only", async () => {
     const { ctx } = runtimeCtx();
-    const events = await collect(makeHandle(ctx, memoryDriver(), "fake", options()).stream(request({ input: "pong" })));
+    const events = await collect(makeHandle(ctx, memoryDriver(), "fake", options({ tools: TOOLS_DEFAULT })).stream(request({ input: "pong" })));
     expect(events.map((event) => event.kind)).toEqual(["started", "text", "finished"]);
     const last = events.at(-1);
     expect(last?.kind === "finished" && last.result.ok && last.result.value.confinement).toEqual([]);

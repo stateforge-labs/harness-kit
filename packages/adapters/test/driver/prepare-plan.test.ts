@@ -1,12 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { inspect } from "node:util";
 import { PlanNote, PLACEHOLDER_OUT_FILE } from "../../src/driver/constants.ts";
-import { Hermetic, Isolation } from "../../src/core/run.ts";
-import { FAKE_HOME, FAKE_INJECT, FAKE_STRIP } from "../support/fake-driver.ts";
+import { FAKE_INJECT, FAKE_STRIP } from "../support/fake-driver.ts";
 import { SENTINEL, valueOf } from "../support/credential.ts";
 import { prep } from "../support/prepare.ts";
-
-const ISO = "/scratch/iso";
 
 describe("plan", () => {
   test("env names only: inject holds the injected name, strip holds present names", () => {
@@ -26,11 +23,11 @@ describe("plan", () => {
     expect(plan.binary).toBe("fake-cli");
   });
 
-  test("notes name argv exposure, env bytes and the private-home gap", () => {
+  test("notes name argv exposure and env bytes, and a private cwd adds nothing to the env names", () => {
     expect(valueOf(prep()).plan.notes).toEqual([PlanNote.ArgvExposure, PlanNote.EnvBytesNotCounted]);
-    const isolated = valueOf(prep({ isolation: { kind: Isolation.PrivateHome, retain: "delete" } })).plan;
-    expect(isolated.notes).toContain(PlanNote.IsolationHeadlessUnmeasured);
-    expect(isolated.env.set).toEqual([FAKE_HOME]);
+    const priv = valueOf(prep({ cwd: { private: "delete" } })).plan;
+    expect(priv.cwd).toEqual({ kind: "private", retain: "delete" });
+    expect(priv.env.set).toEqual([]);
   });
 
   test("the plan never contains the sentinel, in JSON or in inspect", () => {
@@ -41,27 +38,25 @@ describe("plan", () => {
     expect(inspect(prepared.credentialPlan, { depth: 9 })).toContain("[secret]");
   });
 
-  test("the controls expose the timeout and the acceptVersions", () => {
-    const prepared = valueOf(prep({ timeoutMs: 7000, acceptVersions: ["1.0.0"] }));
+  test("the controls expose the timeout and the plan options carry no removed fields", () => {
+    const prepared = valueOf(prep({ timeoutMs: 7000 }));
     expect(prepared.controls.timeoutMs).toBe(7000);
-    expect(prepared.controls.acceptVersions).toEqual(["1.0.0"]);
-    expect(prepared.plan.options.hermetic).toBe(Hermetic.None);
+    expect(Object.keys(prepared.plan.options).sort()).toEqual(["cwd", "effort", "limits", "maxArgvBytes", "model", "persist", "timeoutMs", "tools"]);
   });
 });
 
 describe("child env", () => {
   test("the secret is revealed only inside child.env", () => {
     const prepared = valueOf(prep());
-    const child = prepared.childEnv(null);
+    const child = prepared.childEnv();
     expect(child.env[FAKE_INJECT]).toBe(SENTINEL);
     expect(child.env[FAKE_STRIP]).toBeUndefined();
     expect(child.secrets).toEqual([SENTINEL]);
     expect(JSON.stringify(prepared.plan)).not.toContain(SENTINEL);
   });
 
-  test("the private home is set to the isolation directory", () => {
-    const child = valueOf(prep({ isolation: { kind: Isolation.PrivateHome, retain: "keep" } })).childEnv(ISO);
-    expect(child.env[FAKE_HOME]).toBe(ISO);
-    expect(child.set).toEqual([FAKE_HOME]);
+  test("the child env never sets a home variable", () => {
+    const child = valueOf(prep({ cwd: { private: "keep" } })).childEnv();
+    expect(child.set).toEqual([]);
   });
 });

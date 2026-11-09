@@ -5,11 +5,11 @@ import { EngineMessage } from "../core/engine-constants.ts";
 import { MeasuredState, measuredValue } from "../core/evidence.ts";
 import { CredentialUnsupportedReason, type RunFailure } from "../core/failure.ts";
 import { gatesFor } from "../core/kit.ts";
-import { type ConfinementCell, confine, EnvKind } from "../core/policy.ts";
+import { type ConfinementCell, confine, EnvKind, ToolSetting } from "../core/policy.ts";
 import { fail, ok, type Result } from "../core/result.ts";
-import { Hermetic, type HeadlessOptions, Isolation, type IsolationSpec, type Limits, type Plan, type RunRequest } from "../core/run.ts";
+import type { HeadlessOptions, Limits, Plan, RunRequest } from "../core/run.ts";
 import type { EnvSource } from "../env.ts";
-import { NO_HOME_VAR, PLACEHOLDER_OUT_FILE, PLACEHOLDER_RUN_ID, PlanNote } from "./constants.ts";
+import { PLACEHOLDER_OUT_FILE, PLACEHOLDER_RUN_ID, PlanNote } from "./constants.ts";
 import type { EngineDescription, EngineImpl } from "./engine.ts";
 import { baseEnv, buildChildEnv, type ChildEnv, type EnvBase } from "./env-plan.ts";
 import { type Merged, mergeOptions } from "./options-merge.ts";
@@ -19,7 +19,6 @@ export interface RunControls {
   readonly timeoutMs: number | null;
   readonly signal: AbortSignal | null;
   readonly limits: Limits;
-  readonly acceptVersions: readonly string[] | null;
 }
 
 export interface Prepared<I extends string> {
@@ -32,7 +31,7 @@ export interface Prepared<I extends string> {
   readonly confinement: readonly ConfinementCell[];
   readonly privateCwd: "delete" | "keep" | null;
   readonly nestedEnv: readonly string[];
-  childEnv(isolationDir: string | null): ChildEnv;
+  childEnv(): ChildEnv;
 }
 
 export interface PrepareDeps<I extends string> {
@@ -48,25 +47,22 @@ function byteLength(text: string | null): number {
   return text === null ? 0 : new TextEncoder().encode(text).byteLength;
 }
 
-function userSettingsOpen(harness: string, mode: string, hermetic: string): boolean {
-  return harness === Harness.Claude && hermetic !== Hermetic.Full && (mode === CredentialMode.ApiKey || mode === CredentialMode.Cloud);
+function userSettingsOpen(harness: string, mode: string, settings: string): boolean {
+  return harness === Harness.Claude && settings !== ToolSetting.None && (mode === CredentialMode.ApiKey || mode === CredentialMode.Cloud);
 }
 
-function planNotes(harness: string, mode: string, hermetic: string, argvCarries: readonly string[], isolation: IsolationSpec, injected: readonly string[]): string[] {
+function planNotes(harness: string, mode: string, settings: string, argvCarries: readonly string[], injected: readonly string[]): string[] {
   const notes: string[] = [];
   if (argvCarries.length > 0) {
     notes.push(PlanNote.ArgvExposure);
   }
-  if (userSettingsOpen(harness, mode, hermetic)) {
+  if (userSettingsOpen(harness, mode, settings)) {
     notes.push(PlanNote.ClaudeSettingsMayOverride, PlanNote.ClaudeApiKeyHelperUnmeasured);
   }
   if (harness === Harness.OpenCode && injected.length > 0) {
     notes.push(PlanNote.OpencodeInjectionUnmeasured);
   }
   notes.push(PlanNote.EnvBytesNotCounted);
-  if (isolation.kind === Isolation.PrivateHome) {
-    notes.push(PlanNote.IsolationHeadlessUnmeasured);
-  }
   return notes;
 }
 
@@ -151,18 +147,16 @@ export function prepare<I extends string>(deps: PrepareDeps<I>): Result<Prepared
     return fail(envBase.failure);
   }
   const base: EnvBase = envBase.value;
-  const credentialPlan = driver.credentials.plan({ credential, isolation: m.isolation, env: base.env });
+  const credentialPlan = driver.credentials.plan({ credential, env: base.env });
   if (!credentialPlan.ok) {
     return fail(credentialPlan.failure);
   }
   const resolved: ResolvedOptions = {
     model: m.model,
     effort: m.effort,
-    hermetic: m.hermetic,
     persist: m.persist,
     maxArgvBytes: m.maxArgvBytes,
     cwd: m.cwd,
-    isolation: m.isolation,
     tools: m.tools,
   };
   const limitGate = gatesFor(driver.capabilities, resolved);
@@ -175,9 +169,7 @@ export function prepare<I extends string>(deps: PrepareDeps<I>): Result<Prepared
     return fail(described.failure);
   }
   const description = described === undefined ? describedAs(driver, m.engine) : described.value;
-  const homeVar = measuredValue(driver.profile.isolation.homeVar) ?? NO_HOME_VAR;
   const nestedEnv = measuredValue(driver.profile.nestedEnv) ?? [];
-  const privateHome = m.isolation.kind === Isolation.PrivateHome && homeVar !== NO_HOME_VAR;
   const injected = Object.keys(credentialPlan.value.inject);
   const argvCarries = description.engine === Engine.Cli ? description.argvCarries : [];
   const planBase = {
@@ -185,40 +177,35 @@ export function prepare<I extends string>(deps: PrepareDeps<I>): Result<Prepared
     options: {
       model: m.model,
       effort: m.effort,
-      hermetic: m.hermetic,
       persist: m.persist,
       maxArgvBytes: m.maxArgvBytes,
       timeoutMs: m.timeoutMs,
       cwd: m.cwd,
       limits: m.limits,
-      acceptVersions: m.acceptVersions,
       tools: toolsSummary(m),
     },
     env: {
       kind: base.kind,
       inject: injected,
       strip: base.kind === EnvKind.Inherit ? presentNames(base.env, credentialPlan.value.strip) : [],
-      set: uniqueNames(base.set, privateHome ? [homeVar] : [], description.env),
+      set: uniqueNames(base.set, description.env),
     },
     cwd: { kind: m.privateCwd === null ? ("given" as const) : ("private" as const), retain: m.privateCwd },
     confinement: confinement.value,
-    layers: m.layers,
-    isolation: m.isolation,
-    notes: planNotes(driver.id, credentialPlan.value.mode, m.hermetic, argvCarries, m.isolation, injected),
+    notes: planNotes(driver.id, credentialPlan.value.mode, m.tools.settings, argvCarries, injected),
   };
   const plan: Plan =
     description.engine === Engine.Cli
       ? { ...planBase, engine: Engine.Cli, binary: description.binary, args: description.args, stdinBytes: description.stdinBytes, argvCarries: description.argvCarries }
       : { ...planBase, engine: Engine.Sdk, entry: description.entry };
-  const childEnv = (isolationDir: string | null): ChildEnv =>
-    buildChildEnv({ base, plan: credentialPlan.value, nestedEnv, homeVar, isolationDir: privateHome ? isolationDir : null });
+  const childEnv = (): ChildEnv => buildChildEnv({ base, plan: credentialPlan.value, nestedEnv });
   return ok({
     plan,
     resolved,
     credentialPlan: credentialPlan.value,
     engine,
     request,
-    controls: { timeoutMs: m.timeoutMs, signal: m.signal, limits: m.limits, acceptVersions: m.acceptVersions },
+    controls: { timeoutMs: m.timeoutMs, signal: m.signal, limits: m.limits },
     confinement: confinement.value,
     privateCwd: m.privateCwd,
     nestedEnv,

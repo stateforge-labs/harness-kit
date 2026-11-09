@@ -5,8 +5,7 @@ import { codexCli } from "../../src/codex/engines/cli.ts";
 import { CODEX_UNUSED_FEATURES } from "../../src/codex/exec.ts";
 import type { CodexCredential } from "../../src/core/credential.ts";
 import { secret } from "../../src/core/secret.ts";
-import { resolveTools, TOOLS_OFF } from "../../src/core/policy.ts";
-import { Hermetic } from "../../src/core/run.ts";
+import { resolveTools, TOOLS_DEFAULT, TOOLS_OFF } from "../../src/core/policy.ts";
 import type { EngineInput, ResolvedOptions } from "../../src/driver/port.ts";
 import { adaptersFixtures } from "../support/fixtures.ts";
 import { type InterpretRaw, interpretRaw } from "../support/interpret.ts";
@@ -18,12 +17,10 @@ const credential: CodexCredential = { mode: "api-key", key: secret("sk-test") };
 const base: ResolvedOptions = {
   model: null,
   effort: null,
-  hermetic: Hermetic.None,
   persist: true,
   maxArgvBytes: null,
   cwd: "/work",
-  isolation: { kind: "none" },
-  tools: resolveTools(undefined, undefined),
+  tools: resolveTools(TOOLS_DEFAULT, undefined),
 };
 
 function input(overrides: Partial<EngineInput<"codex">> = {}): EngineInput<"codex"> {

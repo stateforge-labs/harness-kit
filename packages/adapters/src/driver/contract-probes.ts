@@ -3,7 +3,7 @@ import type { RunFailure } from "../core/failure.ts";
 import { ok, type Result } from "../core/result.ts";
 import { CapabilityName, Engine, isUsable, SupportState } from "../core/capability.ts";
 import { confine, resolveTools, type ToolPolicy } from "../core/policy.ts";
-import { Hermetic, Isolation, type RunRequest } from "../core/run.ts";
+import type { RunRequest } from "../core/run.ts";
 import { EnvVar, type EnvSource } from "../env.ts";
 import { PromptText } from "../core/engine-constants.ts";
 import { CONTRACT_CWD, CONTRACT_TOOL_AXES, CONTRACT_EFFORT, CONTRACT_EXIT_CODE, CONTRACT_GARBAGE_SPECS, CONTRACT_GARBAGE_TEXT, CONTRACT_HOME, CONTRACT_OUT_FILE, CONTRACT_PLAIN_SPEC, CONTRACT_RUN_ID, ContractText, FailureKind } from "./contract-constants.ts";
@@ -26,11 +26,9 @@ function optionsWith(request: RunRequest, overrides: Partial<ResolvedOptions>): 
   return {
     model: request.model ?? null,
     effort: null,
-    hermetic: Hermetic.None,
     persist: true,
     maxArgvBytes: request.maxArgvBytes ?? null,
     cwd: typeof request.cwd === "string" ? request.cwd : CONTRACT_CWD,
-    isolation: { kind: Isolation.None },
     tools: resolveTools(undefined, undefined),
     ...overrides,
   };
@@ -78,7 +76,7 @@ export function supportProblems<I extends string>(driver: HarnessDriver<I>, fixt
 function credentialProblemsFor<I extends string>(driver: HarnessDriver<I>, spec: unknown): string[] {
   const plain = spec === CONTRACT_PLAIN_SPEC;
   const from = captureThrow(() => driver.credentials.from(spec as CredentialSpec));
-  const plan = captureThrow(() => driver.credentials.plan({ credential: spec as CredentialOf<I>, isolation: { kind: Isolation.None }, env: contractEnv() }));
+  const plan = captureThrow(() => driver.credentials.plan({ credential: spec as CredentialOf<I>, env: contractEnv() }));
   const problems: string[] = [];
   if (!from.ok) {
     problems.push(threw(from));
@@ -118,7 +116,7 @@ export function engineProblems<I extends string>(driver: HarnessDriver<I>): stri
 }
 
 function planProblemsFor<I extends string>(driver: HarnessDriver<I>, credential: CredentialOf<I>, sentinels: readonly string[]): string[] {
-  const plan = captureThrow(() => driver.credentials.plan({ credential, isolation: { kind: Isolation.None }, env: contractEnv() }));
+  const plan = captureThrow(() => driver.credentials.plan({ credential, env: contractEnv() }));
   if (!plan.ok) {
     return [threw(plan)];
   }

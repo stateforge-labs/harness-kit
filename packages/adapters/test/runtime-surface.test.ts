@@ -12,8 +12,6 @@ describe("the ./runtime value surface", () => {
       "EnvKind",
       "EvidenceKind",
       "Harness",
-      "Hermetic",
-      "Isolation",
       "McpWhy",
       "RUN_FAILURE_KINDS",
       "SpawnPurpose",

@@ -6,7 +6,6 @@ export const DRAIN_GRACE_MS = 1_000;
 export const VERSION_PROBE_MS = 10_000;
 export const STDERR_TAIL_BYTES = 4096;
 export const VERSION_OUTPUT_BYTES = 4096;
-export const ISOLATION_PREFIX = "stateforge-adapters-run-";
 export const CWD_PREFIX = "stateforge-adapters-cwd-";
 export const SCRATCH_PREFIX = "stateforge-adapters-scratch-";
 export const PLACEHOLDER_OUT_FILE = "{out-file}";
@@ -72,15 +71,7 @@ export const PlanNote = {
   ClaudeApiKeyHelperUnmeasured: "claude-apikeyhelper-interaction-unmeasured",
   OpencodeInjectionUnmeasured: "opencode-credential-injection-unmeasured",
   EnvBytesNotCounted: "environment-bytes-counted-at-run-only",
-  IsolationHeadlessUnmeasured: "isolation-headless-unmeasured",
 } as const;
-
-export const Layer = {
-  Fact: "fact",
-  Consumer: "consumer",
-  Call: "call",
-} as const;
-export type Layer = (typeof Layer)[keyof typeof Layer];
 
 export const ConfigField = {
   TimeoutMs: "timeoutMs",
@@ -122,7 +113,6 @@ export const EnvField = {
 } as const;
 
 export const DEFAULT_PERSIST = true;
-export const NO_HOME_VAR = "";
 
 export const StopReason = {
   Timeout: "timeout",
@@ -191,7 +181,6 @@ export const HandleMessage = {
   ModeNotAllowed: "the runtime does not allow this credential mode",
   DriversThrew: "the driver table could not be read",
   ScratchFailed: "a run directory could not be created",
-  VersionRejected: "the installed harness version is not in acceptVersions",
   NoResult: "the run ended without a result",
   HelpUnavailable: "the harness help output could not be read",
 } as const;

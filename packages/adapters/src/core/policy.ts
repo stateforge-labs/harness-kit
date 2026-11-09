@@ -37,7 +37,7 @@ export type ResolvedTools = Required<ToolPolicy>;
 
 export const TOOLS_OFF: ToolPolicy = { builtins: ToolSetting.Off, mcp: [], settings: ToolSetting.None, strict: false };
 export const TOOLS_DEFAULT: ToolPolicy = { builtins: ToolSetting.HarnessDefault, mcp: ToolSetting.HarnessDefault, settings: ToolSetting.HarnessDefault, strict: false };
-export const DEFAULT_TOOLS: ToolPolicy = TOOLS_DEFAULT;
+export const DEFAULT_TOOLS: ToolPolicy = TOOLS_OFF;
 
 /** How the child process environment is built. */
 export type EnvPolicy =

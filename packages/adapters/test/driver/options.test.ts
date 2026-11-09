@@ -1,22 +1,22 @@
 import { describe, expect, test } from "bun:test";
 import type { CredentialSpec } from "../../src/core/credential.ts";
 import { Engine } from "../../src/core/capability.ts";
-import { DEFAULT_LIMITS, Layer } from "../../src/driver/constants.ts";
+import { DEFAULT_LIMITS } from "../../src/driver/constants.ts";
 import { isPositiveInteger, pick } from "../../src/driver/options-merge.ts";
-import { Hermetic } from "../../src/core/run.ts";
+import { TOOLS_DEFAULT, TOOLS_OFF } from "../../src/core/policy.ts";
 import { FAKE_STRIP } from "../support/fake-driver.ts";
 import { ambientEnv, failureOf, valueOf } from "../support/credential.ts";
 import { prep } from "../support/prepare.ts";
 
 describe("pick", () => {
   test("call beats consumer beats fact, and undefined does not count as set", () => {
-    expect(pick("c", "k", "f")).toEqual({ value: "c", layer: Layer.Call });
-    expect(pick(undefined, "k", "f")).toEqual({ value: "k", layer: Layer.Consumer });
-    expect(pick(undefined, undefined, "f")).toEqual({ value: "f", layer: Layer.Fact });
+    expect(pick("c", "k", "f")).toBe("c");
+    expect(pick(undefined, "k", "f")).toBe("k");
+    expect(pick(undefined, undefined, "f")).toBe("f");
   });
 
   test("a null call value still counts as set", () => {
-    expect(pick<string | null>(null, "k", "f")).toEqual({ value: null, layer: Layer.Call });
+    expect(pick<string | null>(null, "k", "f")).toBeNull();
   });
 });
 
@@ -74,36 +74,30 @@ describe("limits", () => {
   });
 });
 
-describe("layers", () => {
-  test("a value with no caller is at the fact layer", () => {
+describe("precedence", () => {
+  test("a value with no caller takes the fact", () => {
     const prepared = valueOf(prep());
-    expect(prepared.plan.layers.model).toBe(Layer.Fact);
-    expect(prepared.plan.layers.persist).toBe(Layer.Fact);
+    expect(prepared.plan.options.model).toBeNull();
     expect(prepared.plan.options.persist).toBe(true);
   });
 
-  test("a consumer value overrides the fact and is recorded", () => {
+  test("a consumer value overrides the fact", () => {
     const prepared = valueOf(prep({ model: "consumer-model", timeoutMs: 5000 }));
     expect(prepared.plan.options.model).toBe("consumer-model");
-    expect(prepared.plan.layers.model).toBe(Layer.Consumer);
     expect(prepared.plan.options.timeoutMs).toBe(5000);
-    expect(prepared.plan.layers.timeoutMs).toBe(Layer.Consumer);
   });
 
-  test("a call value overrides the consumer and is recorded", () => {
-    const prepared = valueOf(prep({ model: "consumer-model", hermetic: Hermetic.None }, { model: "call-model", hermetic: Hermetic.None }));
+  test("a call value overrides the consumer", () => {
+    const prepared = valueOf(prep({ model: "consumer-model", tools: TOOLS_OFF }, { model: "call-model", tools: TOOLS_DEFAULT }));
     expect(prepared.plan.options.model).toBe("call-model");
-    expect(prepared.plan.layers.model).toBe(Layer.Call);
-    expect(prepared.plan.layers.hermetic).toBe(Layer.Call);
+    expect(prepared.plan.options.tools).toMatchObject({ builtins: "harness-default" });
   });
 
   test("the signal and the cwd follow the same rule", () => {
     const controller = new AbortController();
     const prepared = valueOf(prep({ cwd: "/consumer" }, { signal: controller.signal }));
     expect(prepared.controls.signal).toBe(controller.signal);
-    expect(prepared.plan.layers.signal).toBe(Layer.Call);
     expect(prepared.plan.options.cwd).toBe("/consumer");
-    expect(prepared.plan.layers.cwd).toBe(Layer.Consumer);
   });
 });
 
@@ -115,11 +109,11 @@ describe("check order", () => {
   });
 
   test("a credential failure wins over an unsupported capability", () => {
-    expect(failureOf(prep({ hermetic: Hermetic.Full }, {}, noHome))).toMatchObject({ kind: "credential", reason: "home-unset" });
+    expect(failureOf(prep({ tools: TOOLS_OFF }, {}, noHome))).toMatchObject({ kind: "credential", reason: "home-unset" });
   });
 
   test("an unsupported capability wins over an argv overflow", () => {
-    expect(failureOf(prep({ hermetic: Hermetic.Full }, { instructions: "x".repeat(3000) }))).toMatchObject({ kind: "unsupported", capability: "settings-sources" });
+    expect(failureOf(prep({ tools: { ...TOOLS_OFF, strict: true } }, { instructions: "x".repeat(3000) }))).toMatchObject({ kind: "unsupported", capability: "settings-sources" });
   });
 
   test("an argv overflow is too-large on the instructions field", () => {

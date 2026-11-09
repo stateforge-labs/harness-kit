@@ -41,7 +41,7 @@ export function opencodeArgs(opts: OpencodeRunOptions): string[] {
   return [OpenCodeCli.Run, OpenCodeCli.Format, OpenCodeCli.FormatJson, OpenCodeCli.Title, opts.title, ...(opts.model === "" ? [] : [OpenCodeCli.Model, opts.model])];
 }
 
-export function opencodeHermeticEnv(): Record<string, string> {
+export function opencodeToollessEnv(): Record<string, string> {
   return { [EnvVar.OpenCodeConfigContent]: OPENCODE_TOOLLESS_CONFIG };
 }
 

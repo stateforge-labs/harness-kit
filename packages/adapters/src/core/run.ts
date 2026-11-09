@@ -8,14 +8,6 @@ import type { ConfinementCell, EnvPolicy, ToolPolicy } from "./policy.ts";
 import type { Result } from "./result.ts";
 import type { SessionId } from "./session.ts";
 
-export const Hermetic = { None: "none", Full: "full" } as const;
-export type Hermetic = (typeof Hermetic)[keyof typeof Hermetic];
-
-export const Isolation = { None: "none", PrivateHome: "private-home" } as const;
-export type Isolation = (typeof Isolation)[keyof typeof Isolation];
-
-export type IsolationSpec = { readonly kind: "none" } | { readonly kind: "private-home"; readonly retain: "delete" | "keep" };
-
 export type Effort = "low" | "medium" | "high" | "harness-default" | { readonly native: string };
 
 export interface Limits {
@@ -45,7 +37,6 @@ export interface CommonOptions {
   readonly timeoutMs?: number;
   readonly cwd?: CwdSpec;
   readonly maxArgvBytes?: number;
-  readonly hermetic?: Hermetic;
   readonly persist?: boolean;
   readonly signal?: AbortSignal;
   readonly limits?: Partial<Limits>;
@@ -56,8 +47,6 @@ export interface CommonOptions {
 export interface HeadlessOptions<I extends string = HarnessId> extends CommonOptions {
   readonly credential: CredentialOf<I>;
   readonly engine?: Engine;
-  readonly isolation?: IsolationSpec;
-  readonly acceptVersions?: readonly string[];
 }
 
 export interface RunRequest extends CommonOptions {
@@ -74,9 +63,7 @@ export interface RunOutput {
   readonly engine: Engine;
   readonly stability: "stable" | "experimental";
   readonly elapsedMs: number;
-  readonly hermetic: Hermetic;
   readonly persisted: boolean;
-  readonly isolationDir: string | null;
   readonly binary: { readonly path: string; readonly version: string | null; readonly source: "installed" | "bundled" };
   readonly cwd: string;
   readonly credential: CredentialEvidence;
@@ -104,8 +91,6 @@ export type LibraryEvent =
   | { readonly kind: "exit"; readonly harness: string; readonly purpose: SpawnPurpose; readonly code: number | null; readonly signal: string | null; readonly durationMs: number; readonly outcome: "ok" | RunFailure["kind"] }
   | { readonly kind: "credential-plan"; readonly harness: string; readonly mode: string; readonly injected: readonly string[]; readonly stripped: readonly string[] }
   | { readonly kind: "engine-selected"; readonly harness: string; readonly engine: Engine }
-  | { readonly kind: "isolation-created"; readonly harness: string; readonly retain: "delete" | "keep" }
-  | { readonly kind: "isolation-removed"; readonly harness: string; readonly retain: "delete" | "keep" }
   | { readonly kind: "cwd-created" | "cwd-removed"; readonly harness: string; readonly retain: "delete" | "keep" };
 
 interface PlanBase {
@@ -119,8 +104,6 @@ interface PlanBase {
   };
   readonly cwd: { readonly kind: "given" | "private"; readonly retain: "delete" | "keep" | null };
   readonly confinement: readonly ConfinementCell[];
-  readonly layers: Readonly<Record<string, "fact" | "consumer" | "call">>;
-  readonly isolation: IsolationSpec;
   readonly notes: readonly string[];
 }
 

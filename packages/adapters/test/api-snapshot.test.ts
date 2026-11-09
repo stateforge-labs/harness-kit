@@ -11,7 +11,7 @@ describe("public export keys", () => {
 
   test("the runtime entry exports exactly the stable runtime names", async () => {
     const keys = Object.keys(await import(src("runtime/index.ts"))).sort();
-    expect(keys).toEqual(["CapabilityName", "ConfinementAxis", "CredentialReason", "CredentialUnsupportedReason", "Engine", "EnvKind", "EvidenceKind", "Harness", "Hermetic", "Isolation", "McpWhy", "RUN_FAILURE_KINDS", "SpawnPurpose", "TOOLS_DEFAULT", "TOOLS_OFF", "ToolSetting", "UnavailableReason", "UnsupportedReason", "createRuntime", "fail", "isSecret", "isUsable", "ok", "secret", "supportWhy"]);
+    expect(keys).toEqual(["CapabilityName", "ConfinementAxis", "CredentialReason", "CredentialUnsupportedReason", "Engine", "EnvKind", "EvidenceKind", "Harness", "McpWhy", "RUN_FAILURE_KINDS", "SpawnPurpose", "TOOLS_DEFAULT", "TOOLS_OFF", "ToolSetting", "UnavailableReason", "UnsupportedReason", "createRuntime", "fail", "isSecret", "isUsable", "ok", "secret", "supportWhy"]);
   });
 
   test("the testing entry exports exactly the fake helpers", async () => {

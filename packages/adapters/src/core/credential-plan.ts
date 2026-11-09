@@ -2,7 +2,6 @@ import { EnvVar, type EnvSource } from "../env.ts";
 import type { CredentialEvidence, CredentialOf, PolicyNotice } from "./credential.ts";
 import { CredentialReason, CredentialUnsupportedReason, type RunFailure } from "./failure.ts";
 import { fail, ok, type Result } from "./result.ts";
-import { Isolation, type IsolationSpec } from "./run.ts";
 import { isSecret, secretIsEmpty, type Secret } from "./secret.ts";
 
 export const CredentialMode = {
@@ -46,8 +45,6 @@ export const CredentialUnsupportedMessage: Readonly<Record<CredentialUnsupported
   [CredentialUnsupportedReason.UnknownMode]: "credential mode is not offered by this harness",
   [CredentialUnsupportedReason.ModeNotOffered]: "credential mode is not offered by this harness",
   [CredentialUnsupportedReason.ModeNotAllowed]: "credential mode is not allowed by this runtime",
-  [CredentialUnsupportedReason.PrivateHomeMovesLogin]: "a private home would move the login store; use an injected credential",
-  [CredentialUnsupportedReason.PrivateHomeNoAuthCopy]: "a private home has no auth copy; use an injected credential",
 };
 
 export type Injection = Readonly<Record<string, Secret | string>>;
@@ -64,7 +61,6 @@ export interface CredentialPlan {
 
 export interface CredentialPlanInput<I extends string> {
   readonly credential: CredentialOf<I>;
-  readonly isolation: IsolationSpec;
   readonly env: EnvSource;
 }
 
@@ -90,10 +86,6 @@ export function policyFailure(notice: PolicyNotice): RunFailure {
 export function homeFailure(env: EnvSource): RunFailure | null {
   const home = env[EnvVar.Home];
   return home === undefined || home === "" ? credentialFailure(CredentialReason.HomeUnset, EnvVar.Home) : null;
-}
-
-export function isPrivateHome(isolation: IsolationSpec): boolean {
-  return isolation.kind === Isolation.PrivateHome;
 }
 
 export function secretOf(value: unknown, field: string): Result<Secret, RunFailure> {

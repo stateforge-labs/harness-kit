@@ -7,7 +7,6 @@ import { emit, type RuntimeContext } from "./context.ts";
 import { type RunDirs, makeScratch } from "./dirs.ts";
 import type { EngineHost } from "./engine.ts";
 import { type ChildEnv, probeEnv } from "./env-plan.ts";
-import { versionRejected } from "./finish.ts";
 import { helpOf, type ProbeScope, versionOf } from "./probe.ts";
 import type { Setup } from "./setup.ts";
 
@@ -28,10 +27,6 @@ export function makeHost<I extends string>(ctx: RuntimeContext, setup: Setup<I>,
     async version(path): Promise<Result<string | null, RunFailure>> {
       const versionArgs = measuredValue(setup.driver.profile.cli.versionArgs);
       const version = versionArgs === null ? null : await versionOf(ctx, scope, path, versionArgs);
-      const accepted = setup.prepared.controls.acceptVersions;
-      if (accepted !== null && (version === null || !accepted.includes(version))) {
-        return fail(versionRejected());
-      }
       return ok(version);
     },
     help: (path, args) => helpOf(ctx, scope, path, args),

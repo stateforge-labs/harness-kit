@@ -47,8 +47,6 @@ export {
   type RunFailure,
 } from "../core/failure.ts";
 export {
-  Hermetic,
-  Isolation,
   SpawnPurpose,
   type Cost,
   type CliPlan,
@@ -56,7 +54,6 @@ export {
   type CwdSpec,
   type Effort,
   type HeadlessOptions,
-  type IsolationSpec,
   type LibraryEvent,
   type Limits,
   type Plan,

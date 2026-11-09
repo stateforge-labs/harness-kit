@@ -7,7 +7,7 @@ export {
   OPENCODE_BINARY,
   OPENCODE_TOOLLESS_CONFIG,
   opencodeArgs,
-  opencodeHermeticEnv,
+  opencodeToollessEnv,
   opencodeSessionDeleteArgs,
   opencodeSessionListArgs,
   parseOpencodeStream,

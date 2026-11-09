@@ -1,7 +1,7 @@
 import type { RunFailure } from "../../src/core/failure.ts";
 import { fail, type Result } from "../../src/core/result.ts";
 import type { LibraryEvent } from "../../src/core/run.ts";
-import { resolveTools } from "../../src/core/policy.ts";
+import { resolveTools, TOOLS_DEFAULT } from "../../src/core/policy.ts";
 import { DEFAULT_LIMITS } from "../../src/driver/constants.ts";
 import { ok } from "../../src/core/result.ts";
 import type { CliRunInput, EngineEvent, EngineHost, EngineImpl, EngineIo, EngineRunInput } from "../../src/driver/engine.ts";
@@ -50,7 +50,7 @@ export function ioWith(runner: ProcessRunner, files: Record<string, string> = {}
 
 export function runInput<I extends string = string>(overrides: Partial<EngineRunInput<I>> = {}): EngineRunInput<I> {
   return {
-    options: { model: null, effort: null, hermetic: "none", persist: true, maxArgvBytes: null, cwd: "/work", isolation: { kind: "none" }, tools: resolveTools(undefined, undefined) },
+    options: { model: null, effort: null, persist: true, maxArgvBytes: null, cwd: "/work", tools: resolveTools(TOOLS_DEFAULT, undefined) },
     credential: { mode: "login-store", acknowledgePolicy: true } as never,
     instructions: "",
     input: "go",

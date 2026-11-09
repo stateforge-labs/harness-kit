@@ -1,6 +1,5 @@
 import { type Capabilities, Engine } from "../core/capability.ts";
 import { resolveTools } from "../core/policy.ts";
-import { Hermetic, Isolation } from "../core/run.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
 import { measuredValue } from "../core/evidence.ts";
 import type { CredentialOf, CredentialSpec, PolicyNotice } from "../core/credential.ts";
@@ -139,11 +138,9 @@ export function capabilitiesOf<H extends string>(drivers: Drivers<H>, id: string
 const PROBE_OPTIONS: ResolvedOptions = {
   model: null,
   effort: null,
-  hermetic: Hermetic.None,
   persist: true,
   maxArgvBytes: null,
   cwd: PROMPT_PROBE_CWD,
-  isolation: { kind: Isolation.None },
   tools: resolveTools(undefined, undefined),
 };
 

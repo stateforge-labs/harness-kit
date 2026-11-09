@@ -1,7 +1,6 @@
 import type { RunFailure } from "../../src/core/failure.ts";
 import type { CredentialPlanInput } from "../../src/core/credential-plan.ts";
 import type { Result } from "../../src/core/result.ts";
-import type { IsolationSpec } from "../../src/core/run.ts";
 import type { EnvSource } from "../../src/env.ts";
 
 export const SENTINEL = "sk-SENTINEL-7f3a9c";
@@ -18,8 +17,8 @@ export function ambientEnv(names: readonly string[], home: string | null = "/h/u
   return env;
 }
 
-export function planInput<I extends string>(credential: unknown, isolation: IsolationSpec, env: EnvSource): CredentialPlanInput<I> {
-  return { credential, isolation, env } as unknown as CredentialPlanInput<I>;
+export function planInput<I extends string>(credential: unknown, env: EnvSource): CredentialPlanInput<I> {
+  return { credential, env } as unknown as CredentialPlanInput<I>;
 }
 
 export function valueOf<T>(result: Result<T, RunFailure>): T {

@@ -52,7 +52,7 @@ async function* body<I extends string>(
     return fail(dirs.failure);
   }
   held.dirs = dirs.value;
-  const child = prepared.childEnv(dirs.value.isolation);
+  const child = prepared.childEnv();
   const redact = redactor(child.secrets);
   held.redact = redact;
   const input: EngineRunInput<I> = {

@@ -44,8 +44,6 @@ export interface PolicyNotice {
 
 export interface CredentialEvidence {
   readonly requested: string;
-  readonly observed: string | null;
-  readonly verified: boolean;
   readonly scrubbed: readonly string[];
   readonly billing: "per-token" | "subscription" | "unverified";
   readonly acknowledgement: { readonly noticeRetrievedAt: string } | null;

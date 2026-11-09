@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { buildRuntime, type Availability, type Runtime } from "../../src/driver/create-runtime.ts";
 import { secret } from "../../src/core/secret.ts";
-import { ISOLATION_PREFIX, SCRATCH_PREFIX } from "../../src/driver/constants.ts";
+import { CWD_PREFIX, SCRATCH_PREFIX } from "../../src/driver/constants.ts";
 import { fakeClock, fakeFs, fakeProcessRunner } from "../support/fakes.ts";
 import { echoDriver, ECHO_PREFIX, FAKE_INJECT, FAKE_STRIP } from "../support/fake-driver.ts";
 import { BIN, RUN_CWD, SENTINEL, binFs, mentions, routedRig, sourceOf } from "./support.ts";
@@ -51,23 +51,23 @@ describe("sweep removes old orphans and keeps live dirs", () => {
       executables: ["/bin/claude"],
       dirs: [
         TMP,
-        { path: `${TMP}/${ISOLATION_PREFIX}old`, mtimeMs: 0 },
+        { path: `${TMP}/${CWD_PREFIX}old`, mtimeMs: 0 },
         { path: `${TMP}/${SCRATCH_PREFIX}old`, mtimeMs: 0 },
-        { path: `${TMP}/${ISOLATION_PREFIX}fresh`, mtimeMs: 9_900 },
+        { path: `${TMP}/${CWD_PREFIX}fresh`, mtimeMs: 9_900 },
       ],
     });
     const { runtime } = routedRig({ stdout: "" }, { clock: fakeClock(10_000) }, { fs });
     await runtime.sweep({ olderThanMs: 1_000 });
-    expect(fs.removed).toContain(`${TMP}/${ISOLATION_PREFIX}old`);
+    expect(fs.removed).toContain(`${TMP}/${CWD_PREFIX}old`);
     expect(fs.removed).toContain(`${TMP}/${SCRATCH_PREFIX}old`);
-    expect(fs.removed).not.toContain(`${TMP}/${ISOLATION_PREFIX}fresh`);
+    expect(fs.removed).not.toContain(`${TMP}/${CWD_PREFIX}fresh`);
   });
 
   test("a live held run's dir is not swept", async () => {
     const { runtime, fs } = routedRig({ stdout: "", hold: true }, {}, {});
-    const held = runtime.headless("claude", { credential: CRED, isolation: { kind: "private-home", retain: "delete" } } as never).run({ instructions: "x", input: "y" });
+    const held = runtime.headless("claude", { credential: CRED, cwd: { private: "delete" } } as never).run({ instructions: "x", input: "y" });
     await settle();
-    const live = [...fs.dirs].find((path) => path.includes(ISOLATION_PREFIX));
+    const live = [...fs.dirs].find((path) => path.includes(CWD_PREFIX));
     expect(live).toBeDefined();
     await runtime.sweep({ olderThanMs: 0 });
     expect(live === undefined ? true : fs.removed.includes(live)).toBe(false);
@@ -136,7 +136,6 @@ describe("the generic path takes any driver map", () => {
       expect(result.value.credential.scrubbed).toEqual([FAKE_STRIP]);
       expect(result.value.credential.billing).toBe("unverified");
       expect(result.value.credential.acknowledgement).toBeNull();
-      expect(result.value.credential.verified).toBe(false);
     }
   });
 

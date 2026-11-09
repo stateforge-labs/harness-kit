@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { LibraryEvent, RunEvent } from "../../src/core/run.ts";
 import { EnvKind, TOOLS_OFF, type EnvPolicy, type ToolPolicy } from "../../src/core/policy.ts";
+import { ClaudeQuietEnv } from "../../src/claude/constants.ts";
 import { CLAUDE_PROFILE } from "../../src/claude/profile.ts";
 import { secret } from "../../src/core/secret.ts";
 import { createRuntime } from "../../src/runtime/index.ts";
@@ -158,11 +159,13 @@ describe("env policy", () => {
     expect(!result.ok && result.failure).toMatchObject({ kind: "unsupported", capability: "closed-env" });
   });
 
-  test("closed with quiet is unsupported while the profile quiet env is unmeasured", async () => {
-    const { runtime } = routedRig({ stdout: "" });
+  test("closed with quiet adds the measured quiet variables to the child env", async () => {
+    const { runtime, specs } = routedRig({ stdout: CLAUDE_STREAM });
     const quiet: EnvPolicy = { ...closed, quiet: true } as EnvPolicy;
     const result = await runtime.headless("claude", { credential: API_KEY, env: quiet } as never).run(REQUEST);
-    expect(!result.ok && result.failure).toMatchObject({ kind: "unsupported", capability: "closed-env" });
+    expect(result.ok).toBe(true);
+    const runSpec = specs.find((spec) => !spec.args.includes("--version") && !spec.args.includes("--help"));
+    expect(runSpec?.env).toMatchObject(ClaudeQuietEnv);
   });
 });
 

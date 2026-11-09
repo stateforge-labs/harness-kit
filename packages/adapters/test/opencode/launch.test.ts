@@ -5,7 +5,7 @@ import {
   OPENCODE_BINARY,
   OPENCODE_TOOLLESS_CONFIG,
   opencodeArgs,
-  opencodeHermeticEnv,
+  opencodeToollessEnv,
   opencodeSessionDeleteArgs,
   opencodeSessionListArgs,
   parseOpencodeStream,
@@ -49,9 +49,9 @@ describe("opencodeArgs", () => {
   });
 });
 
-describe("opencodeHermeticEnv", () => {
+describe("opencodeToollessEnv", () => {
   test("sets the tool-less config under OPENCODE_CONFIG_CONTENT", () => {
-    const env = opencodeHermeticEnv();
+    const env = opencodeToollessEnv();
     expect(Object.keys(env)).toEqual([EnvVar.OpenCodeConfigContent]);
     const config = env[EnvVar.OpenCodeConfigContent];
     const parsed = JSON.parse(config ?? "null") as { permissions: { action: string; resource: string; effect: string }[] };

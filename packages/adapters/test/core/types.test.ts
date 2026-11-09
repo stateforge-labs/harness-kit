@@ -3,7 +3,7 @@ import { CapabilityName, Engine, UnsupportedReason } from "../../src/core/capabi
 import { EvidenceKind, measured, unmeasured } from "../../src/core/evidence.ts";
 import { CredentialReason, CredentialUnsupportedReason, RUN_FAILURE_KINDS, UnavailableReason } from "../../src/core/failure.ts";
 import { fail, ok } from "../../src/core/result.ts";
-import { Hermetic, Isolation, SpawnPurpose } from "../../src/core/run.ts";
+import { SpawnPurpose } from "../../src/core/run.ts";
 
 describe("constant objects", () => {
   test("the engine and capability names", () => {
@@ -29,9 +29,7 @@ describe("constant objects", () => {
     });
   });
 
-  test("the run options and purposes", () => {
-    expect(Hermetic).toEqual({ None: "none", Full: "full" });
-    expect(Isolation).toEqual({ None: "none", PrivateHome: "private-home" });
+  test("the spawn purposes", () => {
     expect(SpawnPurpose).toEqual({ Run: "run", Version: "version", Help: "help" });
   });
 
@@ -49,17 +47,13 @@ describe("constant objects", () => {
       UnknownMode: "unknown-mode",
       ModeNotOffered: "mode-not-offered",
       ModeNotAllowed: "mode-not-allowed",
-      PrivateHomeMovesLogin: "private-home-moves-login",
-      PrivateHomeNoAuthCopy: "private-home-no-auth-copy",
     });
     expect(UnavailableReason).toEqual({
       BinaryMissing: "binary-missing",
       SpawnFailed: "spawn-failed",
-      VersionNotAccepted: "version-not-accepted",
       RuntimeClosed: "runtime-closed",
       InternalError: "internal-error",
       ScratchFailed: "scratch-failed",
-      ScriptExhausted: "script-exhausted",
     });
   });
 

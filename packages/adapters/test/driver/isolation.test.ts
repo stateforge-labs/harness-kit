@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createDir, sweepDirs, tmpRoot } from "../../src/driver/isolation.ts";
-import { ISOLATION_PREFIX, SCRATCH_PREFIX, TMP_FALLBACK } from "../../src/driver/constants.ts";
+import { CWD_PREFIX, SCRATCH_PREFIX, TMP_FALLBACK } from "../../src/driver/constants.ts";
 import { EnvVar } from "../../src/env.ts";
 import { fakeFs } from "../support/fakes.ts";
 
@@ -23,9 +23,9 @@ describe("tmpRoot", () => {
 describe("createDir", () => {
   test("creates a directory under the temp root with the prefix", async () => {
     const fs = fakeFs();
-    const path = await createDir(fs, { [EnvVar.Tmpdir]: "/work" }, ISOLATION_PREFIX);
-    expect(path).toBe(`/work/${ISOLATION_PREFIX}1`);
-    expect(fs.dirs.has(`/work/${ISOLATION_PREFIX}1`)).toBe(true);
+    const path = await createDir(fs, { [EnvVar.Tmpdir]: "/work" }, CWD_PREFIX);
+    expect(path).toBe(`/work/${CWD_PREFIX}1`);
+    expect(fs.dirs.has(`/work/${CWD_PREFIX}1`)).toBe(true);
   });
 });
 
@@ -35,21 +35,21 @@ describe("sweepDirs", () => {
     const fs = fakeFs({
       dirs: [
         root,
-        { path: `${root}/${ISOLATION_PREFIX}old`, mtimeMs: OLD },
+        { path: `${root}/${CWD_PREFIX}old`, mtimeMs: OLD },
         { path: `${root}/${SCRATCH_PREFIX}old`, mtimeMs: OLD },
-        { path: `${root}/${ISOLATION_PREFIX}kept`, mtimeMs: OLD },
-        { path: `${root}/${ISOLATION_PREFIX}young`, mtimeMs: YOUNG },
+        { path: `${root}/${CWD_PREFIX}kept`, mtimeMs: OLD },
+        { path: `${root}/${CWD_PREFIX}young`, mtimeMs: YOUNG },
         { path: `${root}/unrelated`, mtimeMs: OLD },
       ],
-      files: { [`${root}/${ISOLATION_PREFIX}file`]: "x" },
+      files: { [`${root}/${CWD_PREFIX}file`]: "x" },
     });
     const env = { [EnvVar.Tmpdir]: root };
-    const removed = await sweepDirs(fs, env, NOW, AGE, new Set([`${root}/${ISOLATION_PREFIX}kept`]));
+    const removed = await sweepDirs(fs, env, NOW, AGE, new Set([`${root}/${CWD_PREFIX}kept`]));
 
     expect(removed).toBe(2);
-    expect([...fs.removed].sort()).toEqual([`${root}/${ISOLATION_PREFIX}old`, `${root}/${SCRATCH_PREFIX}old`].sort());
-    expect(fs.dirs.has(`${root}/${ISOLATION_PREFIX}kept`)).toBe(true);
-    expect(fs.dirs.has(`${root}/${ISOLATION_PREFIX}young`)).toBe(true);
+    expect([...fs.removed].sort()).toEqual([`${root}/${CWD_PREFIX}old`, `${root}/${SCRATCH_PREFIX}old`].sort());
+    expect(fs.dirs.has(`${root}/${CWD_PREFIX}kept`)).toBe(true);
+    expect(fs.dirs.has(`${root}/${CWD_PREFIX}young`)).toBe(true);
     expect(fs.dirs.has(`${root}/unrelated`)).toBe(true);
   });
 

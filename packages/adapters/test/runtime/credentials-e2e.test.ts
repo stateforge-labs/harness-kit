@@ -3,6 +3,7 @@ import { basename } from "node:path";
 import { inspect } from "node:util";
 import { CODEX_MESSAGE, HOMES, OPENCODE_STREAM, SCRATCH_OUT, SENTINEL, fixture, mentions, routedRig, sourceOf } from "./support.ts";
 import { type LibraryEvent } from "../../src/core/run.ts";
+import { TOOLS_DEFAULT } from "../../src/core/policy.ts";
 import { secret } from "../../src/core/secret.ts";
 import { CLAUDE_CREDENTIAL_VARS } from "../../src/claude/credentials.ts";
 import { CODEX_CREDENTIAL_VARS } from "../../src/codex/credentials.ts";
@@ -70,7 +71,7 @@ describe("every credential mode reaches the child only under its chosen variable
         const events: LibraryEvent[] = [];
         const run = RUN[item.harness];
         const { runtime, specs } = routedRig({ stdout: run.stdout }, { source: ambient(home), onEvent: (event) => events.push(event) }, { files: run.files });
-        const options = { credential: item.credential };
+        const options = { credential: item.credential, tools: TOOLS_DEFAULT };
         const handle = runtime.headless(item.harness, options as never);
         const request = { instructions: "be brief", input: "hello" };
         const planned = handle.plan(request);
@@ -101,7 +102,6 @@ describe("every credential mode reaches the child only under its chosen variable
           expect(credential.requested).toBe(String(item.credential.mode));
           expect(credential.scrubbed).toEqual([...ownOf(item.harness)]);
           expect(credential.billing).toBe(item.billing);
-          expect(credential.verified).toBe(false);
           expect(credential.acknowledgement === null).toBe(!item.gated);
         }
       });

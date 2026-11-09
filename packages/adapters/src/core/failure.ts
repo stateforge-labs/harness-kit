@@ -15,19 +15,15 @@ export const CredentialUnsupportedReason = {
   UnknownMode: "unknown-mode",
   ModeNotOffered: "mode-not-offered",
   ModeNotAllowed: "mode-not-allowed",
-  PrivateHomeMovesLogin: "private-home-moves-login",
-  PrivateHomeNoAuthCopy: "private-home-no-auth-copy",
 } as const;
 export type CredentialUnsupportedReason = (typeof CredentialUnsupportedReason)[keyof typeof CredentialUnsupportedReason];
 
 export const UnavailableReason = {
   BinaryMissing: "binary-missing",
   SpawnFailed: "spawn-failed",
-  VersionNotAccepted: "version-not-accepted",
   RuntimeClosed: "runtime-closed",
   InternalError: "internal-error",
   ScratchFailed: "scratch-failed",
-  ScriptExhausted: "script-exhausted",
 } as const;
 export type UnavailableReason = (typeof UnavailableReason)[keyof typeof UnavailableReason];
 

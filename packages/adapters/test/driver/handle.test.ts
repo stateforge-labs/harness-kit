@@ -4,7 +4,7 @@ import { makeHandle } from "../../src/driver/handle.ts";
 import type { ProcessRunner, ProcessSpec } from "../../src/driver/ports.ts";
 import type { HeadlessOptions, LibraryEvent, RunEvent, RunOutput, RunRequest } from "../../src/core/run.ts";
 import type { RunFailure } from "../../src/core/failure.ts";
-import { ECHO_PREFIX, echoDriver, FAKE_CAPABILITIES, FAKE_HOME, FAKE_INJECT, FAKE_STRIP } from "../support/fake-driver.ts";
+import { ECHO_PREFIX, echoDriver, FAKE_CAPABILITIES, FAKE_INJECT, FAKE_STRIP } from "../support/fake-driver.ts";
 import { chunkedRunner, type ChunkScript } from "../support/chunked-runner.ts";
 import { options, request } from "../support/prepare.ts";
 import { SENTINEL } from "../support/credential.ts";
@@ -21,15 +21,15 @@ import { unparsable } from "../../src/core/kit.ts";
 const VERSION: ChunkScript = { chunks: ["fake-cli 1.2.3\n"] };
 const TEXT: ChunkScript = { chunks: ["text:hel", "lo\ntext:", " world\n"] };
 const OUT_PATH = `${SCRATCH_FIRST}/${OUT_FILE_NAME}`;
-const ISOLATION_DIR = "/tmp/stateforge-adapters-run-1";
+const CWD_DIR = "/tmp/stateforge-adapters-cwd-1";
 const HOME_VALUE = "/h/u";
 const ALLOWED_FIELDS: Readonly<Record<string, readonly string[]>> = {
   spawn: ["kind", "harness", "engine", "purpose", "argc"],
   exit: ["kind", "harness", "purpose", "code", "signal", "durationMs", "outcome"],
   "credential-plan": ["kind", "harness", "mode", "injected", "stripped"],
   "engine-selected": ["kind", "harness", "engine"],
-  "isolation-created": ["kind", "harness", "retain"],
-  "isolation-removed": ["kind", "harness", "retain"],
+  "cwd-created": ["kind", "harness", "retain"],
+  "cwd-removed": ["kind", "harness", "retain"],
 };
 
 async function collect(events: AsyncIterable<RunEvent>): Promise<RunEvent[]> {
@@ -103,9 +103,8 @@ describe("run and stream", () => {
     expect(output.binary).toEqual({ path: BIN_PATH, version: "1.2.3", source: "installed" });
     expect(output.engine).toBe("cli");
     expect(output.stability).toBe("stable");
-    expect(output.isolationDir).toBeNull();
     expect(output.cwd).toBe(RUN_CWD);
-    expect(output.credential.verified).toBe(false);
+    expect(Object.keys(output.credential).sort()).toEqual(["acknowledgement", "billing", "requested", "scrubbed"]);
   });
 
   test("probe specs carry no credential and the run spec carries it only in env", async () => {
@@ -232,12 +231,12 @@ describe("failures before spawn", () => {
     expect(chunked.specs).toEqual([]);
   });
 
-  test("a version outside acceptVersions is rejected after the version probe only", async () => {
-    const chunked = chunkedRunner([VERSION]);
+  test("the version probe never refuses a run, whatever version it reports", async () => {
+    const chunked = chunkedRunner([{ chunks: ["fake-cli 9.9.9\n"] }, TEXT]);
     const { ctx } = runtimeCtx({ runner: chunked.runner });
-    const failure = failureOf(await makeHandle(ctx, echoDriver(), "fake", options({ acceptVersions: ["9.9.9"] })).run(request()));
-    expect(failure).toMatchObject({ kind: "unavailable", reason: "version-not-accepted" });
-    expect(chunked.specs.length).toBe(1);
+    const output = outputOf(await makeHandle(ctx, echoDriver(), "fake", options()).run(request()));
+    expect(output.binary.version).toBe("9.9.9");
+    expect(chunked.specs.length).toBe(2);
   });
 
   test("a throwing env transform is invalid-config on field env", async () => {
@@ -322,50 +321,49 @@ describe("failures during the run", () => {
   });
 });
 
-describe("isolation", () => {
-  test("retain delete removes the private home and reports it", async () => {
+describe("private cwd", () => {
+  test("retain delete removes the private cwd and reports it", async () => {
     const chunked = chunkedRunner([VERSION, TEXT]);
     const events: LibraryEvent[] = [];
     const { ctx, fs } = runtimeCtx({ runner: chunked.runner, onEvent: (event) => events.push(event) });
-    const output = outputOf(await makeHandle(ctx, echoDriver(), "fake", options({ isolation: { kind: "private-home", retain: "delete" } })).run(request()));
-    expect(output.isolationDir).toBeNull();
-    expect(fs.removed).toContain("/tmp/stateforge-adapters-run-1");
-    expect(events.map((event) => event.kind)).toContain("isolation-removed");
+    const output = outputOf(await makeHandle(ctx, echoDriver(), "fake", options({ cwd: { private: "delete" } })).run(request()));
+    expect(output.cwd).toBe(CWD_DIR);
+    expect(fs.removed).toContain(CWD_DIR);
+    expect(events.map((event) => event.kind)).toContain("cwd-removed");
   });
 
-  test("retain keep returns the private home and leaves it on disk", async () => {
+  test("retain keep returns the private cwd and leaves it on disk", async () => {
     const chunked = chunkedRunner([VERSION, TEXT]);
     const { ctx, fs } = runtimeCtx({ runner: chunked.runner });
-    const output = outputOf(await makeHandle(ctx, echoDriver(), "fake", options({ isolation: { kind: "private-home", retain: "keep" } })).run(request()));
-    expect(output.isolationDir).toBe("/tmp/stateforge-adapters-run-1");
-    expect(fs.removed).not.toContain("/tmp/stateforge-adapters-run-1");
+    const output = outputOf(await makeHandle(ctx, echoDriver(), "fake", options({ cwd: { private: "keep" } })).run(request()));
+    expect(output.cwd).toBe(CWD_DIR);
+    expect(fs.removed).not.toContain(CWD_DIR);
   });
 });
 
-describe("layers", () => {
-  function layersOf(opts: Partial<HeadlessOptions<"fake">>, req: Partial<RunRequest>) {
+describe("plan options precedence", () => {
+  function optionsOf(opts: Partial<HeadlessOptions<"fake">>, req: Partial<RunRequest>) {
     const { ctx } = runtimeCtx();
     const planned = makeHandle(ctx, echoDriver(), "fake", options(opts)).plan(request(req));
     if (!planned.ok) {
       throw new Error(`expected a plan, got ${planned.failure.kind}`);
     }
-    return planned.value.layers;
+    return planned.value.options;
   }
 
-  test("fields with no value report fact", () => {
-    expect(layersOf({}, {})).toMatchObject({ model: "fact", effort: "fact", cwd: "fact", hermetic: "fact", persist: "fact", isolation: "fact" });
+  test("fields with no value take the fact", () => {
+    expect(optionsOf({}, {})).toMatchObject({ model: null, effort: null, persist: true });
   });
 
-  test("a value on the handle reports consumer", () => {
-    expect(layersOf({ model: "consumer-model" }, {})).toMatchObject({ model: "consumer" });
-    expect(layersOf({ effort: "low" }, {})).toMatchObject({ effort: "consumer" });
-    expect(layersOf({ cwd: "/elsewhere" }, {})).toMatchObject({ cwd: "consumer" });
-    expect(layersOf({ isolation: { kind: "private-home", retain: "keep" } }, {})).toMatchObject({ isolation: "consumer" });
+  test("a value on the handle is used", () => {
+    expect(optionsOf({ model: "consumer-model" }, {})).toMatchObject({ model: "consumer-model" });
+    expect(optionsOf({ effort: "low" }, {})).toMatchObject({ effort: "low" });
+    expect(optionsOf({ cwd: "/elsewhere" }, {})).toMatchObject({ cwd: "/elsewhere" });
   });
 
-  test("a value on the request reports call and wins over the handle", () => {
-    expect(layersOf({ model: "consumer-model" }, { model: "call-model" })).toMatchObject({ model: "call" });
-    expect(layersOf({}, { effort: "low" })).toMatchObject({ effort: "call" });
+  test("a value on the request wins over the handle", () => {
+    expect(optionsOf({ model: "consumer-model" }, { model: "call-model" })).toMatchObject({ model: "call-model" });
+    expect(optionsOf({}, { effort: "low" })).toMatchObject({ effort: "low" });
   });
 });
 
@@ -500,17 +498,17 @@ describe("out file", () => {
 });
 
 describe("onEvent payloads", () => {
-  test("every event has exactly its allowlisted fields and no isolation dir, cwd, home or secret", async () => {
+  test("every event has exactly its allowlisted fields and no cwd, home or secret", async () => {
     const chunked = chunkedRunner([VERSION, TEXT]);
     const events: LibraryEvent[] = [];
     const { ctx } = runtimeCtx({ runner: chunked.runner, onEvent: (event) => events.push(event) });
-    await makeHandle(ctx, echoDriver(), "fake", options({ isolation: { kind: "private-home", retain: "delete" } })).run(request());
-    expect(events.map((event) => event.kind)).toContain("isolation-removed");
+    await makeHandle(ctx, echoDriver(), "fake", options({ cwd: { private: "delete" } })).run(request());
+    expect(events.map((event) => event.kind)).toContain("cwd-removed");
     for (const event of events) {
       expect(Object.keys(event).sort()).toEqual([...(ALLOWED_FIELDS[event.kind] ?? [])].sort());
     }
     const json = JSON.stringify(events);
-    for (const forbidden of [SENTINEL, ISOLATION_DIR, RUN_CWD, HOME_VALUE]) {
+    for (const forbidden of [SENTINEL, CWD_DIR, RUN_CWD, HOME_VALUE]) {
       expect(json).not.toContain(forbidden);
     }
   });
@@ -527,18 +525,16 @@ describe("onEvent payloads", () => {
   });
 });
 
-describe("isolation under concurrency", () => {
-  test("two concurrent runs with private-home get distinct dirs, each passed as its own home", async () => {
+describe("private cwd under concurrency", () => {
+  test("two concurrent runs with a private cwd get distinct dirs, each used as its own cwd", async () => {
     const chunked = chunkedRunner([VERSION, TEXT, TEXT]);
     const { ctx } = runtimeCtx({ runner: chunked.runner });
-    const handle = makeHandle(ctx, echoDriver(), "fake", options({ isolation: { kind: "private-home", retain: "keep" } }));
+    const handle = makeHandle(ctx, echoDriver(), "fake", options({ cwd: { private: "keep" } }));
     const [first, second] = await Promise.all([handle.run(request()), handle.run(request())]);
-    const dirA = outputOf(first).isolationDir;
-    const dirB = outputOf(second).isolationDir;
-    expect(dirA).not.toBeNull();
-    expect(dirB).not.toBeNull();
+    const dirA = outputOf(first).cwd;
+    const dirB = outputOf(second).cwd;
     expect(dirA).not.toBe(dirB);
-    const homes = chunked.specs.slice(1).map((spec) => spec.env[FAKE_HOME]);
-    expect(new Set(homes)).toEqual(new Set([dirA ?? undefined, dirB ?? undefined]));
+    expect(dirA.startsWith("/tmp/stateforge-adapters-cwd-")).toBe(true);
+    expect(dirB.startsWith("/tmp/stateforge-adapters-cwd-")).toBe(true);
   });
 });

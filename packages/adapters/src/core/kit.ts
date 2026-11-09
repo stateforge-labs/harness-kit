@@ -4,7 +4,7 @@ import type { RunFailure } from "./failure.ts";
 import { argvBytes, longestArgBytes, tailBytes } from "./limits.ts";
 import type { Profile } from "./profile.ts";
 import { fail, ok, type Result } from "./result.ts";
-import { type Effort, Hermetic, type TokenUsage } from "./run.ts";
+import { type Effort, type TokenUsage } from "./run.ts";
 import { ArgvField, EffortName, EngineMessage, FAILURE_TAIL_BYTES, PromptText } from "./engine-constants.ts";
 import type { ProcessExit, ResolvedOptions } from "./raw-run.ts";
 
@@ -42,9 +42,6 @@ export function gatesFor(caps: Capabilities, options: ResolvedOptions): RunFailu
     if (ephemeral !== null) {
       return ephemeral;
     }
-  }
-  if (options.hermetic === Hermetic.Full) {
-    return requireCapability(caps, CapabilityName.SettingsSources);
   }
   return null;
 }
