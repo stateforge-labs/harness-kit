@@ -1,3 +1,17 @@
+import { EnvVar } from "../env.ts";
+
+export const ClaudeCloudSelector = {
+  Bedrock: "bedrock",
+  Vertex: "vertex",
+  Foundry: "foundry",
+} as const;
+
+export const ClaudeCloudEnv: Readonly<Record<string, string>> = {
+  [ClaudeCloudSelector.Bedrock]: EnvVar.ClaudeCodeUseBedrock,
+  [ClaudeCloudSelector.Vertex]: EnvVar.ClaudeCodeUseVertex,
+  [ClaudeCloudSelector.Foundry]: EnvVar.ClaudeCodeUseFoundry,
+};
+
 export const ClaudeDir = {
   Projects: "projects",
   Sessions: "sessions",

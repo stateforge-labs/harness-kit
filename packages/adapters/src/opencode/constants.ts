@@ -1,3 +1,13 @@
+import { EnvVar } from "../env.ts";
+
+export const OpenCodeProviderEnv: Readonly<Record<string, string>> = {
+  anthropic: EnvVar.AnthropicApiKey,
+  openai: EnvVar.OpenAiApiKey,
+  azure: EnvVar.AzureOpenAiApiKey,
+  opencode: EnvVar.OpenCodeApiKey,
+  "amazon-bedrock": EnvVar.AwsBearerTokenBedrock,
+};
+
 export const OpenCodeDir = {
   Data: "opencode",
   Database: "opencode.db",

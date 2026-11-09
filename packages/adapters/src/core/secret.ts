@@ -1,6 +1,7 @@
 export const SECRET_BRAND = Symbol.for("stateforge-labs.secret");
 export const SECRET_REVEAL = Symbol.for("stateforge-labs.secret.reveal");
 
+const SECRET_EMPTY = Symbol.for("stateforge-labs.secret.empty");
 const Mask = { Text: "[secret]" } as const;
 const InspectCustom = Symbol.for("nodejs.util.inspect.custom");
 
@@ -19,6 +20,10 @@ class SecretValue implements Secret {
 
   [SECRET_REVEAL](): string {
     return this.#value;
+  }
+
+  [SECRET_EMPTY](): boolean {
+    return this.#value === "";
   }
 
   toJSON(): string {
@@ -56,4 +61,12 @@ export function isSecret(value: unknown): value is Secret {
 
 export function reveal(value: Secret): string {
   return value[SECRET_REVEAL]();
+}
+
+export function secretIsEmpty(value: Secret): boolean {
+  const probe = Reflect.get(value, SECRET_EMPTY);
+  if (typeof probe === "function") {
+    return Reflect.apply(probe, value, []) === true;
+  }
+  return value[SECRET_REVEAL]() === "";
 }
