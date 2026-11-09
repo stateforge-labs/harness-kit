@@ -7,7 +7,7 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ### `@stateforge-labs/harness-hooks`
 
-- Added the `./endpoint` subpath: `createHookHandler` builds a web-standard `(Request) => Promise<Response>` hook handler with token or loopback admission, and `serveNode` and `serveBun` serve it on a TCP port or a unix socket.
+- Added the `./endpoint` subpath: `createHookHandler` builds a web-standard `(Request) => Promise<Response>` hook handler with token or loopback admission, and `serveNode` and `serveBun` serve it on a TCP port or a unix socket. A body over `maxBodyBytes` is answered `413`, and the endpoint reads no environment and writes no log. The subpath also exports `AdmissionMode`, `createAdmission` and `isLoopbackHost`.
 - Added the stock layers `stopGuard`, `once` and `stripToolPrefix`. `Next` now accepts an optional replacement context, which `stripToolPrefix` uses.
 - Added `HandleOptions` with an `onError` callback for `handle`, and an `onError` option on `createHookHandler`.
 - Added `renderCurlShim`, which renders a POSIX sh hook shim that posts with curl (over TCP or a unix socket) instead of starting a JavaScript process, with `parseCurlVersion`, `curlSupports` and `CURL_MIN_VERSION` (8.3.0). The token reaches curl through its environment (or a header file), never an argument. Added the `HOOK_SOCKET` variable name.
@@ -15,6 +15,8 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ### `@stateforge-labs/harness-hooks-server`
 
+- Changed: the server runs on `createHookHandler` and `serveBun` from the `./endpoint` subpath. `HookServerBuilder.build()` is now asynchronous and returns the running endpoint (`address` and `close()`) instead of the `Bun.serve` server. The `ipaddr.js` dependency is gone.
+- Added a k6 load test, `load/hook-load.js`, for 10 and 50 simulated agents (documented in `load/README.md`; k6 2.3.0 is pinned in `mise.toml`).
 - Added `HOOK_SOCKET`: serve on a unix socket (created user-only, a stale socket file is removed on start) instead of a TCP port.
 - Installer: `--shim auto|curl|ts` picks the curl shim (the default when curl 8.3.0 or later is on PATH) or the TypeScript shim, `--shim-dir` sets where the script is written, and `--socket` points the shim and the service unit at the unix socket. `claude --apply` writes the curl script only.
 

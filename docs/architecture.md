@@ -17,8 +17,8 @@ harness ──(client)──> POST /hook/<harness> ──> admission ──> ada
 
 | Step | Where | What it does |
 | --- | --- | --- |
-| Route | `packages/hooks-server/src/http/hook-handler.ts` | `POST /hook/<harness>` (exact shape); `/hook` alone is the Claude route; `/healthz`; anything else 404/405. The adapter registry is a `Map`, so a prototype key in the URL (`/hook/constructor`, `/hook/__proto__`) never resolves to an adapter. |
-| Admission | `packages/hooks-server/src/http/admission.ts` | With a token: the bearer must match, and nothing else is needed, because a web page cannot add an `Authorization` header without a CORS preflight. Without one the server is open on loopback, which a page in the user's browser can also reach, so it also requires a loopback `Host` (stops DNS rebinding) and a JSON content type (a cross-site form or no-cors fetch cannot send one). A non-canonical `Host` is 403; one that makes the request URL unparseable is 400; never a 500 or an answer. Runs **before** the harness lookup, so an unauthenticated caller cannot learn which harnesses exist. |
+| Route | `packages/hooks/src/endpoint/handler.ts` (served by `packages/hooks-server/src/server.ts`) | `POST /hook/<harness>` (exact shape); `/hook` alone is the Claude route; `/healthz`; anything else 404/405. The adapter registry is a `Map`, so a prototype key in the URL (`/hook/constructor`, `/hook/__proto__`) never resolves to an adapter. |
+| Admission | `packages/hooks/src/endpoint/admission.ts` | With a token: the bearer must match, and nothing else is needed, because a web page cannot add an `Authorization` header without a CORS preflight. Without one the server is open on loopback, which a page in the user's browser can also reach, so it also requires a loopback `Host` (stops DNS rebinding) and a JSON content type (a cross-site form or no-cors fetch cannot send one). A non-canonical `Host` is 403; one that makes the request URL unparseable is 400; never a 500 or an answer. Runs **before** the harness lookup, so an unauthenticated caller cannot learn which harnesses exist. |
 | Decode | `adapter.decode(raw)` | Validates the payload with the event's zod schema (reports `missing` and `wrong_type`, never rejects), builds the neutral event and the log metadata. |
 | Middleware | `packages/hooks/src/core/pipeline.ts` | The layers registered with `HookServerBuilder.use()` or `HOOK_MIDDLEWARE`; the built-in policy is always the innermost one (see Middleware below). |
 | Policy | `packages/hooks/src/core/policy.ts` | Pure: neutral event + the adapter's rules to context text only. Deny, continue and allow come from consumer layers, never from the policy (ADR 0003). |
@@ -339,11 +339,10 @@ Whole-number settings accept only plain digits inside their range. `""`, `" 80"`
 `Number()` would turn `""` into 0 (a random port), `"0x10"` into 16 and `" 80 "` into 80. `ServerConfig` throws one `ConfigError` listing
 every invalid setting (and, separately, refuses a non-loopback host with an empty token), so a `ServerConfig` that exists is a valid one.
 
-Loopback is decided by `packages/hooks-server/src/net.ts` with `ipaddr.js` (`range() === "loopback"`) after the URL parser has split
+Loopback is decided by `isLoopbackHost` in `packages/hooks/src/endpoint/loopback.ts` (`packages/hooks-server/src/net.ts` re-exports it), with `node:net` `isIPv4` and `isIPv6`, after the URL parser has split
 `host[:port]`. Only canonical spellings are accepted (`localhost` in any case, `127.x.y.z`, `[::1]`). Anything the URL parser would rewrite or add
 to is refused rather than interpreted (`127.1`, `0x7f.1`, `2130706433`, `[0:0:0:0:0:0:0:1]`, `[::ffff:127.0.0.1]`, `user@localhost`, a path
-or query, `app.localhost`, `0.0.0.0`): real clients send the canonical form, and not guessing keeps the check small. `ipaddr.js` alone
-would class the IPv4-mapped form as loopback; the canonical rule refuses it first (`test/e2e/server-config.test.ts`). No DNS lookup is ever made.
+or query, `app.localhost`, `0.0.0.0`): real clients send the canonical form, and not guessing keeps the check small. No DNS lookup is ever made.
 `HookServerBuilder` (`packages/hooks-server/src/server.ts`) wires config, adapters and the handler; `packages/hooks-server/src/shutdown.ts` drains the log on SIGTERM/SIGINT.
 
 ## Code conventions

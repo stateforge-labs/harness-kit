@@ -37,17 +37,18 @@ harness-hooks listening on 127.0.0.1:8787
 The first line is a warning that appears only when `HOOK_TOKEN` is empty.
 
 In code, build a server from a config and the adapters. Both inputs are required, so a half-configured server cannot be built. Layers
-are added outermost first. The built-in policy always runs innermost, so every layer sees its reply and can change it.
+are added outermost first. `build()` is asynchronous and returns the running endpoint (`address` and `close()`). The built-in policy always runs innermost, so every layer sees its reply and can change it.
 
 ```ts
 import { adapters } from "@stateforge-labs/harness-hooks";
 import { ServerConfig } from "./src/config.ts";
 import { HookServerBuilder } from "./src/server.ts";
 
-const server = new HookServerBuilder()
+const server = await new HookServerBuilder()
   .withConfig(new ServerConfig())
   .withAdapters(adapters)
   .build();
+console.log(server.address);
 ```
 
 ## Environment variables
@@ -111,6 +112,17 @@ The installer reads `XDG_CONFIG_HOME`, `XDG_STATE_HOME` and `CODEX_HOME` for the
 the environment on every call, and the token reaches curl through its environment, never an argument. With the curl shim, `claude --apply` writes the script only,
 because the settings stay in your dotfiles. `service --socket <path>` makes the unit serve on that socket.
 
+A unix socket with the curl shim, end to end:
+
+```sh
+SOCK="$XDG_RUNTIME_DIR/harness-hooks.sock"
+bun scripts/install.ts service --socket "$SOCK" --apply
+bun scripts/install.ts codex --shim curl --socket "$SOCK" --apply
+```
+
+The first command writes the service unit that serves on the socket. The second writes `harness-hooks-codex.sh` and a Codex `hooks.json` that runs it. `--shim ts`
+keeps the TypeScript shim, which cannot reach a socket, so `--socket` with `--shim ts` is refused; with `--shim curl` the install stops when curl is older than 8.3.0.
+
 `claude`, `codex` and `service` take `--url <base>` (default `http://127.0.0.1:8787`) and write it into the config. `opencode` ignores
 `--url`, because the plugin reads `HOOK_URL` from OpenCode's environment.
 
@@ -142,6 +154,18 @@ Each request writes one line to `HOOK_LOG_FILE`. Only allowlisted fields are wri
 ```
 
 The log holds key names and counts, never the text of prompts or tool input (unless `HOOK_LOG_PAYLOAD=1`).
+
+The server serves the hook endpoint of `@stateforge-labs/harness-hooks/endpoint` and passes it the callbacks that write the log and the fault messages to
+stderr; the library itself logs nothing.
+
+## Load test
+
+`load/hook-load.js` is a [k6](https://k6.io) script that posts `PreToolUse` and `PostToolUse` payloads from 10 or 50 simulated agents for 30 seconds and
+fails when a request fails, an answer is not a JSON object or the p95 latency is over 25 ms. It targets loopback TCP. See [`load/README.md`](load/README.md).
+
+```sh
+SCENARIO=agents10 mise exec k6@2.3.0 -- k6 run load/hook-load.js
+```
 
 ## Endpoints
 
