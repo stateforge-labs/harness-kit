@@ -2,7 +2,7 @@ name: Publish
 
 on:
   push:
-    tags: ['v*.*.*']
+    tags: ['v*.*.*', 'harness-hooks-v*.*.*', 'harness-adapters-v*.*.*']
 
 permissions:
   contents: read
@@ -27,17 +27,39 @@ jobs:
           package-manager-cache: false
       - name: npm 11.5.1 or later (trusted publishing)
         run: npx --yes semver@7.7.2 --range '>=11.5.1' "$(npm --version)"
+      - name: Resolve the package from the tag
+        id: pkg
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          . ci/lib/release-tag.sh
+          dir="$(package_for_tag "$TAG")"
+          version="$(version_of_tag "$TAG")"
+          name="$(node -p "require('./${dir}/package.json').name")"
+          printf 'dir=%s\nversion=%s\nname=%s\n' "$dir" "$version" "$name" >> "$GITHUB_OUTPUT"
       - name: The tag equals the package version
-        run: test "v$(node -p "require('./packages/hooks/package.json').version")" = "$GITHUB_REF_NAME"
+        env:
+          PKG_DIR: ${{ steps.pkg.outputs.dir }}
+          VERSION: ${{ steps.pkg.outputs.version }}
+        run: test "$(node -p "require('./${PKG_DIR}/package.json').version")" = "$VERSION"
       - name: Skip a version npm already has
         id: seen
+        env:
+          PKG_NAME: ${{ steps.pkg.outputs.name }}
+          VERSION: ${{ steps.pkg.outputs.version }}
         run: |
-          name="$(node -p "require('./packages/hooks/package.json').name")"
-          version="$(node -p "require('./packages/hooks/package.json').version")"
-          if [ "$(npm view "$name@$version" version 2>/dev/null)" = "$version" ]; then
-            echo "$name@$version is already on npm: nothing to publish"
+          if [ "$(npm view "$PKG_NAME@$VERSION" version 2>/dev/null)" = "$VERSION" ]; then
+            echo "$PKG_NAME@$VERSION is already on npm: nothing to publish"
             echo "published=true" >> "$GITHUB_OUTPUT"
           fi
+      - name: The harness-hooks dependency is on npm
+        if: steps.seen.outputs.published != 'true' && steps.pkg.outputs.dir == 'packages/adapters'
+        run: |
+          . ci/lib/release-tag.sh
+          hooks="@stateforge-labs/harness-hooks"
+          min="$(dependency_min_version packages/adapters "$hooks")"
+          npm view "$hooks@$min" version | grep -qx "$min" ||
+            { echo "$hooks@$min (the minimum of the dependency range) is not on npm: publish harness-hooks first"; exit 1; }
       - if: steps.seen.outputs.published != 'true'
         run: bun install --frozen-lockfile
       - if: steps.seen.outputs.published != 'true'
@@ -51,4 +73,4 @@ jobs:
       - name: Publish with OIDC and provenance
         if: steps.seen.outputs.published != 'true'
         run: npm publish
-        working-directory: packages/hooks
+        working-directory: ${{ steps.pkg.outputs.dir }}

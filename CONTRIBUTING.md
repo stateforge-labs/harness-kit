@@ -149,14 +149,14 @@ on a match. Never commit a raw capture, and never hand-edit a fixture to hide a 
 
 ## Releases
 
-Releases follow [Semantic Versioning](https://semver.org).
+Releases follow [Semantic Versioning](https://semver.org). Each published package has its own tag, so a package that did not change is not republished.
 
 1. Add a version heading with the date to [CHANGELOG.md](CHANGELOG.md).
-2. Bump `version` in the package's `package.json`. Only the packages that changed need a bump.
-3. Run the checks above, and `npm pack --dry-run` in `packages/hooks` and `packages/hooks-server` to confirm what would ship.
-4. Tag the commit `vX.Y.Z` and push the tag.
+2. Bump `version` in the package's `package.json`. If the package depends on a version that was just released, raise its range too.
+3. Run the checks above, and `npm pack --dry-run` in the package to confirm what would ship.
+4. Tag the commit `harness-hooks-vX.Y.Z` for `packages/hooks` or `harness-adapters-vX.Y.Z` for `packages/adapters`, and push the tag. Tag `harness-hooks` first: adapters depends on it, and its publish job fails until that version is on npm or in the GitLab registry.
 
-Publishing runs from a version tag. `.github/workflows/publish.yml` publishes `@stateforge-labs/harness-hooks` to npm, and `ci/publish-gitlab.sh` publishes it to the GitLab registry. The tag must equal `v<version>` for the version in `packages/hooks/package.json`.
+Publishing runs from a tag. `.github/workflows/publish.yml` publishes to npm with OIDC and provenance, and `ci/publish-gitlab.sh` publishes to the GitLab registry. `ci/lib/release-tag.sh` maps a tag to its package directory, and the tag must equal `version` in that package's `package.json`. A bare `vX.Y.Z` tag is a legacy alias for `harness-hooks`.
 
 ## License
 
