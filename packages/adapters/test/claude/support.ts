@@ -1,6 +1,16 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { CLAUDE_NESTED_ENV } from "../../src/claude/launch.ts";
+import type { CredentialPlan, CredentialPlanInput } from "../../src/core/credential-plan.ts";
+import { buildChildEnv, type EnvBase } from "../../src/driver/env-plan.ts";
+import { EnvVar, type EnvSource } from "../../src/env.ts";
 import { adaptersFixtures, filesUnder } from "../support/fixtures.ts";
+
+export const claudePlanInput = (credential: unknown, env: EnvSource): CredentialPlanInput<"claude"> =>
+  ({ credential, isolation: { kind: "none" }, env }) as unknown as CredentialPlanInput<"claude">;
+
+export const claudeChildEnv = (base: EnvBase, plan: CredentialPlan) =>
+  buildChildEnv({ base, plan, nestedEnv: CLAUDE_NESTED_ENV, homeVar: EnvVar.ClaudeConfigDir, isolationDir: null });
 
 export const transcriptsRoot = join(adaptersFixtures, "claude", "projects");
 

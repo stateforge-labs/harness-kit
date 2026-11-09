@@ -187,6 +187,14 @@ export const ClaudeCli = {
   Version: "--version",
 } as const;
 
+export const ClaudeQuietEnv: Readonly<Record<string, string>> = {
+  ENABLE_TOOL_SEARCH: "false",
+  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
+  DISABLE_TELEMETRY: "1",
+  DISABLE_AUTOUPDATER: "1",
+  CLAUDE_CODE_DISABLE_AUTO_MEMORY: "1",
+};
+
 export const ClaudeSettingSources = {
   NoUser: "project,local",
 } as const;

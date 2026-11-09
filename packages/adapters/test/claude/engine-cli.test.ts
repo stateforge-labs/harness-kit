@@ -5,8 +5,7 @@ import { claudeCli } from "../../src/claude/engines/cli.ts";
 import { claudeHeadlessArgs } from "../../src/claude/launch.ts";
 import type { ClaudeCredential } from "../../src/core/credential.ts";
 import { secret } from "../../src/core/secret.ts";
-import { resolveTools } from "../../src/core/policy.ts";
-import { Hermetic } from "../../src/core/run.ts";
+import { resolveTools, TOOLS_OFF } from "../../src/core/policy.ts";
 import { ArgvCarry } from "../../src/core/engine-constants.ts";
 import type { EngineInput, ResolvedOptions } from "../../src/driver/port.ts";
 import { adaptersFixtures } from "../support/fixtures.ts";
@@ -15,16 +14,14 @@ import { type InterpretRaw, interpretRaw } from "../support/interpret.ts";
 const headless = join(adaptersFixtures, "claude", "headless");
 const stream = readFileSync(join(headless, "claude-stream-json-verbose.jsonl"), "utf8");
 const apiKey: ClaudeCredential = { mode: "api-key", key: secret("sk-test") };
-const base: ResolvedOptions = {
+const base = {
   model: null,
   effort: null,
-  hermetic: Hermetic.None,
   persist: true,
   maxArgvBytes: null,
   cwd: "/work",
-  isolation: { kind: "none" },
   tools: resolveTools(undefined, undefined),
-};
+} as unknown as ResolvedOptions;
 
 function input(overrides: Partial<EngineInput<"claude">> = {}): EngineInput<"claude"> {
   return { options: base, credential: apiKey, instructions: "SYS", input: "hello", outFile: "/work/out.txt", runId: "run-1", ...overrides };
@@ -77,15 +74,15 @@ describe("claudeCli invocation", () => {
     ]);
   });
 
-  test("full hermetic isolation disables tools, settings and MCP", () => {
-    const result = claudeCli.invocation(withOptions({ hermetic: Hermetic.Full }));
+  test("tools off disables tools, MCP and settings", () => {
+    const result = claudeCli.invocation(withOptions({ tools: resolveTools(TOOLS_OFF, undefined) }));
     expect(result.ok && result.value.args).toEqual([
       "-p",
       "--tools",
       "",
+      "--strict-mcp-config",
       "--setting-sources",
       "",
-      "--strict-mcp-config",
       "--output-format",
       "stream-json",
       "--verbose",
@@ -94,12 +91,12 @@ describe("claudeCli invocation", () => {
     ]);
   });
 
-  test("login-store keeps project and local settings when not hermetic", () => {
+  test("login-store keeps project and local settings by default", () => {
     const result = claudeCli.invocation(input({ credential: { mode: "login-store", acknowledgePolicy: true } }));
     expect(result.ok && result.value.args).toEqual(["-p", "--setting-sources", "project,local", "--output-format", "stream-json", "--verbose", "--system-prompt", "SYS"]);
   });
 
-  test("token mode keeps project and local settings when not hermetic", () => {
+  test("token mode keeps project and local settings by default", () => {
     const result = claudeCli.invocation(input({ credential: { mode: "token", token: secret("tok"), acknowledgePolicy: true } }));
     expect(result.ok && result.value.args).toEqual(["-p", "--setting-sources", "project,local", "--output-format", "stream-json", "--verbose", "--system-prompt", "SYS"]);
   });
@@ -109,10 +106,15 @@ describe("claudeCli invocation", () => {
     expect(result.ok && result.value.args).toEqual(["-p", "--output-format", "stream-json", "--verbose", "--system-prompt", "SYS"]);
   });
 
-  test("full hermetic run matches the 0.1.0 headless builder except the output format", () => {
-    const result = claudeCli.invocation(withOptions({ model: "haiku", persist: false, hermetic: Hermetic.Full, effort: "low" }));
+  test("tools off carries the policy env into the invocation", () => {
+    const result = claudeCli.invocation(withOptions({ tools: resolveTools(TOOLS_OFF, undefined) }));
+    expect(result.ok && result.value.env).toEqual({});
+  });
+
+  test("the policy flags are the same set the 0.1.0 headless builder used", () => {
+    const result = claudeCli.invocation(withOptions({ model: "haiku", persist: false, tools: resolveTools(TOOLS_OFF, undefined), effort: "low" }));
     const legacy = claudeHeadlessArgs({ model: "haiku", systemPrompt: "SYS", effort: "low" }).flatMap((arg) => (arg === "json" ? ["stream-json", "--verbose"] : [arg]));
-    expect(result.ok && result.value.args).toEqual(legacy);
+    expect(result.ok && [...result.value.args].sort()).toEqual([...legacy].sort());
   });
 
   test("accepts a measured native effort", () => {
