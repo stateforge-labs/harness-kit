@@ -97,6 +97,8 @@ export const OpenCodeCli = {
   Session: "session",
   List: "list",
   Delete: "delete",
+  Standalone: "--standalone",
+  Version: "--version",
 } as const;
 
 export const OpenCodeStreamField = {

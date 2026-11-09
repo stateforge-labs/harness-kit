@@ -168,6 +168,11 @@ export const ClaudeCli = {
   OutputJson: "json",
   SystemPrompt: "--system-prompt",
   Effort: "--effort",
+  Version: "--version",
+} as const;
+
+export const ClaudeSettingSources = {
+  NoUser: "project,local",
 } as const;
 
 export const ClaudeResultField = {
