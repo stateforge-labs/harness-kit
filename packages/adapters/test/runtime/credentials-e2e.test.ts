@@ -18,7 +18,7 @@ const OWN: Readonly<Record<string, readonly string[]>> = {
 };
 const AMBIENT_NAMES = [...new Set([...CLAUDE_CREDENTIAL_VARS, ...CODEX_CREDENTIAL_VARS, ...OPENCODE_CREDENTIAL_VARS])];
 const RUN: Readonly<Record<HarnessName, { readonly stdout: string; readonly files: Readonly<Record<string, string>> }>> = {
-  claude: { stdout: fixture("claude", "claude-result.json"), files: {} },
+  claude: { stdout: fixture("claude", "claude-stream-json-verbose.jsonl"), files: {} },
   codex: { stdout: "", files: { [SCRATCH_OUT]: CODEX_MESSAGE } },
   opencode: { stdout: OPENCODE_STREAM, files: {} },
 };

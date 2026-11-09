@@ -112,5 +112,23 @@
   "harnessVersion": "unknown",
   "capturedAt": "2026-11-08",
   "maskedBy": "hand-written"
+ },
+ "headless/claude-stream-json-verbose.jsonl": {
+  "source": "headless-run",
+  "harnessVersion": "2.1.319",
+  "capturedAt": "2026-11-09",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "headless/claude-stream-json-partial.jsonl": {
+  "source": "headless-run",
+  "harnessVersion": "2.1.319",
+  "capturedAt": "2026-11-09",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "headless/claude-stream-json-plain.txt": {
+  "source": "headless-run",
+  "harnessVersion": "2.1.319",
+  "capturedAt": "2026-11-09",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
  }
 }

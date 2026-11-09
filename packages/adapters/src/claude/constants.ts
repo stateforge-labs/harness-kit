@@ -180,6 +180,8 @@ export const ClaudeCli = {
   StrictMcpConfig: "--strict-mcp-config",
   OutputFormat: "--output-format",
   OutputJson: "json",
+  StreamJson: "stream-json",
+  Verbose: "--verbose",
   SystemPrompt: "--system-prompt",
   Effort: "--effort",
   Version: "--version",
@@ -196,6 +198,21 @@ export const ClaudeResultField = {
   SessionId: "session_id",
   Usage: "usage",
   ModelUsage: "modelUsage",
+} as const;
+
+export const ClaudeRowType = {
+  System: "system",
+  User: "user",
+  Assistant: "assistant",
+  Result: "result",
+  RateLimit: "rate_limit_event",
+} as const;
+
+export const ClaudeRowField = {
+  Type: "type",
+  Message: "message",
+  Content: "content",
+  Text: "text",
 } as const;
 
 export const ClaudePolicy = {

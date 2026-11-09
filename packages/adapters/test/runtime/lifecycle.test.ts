@@ -21,13 +21,13 @@ describe("binary and version gating", () => {
   });
 
   test("acceptVersions rejects an unlisted version and accepts a listed one", async () => {
-    const rejected = routedRig({ stdout: fixture("claude", "claude-result.json") });
+    const rejected = routedRig({ stdout: fixture("claude", "claude-stream-json-verbose.jsonl") });
     const refused = await rejected.runtime.headless("claude", { credential: CRED, acceptVersions: ["9.9.9"] } as never).run({ instructions: "x", input: "y" });
     expect(refused.ok).toBe(false);
     if (!refused.ok) {
       expect(refused.failure.kind === "unavailable" ? refused.failure.reason : null).toBe("version-not-accepted");
     }
-    const accepted = routedRig({ stdout: fixture("claude", "claude-result.json") });
+    const accepted = routedRig({ stdout: fixture("claude", "claude-stream-json-verbose.jsonl") });
     const allowed = await accepted.runtime.headless("claude", { credential: CRED, acceptVersions: ["2.1.319"] } as never).run({ instructions: "x", input: "y" });
     expect(allowed.ok).toBe(true);
   });
@@ -35,7 +35,7 @@ describe("binary and version gating", () => {
 
 describe("close aborts held runs and removes directories", () => {
   test("a kept isolation dir survives close", async () => {
-    const { runtime, fs } = routedRig({ stdout: fixture("claude", "claude-result.json") });
+    const { runtime, fs } = routedRig({ stdout: fixture("claude", "claude-stream-json-verbose.jsonl") });
     const done = await runtime.headless("claude", { credential: CRED, isolation: PRIVATE_KEEP } as never).run({ instructions: "x", input: "y" });
     expect(done.ok).toBe(true);
     await runtime.close();
@@ -55,7 +55,7 @@ describe("close aborts held runs and removes directories", () => {
   });
 
   test("a run after close gives unavailable/runtime-closed", async () => {
-    const { runtime } = routedRig({ stdout: fixture("claude", "claude-result.json") });
+    const { runtime } = routedRig({ stdout: fixture("claude", "claude-stream-json-verbose.jsonl") });
     await runtime.close();
     const result = await runtime.headless("claude", { credential: CRED } as never).run({ instructions: "x", input: "y" });
     expect(result.ok).toBe(false);

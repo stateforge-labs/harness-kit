@@ -56,7 +56,7 @@ describe("HOME is required for credential planning", () => {
 describe("nested harness env is removed from the claude child and probes", () => {
   test("CLAUDECODE and CLAUDE_CODE_ENTRYPOINT are absent from the run and from every probe", async () => {
     const source = sourceOf({ CLAUDECODE: "1", CLAUDE_CODE_ENTRYPOINT: "cli" });
-    const { runtime, specs } = routedRig({ stdout: fixture("claude", "claude-result.json") }, { source });
+    const { runtime, specs } = routedRig({ stdout: fixture("claude", "claude-stream-json-verbose.jsonl") }, { source });
     await runtime.available(["claude"], { timeoutMs: 5000 });
     const result = await runtime.headless("claude", { credential: { mode: "api-key", key: secret(SENTINEL) } } as never).run({ instructions: "x", input: "y" });
     expect(result.ok).toBe(true);

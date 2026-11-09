@@ -1,6 +1,7 @@
-import { EngineReason, PromptText, CostBasis } from "../core/engine-constants.ts";
+import { EngineReason, FAILURE_TAIL_BYTES, PromptText, CostBasis } from "../core/engine-constants.ts";
 import type { RunFailure } from "../core/failure.ts";
 import { exitFailure, NO_USAGE, unparsable } from "../core/kit.ts";
+import { tailBytes } from "../core/limits.ts";
 import { fail, ok, type Result } from "../core/result.ts";
 import type { Cost, TokenUsage } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
@@ -60,7 +61,11 @@ export function foldStep(f: Fold, e: EngineEvent): Fold {
 }
 
 function withExit(failure: RunFailure, end: EngineEnd): RunFailure {
-  return failure.kind === "exit" && failure.code === null && failure.signal === null ? { ...failure, code: end.exit.code, signal: end.exit.signal } : failure;
+  if (failure.kind === "exit" && failure.code === null && failure.signal === null) {
+    const stderrTail = failure.stderrTail === PromptText.Empty ? tailBytes(end.stderrTail, FAILURE_TAIL_BYTES) : failure.stderrTail;
+    return { ...failure, code: end.exit.code, signal: end.exit.signal, stderrTail };
+  }
+  return failure;
 }
 
 export function foldEnd(f: Fold, end: EngineEnd, requestedModel: string | null): Result<ParsedRun, RunFailure> {
