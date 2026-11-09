@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import type { RuntimeFs } from "../core/io.ts";
 import { type EnvSource, EnvVar } from "../env.ts";
-import { ISOLATION_PREFIX, SCRATCH_PREFIX, TMP_FALLBACK } from "./constants.ts";
+import { CWD_PREFIX, ISOLATION_PREFIX, SCRATCH_PREFIX, TMP_FALLBACK } from "./constants.ts";
 
 export function tmpRoot(env: EnvSource): string {
   const value = env[EnvVar.Tmpdir];
@@ -13,7 +13,7 @@ export function createDir(fs: RuntimeFs, env: EnvSource, prefix: string): Promis
 }
 
 function owned(name: string): boolean {
-  return name.startsWith(ISOLATION_PREFIX) || name.startsWith(SCRATCH_PREFIX);
+  return name.startsWith(ISOLATION_PREFIX) || name.startsWith(SCRATCH_PREFIX) || name.startsWith(CWD_PREFIX);
 }
 
 export async function sweepDirs(

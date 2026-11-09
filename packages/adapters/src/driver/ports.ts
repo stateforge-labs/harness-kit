@@ -42,4 +42,5 @@ export interface RuntimeConfig<H extends string = HarnessId> {
   readonly cwd?: () => string;
   readonly onEvent?: (event: LibraryEvent) => void;
   readonly drivers?: Drivers<H>;
+  readonly allowedModes?: readonly string[];
 }

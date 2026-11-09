@@ -1,30 +1,19 @@
 import { Harness } from "@stateforge-labs/harness-hooks";
-import { Engine } from "../core/capability.ts";
-import { presentNames, type CredentialPlan } from "../core/credential-plan.ts";
+import { CapabilityName, type Capabilities, ENGINE_CAPABILITY, Engine, isUsable, supportWhy, UnsupportedReason } from "../core/capability.ts";
+import { CredentialMode, presentNames, type CredentialPlan, unsupportedFailure } from "../core/credential-plan.ts";
 import { EngineMessage } from "../core/engine-constants.ts";
-import { EnvField, NO_HOME_VAR, PLACEHOLDER_OUT_FILE, PLACEHOLDER_RUN_ID, PlanNote } from "./constants.ts";
-import { type ChildEnv, buildChildEnv } from "./env-plan.ts";
-import type { EnvSource } from "../env.ts";
+import { MeasuredState, measuredValue } from "../core/evidence.ts";
+import { CredentialUnsupportedReason, type RunFailure } from "../core/failure.ts";
+import { gatesFor } from "../core/kit.ts";
+import { type ConfinementCell, confine, EnvKind } from "../core/policy.ts";
 import { fail, ok, type Result } from "../core/result.ts";
-import type { RunFailure } from "../core/failure.ts";
-import { argvBytes, envBytes } from "../core/limits.ts";
-import { measuredValue } from "../core/evidence.ts";
-import { type HeadlessOptions, type IsolationSpec, type Limits, Isolation, Hermetic, type Plan, type RunRequest } from "../core/run.ts";
-import { CredentialMode } from "../core/credential-plan.ts";
-import { budgetOf, gatesFor } from "../core/kit.ts";
-import { mergeOptions } from "./options-merge.ts";
-import type { EngineImpl } from "./engine.ts";
-import type { HarnessDriver, Invocation, ResolvedOptions } from "./port.ts";
-
-export interface BuildPaths {
-  readonly outFile: string;
-  readonly isolationDir: string | null;
-}
-
-export interface BuiltRun {
-  readonly invocation: Invocation;
-  readonly child: ChildEnv;
-}
+import { Hermetic, type HeadlessOptions, Isolation, type IsolationSpec, type Limits, type Plan, type RunRequest } from "../core/run.ts";
+import type { EnvSource } from "../env.ts";
+import { NO_HOME_VAR, PLACEHOLDER_OUT_FILE, PLACEHOLDER_RUN_ID, PlanNote } from "./constants.ts";
+import type { EngineDescription, EngineImpl } from "./engine.ts";
+import { baseEnv, buildChildEnv, type ChildEnv, type EnvBase } from "./env-plan.ts";
+import { type Merged, mergeOptions } from "./options-merge.ts";
+import type { HarnessDriver, ResolvedOptions } from "./port.ts";
 
 export interface RunControls {
   readonly timeoutMs: number | null;
@@ -40,7 +29,10 @@ export interface Prepared<I extends string> {
   readonly engine: EngineImpl<I>;
   readonly request: RunRequest;
   readonly controls: RunControls;
-  build(paths: BuildPaths, runId?: string): Result<BuiltRun, RunFailure>;
+  readonly confinement: readonly ConfinementCell[];
+  readonly privateCwd: "delete" | "keep" | null;
+  readonly nestedEnv: readonly string[];
+  childEnv(isolationDir: string | null): ChildEnv;
 }
 
 export interface PrepareDeps<I extends string> {
@@ -49,6 +41,7 @@ export interface PrepareDeps<I extends string> {
   readonly request: RunRequest;
   readonly base: EnvSource;
   readonly cwd: string;
+  readonly allowedModes?: readonly string[];
 }
 
 function byteLength(text: string | null): number {
@@ -77,6 +70,58 @@ function planNotes(harness: string, mode: string, hermetic: string, argvCarries:
   return notes;
 }
 
+function engineFor<I extends string>(driver: HarnessDriver<I>, wanted: Engine): Result<EngineImpl<I>, RunFailure> {
+  const impl = wanted === Engine.Sdk ? driver.run.sdk : driver.run.cli;
+  if (impl === undefined || !driver.run.engines.includes(wanted)) {
+    return fail({ kind: "unsupported", message: EngineMessage.EngineUnsupported, capability: ENGINE_CAPABILITY, engine: wanted, why: UnsupportedReason.NotImplemented });
+  }
+  return ok(impl);
+}
+
+function modeGate(allowed: readonly string[] | undefined, mode: string): RunFailure | null {
+  return allowed === undefined || allowed.includes(mode) ? null : unsupportedFailure(mode, CredentialUnsupportedReason.ModeNotAllowed);
+}
+
+function baseUrlGate(caps: Capabilities, engine: Engine, baseUrl: unknown): RunFailure | null {
+  if (baseUrl === undefined) {
+    return null;
+  }
+  const support = caps[CapabilityName.BaseUrl][engine];
+  return isUsable(support)
+    ? null
+    : { kind: "unsupported", message: EngineMessage.BaseUrlUnsupported, capability: CapabilityName.BaseUrl, engine, why: supportWhy(support), support };
+}
+
+function closedGate<I extends string>(driver: HarnessDriver<I>, engine: Engine, m: Merged): RunFailure | null {
+  if (m.env.kind !== EnvKind.Closed) {
+    return null;
+  }
+  const support = driver.capabilities[CapabilityName.ClosedEnv][engine];
+  if (!isUsable(support)) {
+    return { kind: "unsupported", message: EngineMessage.ClosedEnvUnsupported, capability: CapabilityName.ClosedEnv, engine, why: supportWhy(support), support };
+  }
+  const quiet = driver.profile.quiet;
+  if (m.env.quiet === true && measuredValue(quiet) === null) {
+    return { kind: "unsupported", message: EngineMessage.ClosedEnvUnsupported, capability: CapabilityName.ClosedEnv, engine, why: quiet.state === MeasuredState.Unmeasured ? quiet.question : EngineMessage.QuietUnmeasured };
+  }
+  return null;
+}
+
+function describedAs<I extends string>(driver: HarnessDriver<I>, engine: Engine): EngineDescription {
+  return engine === Engine.Sdk
+    ? { engine: Engine.Sdk, entry: driver.profile.binary, env: [] }
+    : { engine: Engine.Cli, binary: driver.profile.binary, args: [], stdinBytes: 0, argvCarries: [], env: [] };
+}
+
+function toolsSummary(m: Merged): Readonly<Record<string, unknown>> {
+  const mcp = m.tools.mcp;
+  return { builtins: m.tools.builtins, mcp: typeof mcp === "string" ? mcp : mcp.map((endpoint) => endpoint.name), settings: m.tools.settings, strict: m.tools.strict };
+}
+
+function uniqueNames(...lists: readonly (readonly string[])[]): string[] {
+  return [...new Set(lists.flat())];
+}
+
 export function prepare<I extends string>(deps: PrepareDeps<I>): Result<Prepared<I>, RunFailure> {
   const merged = mergeOptions(deps.options, deps.request, deps.cwd);
   if (!merged.ok) {
@@ -84,7 +129,29 @@ export function prepare<I extends string>(deps: PrepareDeps<I>): Result<Prepared
   }
   const m = merged.value;
   const credential = deps.options.credential;
-  const credentialPlan = deps.driver.credentials.plan({ credential, isolation: m.isolation, env: deps.base });
+  const driver = deps.driver;
+  const gate =
+    modeGate(deps.allowedModes, credential.mode) ??
+    baseUrlGate(driver.capabilities, m.engine, (credential as { readonly baseUrl?: unknown }).baseUrl) ??
+    closedGate(driver, m.engine, m);
+  if (gate !== null) {
+    return fail(gate);
+  }
+  const selected = engineFor(driver, m.engine);
+  if (!selected.ok) {
+    return fail(selected.failure);
+  }
+  const engine = selected.value;
+  const confinement = confine(m.tools, driver.capabilities, m.engine);
+  if (!confinement.ok) {
+    return fail(confinement.failure);
+  }
+  const envBase = baseEnv(deps.base, m.env, measuredValue(driver.profile.quiet));
+  if (!envBase.ok) {
+    return fail(envBase.failure);
+  }
+  const base: EnvBase = envBase.value;
+  const credentialPlan = driver.credentials.plan({ credential, isolation: m.isolation, env: base.env });
   if (!credentialPlan.ok) {
     return fail(credentialPlan.failure);
   }
@@ -96,53 +163,55 @@ export function prepare<I extends string>(deps: PrepareDeps<I>): Result<Prepared
     maxArgvBytes: m.maxArgvBytes,
     cwd: m.cwd,
     isolation: m.isolation,
+    tools: m.tools,
   };
-  const gate = gatesFor(deps.driver.capabilities, resolved);
-  if (gate !== null) {
-    return fail(gate);
+  const limitGate = gatesFor(driver.capabilities, resolved);
+  if (limitGate !== null) {
+    return fail(limitGate);
   }
-  const engine = deps.driver.run.cli;
   const request = deps.request;
-  const planned = engine.invocation({ options: resolved, credential, instructions: request.instructions, input: request.input, outFile: PLACEHOLDER_OUT_FILE, runId: PLACEHOLDER_RUN_ID });
-  if (!planned.ok) {
-    return fail(planned.failure);
+  const described = engine.describe?.({ options: resolved, credential, instructions: request.instructions, input: request.input, outFile: PLACEHOLDER_OUT_FILE, runId: PLACEHOLDER_RUN_ID });
+  if (described !== undefined && !described.ok) {
+    return fail(described.failure);
   }
-  const homeVar = measuredValue(deps.driver.profile.isolation.homeVar) ?? NO_HOME_VAR;
-  const nestedEnv = measuredValue(deps.driver.profile.nestedEnv) ?? [];
+  const description = described === undefined ? describedAs(driver, m.engine) : described.value;
+  const homeVar = measuredValue(driver.profile.isolation.homeVar) ?? NO_HOME_VAR;
+  const nestedEnv = measuredValue(driver.profile.nestedEnv) ?? [];
   const privateHome = m.isolation.kind === Isolation.PrivateHome && homeVar !== NO_HOME_VAR;
   const injected = Object.keys(credentialPlan.value.inject);
-  const plan: Plan = {
-    harness: deps.driver.id,
-    engine: Engine.Cli,
-    binary: deps.driver.profile.binary,
-    args: planned.value.args,
-    stdinBytes: byteLength(planned.value.stdin),
-    argvCarries: planned.value.argvCarries,
-    env: { inject: injected, strip: presentNames(deps.base, credentialPlan.value.strip), set: privateHome ? [homeVar] : [] },
-    options: { model: m.model, effort: m.effort, hermetic: m.hermetic, persist: m.persist, maxArgvBytes: m.maxArgvBytes, timeoutMs: m.timeoutMs, cwd: m.cwd, limits: m.limits, acceptVersions: m.acceptVersions },
+  const argvCarries = description.engine === Engine.Cli ? description.argvCarries : [];
+  const planBase = {
+    harness: driver.id,
+    options: {
+      model: m.model,
+      effort: m.effort,
+      hermetic: m.hermetic,
+      persist: m.persist,
+      maxArgvBytes: m.maxArgvBytes,
+      timeoutMs: m.timeoutMs,
+      cwd: m.cwd,
+      limits: m.limits,
+      acceptVersions: m.acceptVersions,
+      tools: toolsSummary(m),
+    },
+    env: {
+      kind: base.kind,
+      inject: injected,
+      strip: base.kind === EnvKind.Inherit ? presentNames(base.env, credentialPlan.value.strip) : [],
+      set: uniqueNames(base.set, privateHome ? [homeVar] : [], description.env),
+    },
+    cwd: { kind: m.privateCwd === null ? ("given" as const) : ("private" as const), retain: m.privateCwd },
+    confinement: confinement.value,
     layers: m.layers,
     isolation: m.isolation,
-    notes: planNotes(deps.driver.id, credentialPlan.value.mode, m.hermetic, planned.value.argvCarries, m.isolation, injected),
+    notes: planNotes(driver.id, credentialPlan.value.mode, m.hermetic, argvCarries, m.isolation, injected),
   };
-  const build = (paths: BuildPaths, runId: string = PLACEHOLDER_RUN_ID): Result<BuiltRun, RunFailure> => {
-    const invocation = engine.invocation({ options: resolved, credential, instructions: request.instructions, input: request.input, outFile: paths.outFile, runId });
-    if (!invocation.ok) {
-      return fail(invocation.failure);
-    }
-    const child = buildChildEnv({
-      base: deps.base,
-      plan: credentialPlan.value,
-      nestedEnv,
-      homeVar,
-      isolationDir: privateHome ? paths.isolationDir : null,
-    });
-    const budget = budgetOf(resolved, deps.driver.profile);
-    const total = argvBytes(invocation.value.args) + envBytes(child.env);
-    if (budget.total !== null && total > budget.total) {
-      return fail({ kind: "too-large", message: EngineMessage.EnvTooLarge, limitBytes: budget.total, actualBytes: total, field: EnvField.Environment });
-    }
-    return ok({ invocation: invocation.value, child });
-  };
+  const plan: Plan =
+    description.engine === Engine.Cli
+      ? { ...planBase, engine: Engine.Cli, binary: description.binary, args: description.args, stdinBytes: description.stdinBytes, argvCarries: description.argvCarries }
+      : { ...planBase, engine: Engine.Sdk, entry: description.entry };
+  const childEnv = (isolationDir: string | null): ChildEnv =>
+    buildChildEnv({ base, plan: credentialPlan.value, nestedEnv, homeVar, isolationDir: privateHome ? isolationDir : null });
   return ok({
     plan,
     resolved,
@@ -150,6 +219,9 @@ export function prepare<I extends string>(deps: PrepareDeps<I>): Result<Prepared
     engine,
     request,
     controls: { timeoutMs: m.timeoutMs, signal: m.signal, limits: m.limits, acceptVersions: m.acceptVersions },
-    build,
+    confinement: confinement.value,
+    privateCwd: m.privateCwd,
+    nestedEnv,
+    childEnv,
   });
 }

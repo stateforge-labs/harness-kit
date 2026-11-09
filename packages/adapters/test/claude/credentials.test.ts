@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { inspect } from "node:util";
 import { CLAUDE_CREDENTIAL_VARS, claudeCredentialPlan } from "../../src/claude/credentials.ts";
 import { CLAUDE_NESTED_ENV } from "../../src/claude/launch.ts";
-import { buildChildEnv } from "../../src/driver/env-plan.ts";
+import { buildChildEnv, inheritEnv } from "../../src/driver/env-plan.ts";
 import { secret } from "../../src/core/secret.ts";
 import { EnvVar } from "../../src/env.ts";
 import { Isolation, type IsolationSpec } from "../../src/core/run.ts";
@@ -15,7 +15,7 @@ const ACK = { acknowledgePolicy: true };
 function childFor(credential: unknown, home: string, isolation: IsolationSpec = NONE, isolationDir: string | null = null) {
   const base = ambientEnv(CLAUDE_CREDENTIAL_VARS, home);
   const plan = valueOf(claudeCredentialPlan(planInput<"claude">(credential, isolation, base)));
-  const child = buildChildEnv({ base, plan, nestedEnv: CLAUDE_NESTED_ENV, homeVar: EnvVar.ClaudeConfigDir, isolationDir });
+  const child = buildChildEnv({ base: inheritEnv(base), plan, nestedEnv: CLAUDE_NESTED_ENV, homeVar: EnvVar.ClaudeConfigDir, isolationDir });
   return { base, plan, child };
 }
 

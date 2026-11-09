@@ -56,7 +56,7 @@ export function setupRun<I extends string>(
   if (!env.ok) {
     return fail(env.failure);
   }
-  const prepared = prepare({ driver, options, request, base: env.value, cwd: ctx.cwd() });
+  const prepared = prepare({ driver, options, request, base: env.value, cwd: ctx.cwd(), allowedModes: ctx.allowedModes });
   if (!prepared.ok) {
     return fail(prepared.failure);
   }

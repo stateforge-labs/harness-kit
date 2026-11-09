@@ -2,7 +2,7 @@ import type { CredentialEvidence } from "../core/credential.ts";
 import type { CredentialPlan } from "../core/credential-plan.ts";
 import { type RunFailure, UnavailableReason } from "../core/failure.ts";
 import { redactValue } from "../core/redact.ts";
-import { ConfigField, HandleMessage, SuperviseMessage } from "./constants.ts";
+import { ConfigField, EnvFieldName, HandleMessage, SuperviseMessage } from "./constants.ts";
 
 export function redactFailure(failure: RunFailure, redact: (text: string) => string): RunFailure {
   return redactValue(failure, redact) as RunFailure;
@@ -42,6 +42,14 @@ export function noResult(): RunFailure {
 
 export function envFailure(): RunFailure {
   return { kind: "invalid-config", message: HandleMessage.EnvTransform, field: ConfigField.Env };
+}
+
+export function envPathFailure(): RunFailure {
+  return { kind: "invalid-config", message: HandleMessage.EnvPathMissing, field: EnvFieldName.SetPath };
+}
+
+export function driversFailure(): RunFailure {
+  return { kind: "invalid-config", message: HandleMessage.DriversThrew, field: ConfigField.Drivers };
 }
 
 export function credentialEvidence(plan: CredentialPlan, scrubbed: readonly string[]): CredentialEvidence {

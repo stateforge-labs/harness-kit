@@ -7,9 +7,12 @@ export const VERSION_PROBE_MS = 10_000;
 export const STDERR_TAIL_BYTES = 4096;
 export const VERSION_OUTPUT_BYTES = 4096;
 export const ISOLATION_PREFIX = "stateforge-adapters-run-";
+export const CWD_PREFIX = "stateforge-adapters-cwd-";
 export const SCRATCH_PREFIX = "stateforge-adapters-scratch-";
 export const PLACEHOLDER_OUT_FILE = "{out-file}";
 export const PLACEHOLDER_RUN_ID = "{run-id}";
+export const PROMPT_PROBE_TEXT = "prompt-limit-probe-text";
+export const PROMPT_PROBE_CWD = "/";
 export const RUN_ID_SEPARATOR = "-";
 export const TMP_FALLBACK = "/tmp";
 export const DIR_MODE = 0o700;
@@ -91,6 +94,7 @@ export const ConfigField = {
   Effort: "effort",
   Limits: "limits",
   Env: "env",
+  Drivers: "drivers",
 } as const;
 
 export const ConfigMessage = {
@@ -99,6 +103,18 @@ export const ConfigMessage = {
   NonEmpty: "must be a non-empty string",
   Required: "is required",
   CliOnly: "must be the cli engine",
+  KnownEngine: "must be a known engine",
+  CwdSpec: "must be a path or an object with private set to delete or keep",
+  EnvPolicy: "must be an inherit or closed environment policy",
+} as const;
+
+export const PrivateCwd = {
+  Delete: "delete",
+  Keep: "keep",
+} as const;
+
+export const EnvFieldName = {
+  SetPath: "env.set.PATH",
 } as const;
 
 export const EnvField = {
@@ -171,6 +187,9 @@ export const HandleMessage = {
   RuntimeClosed: "the runtime has been closed",
   UnknownHarness: "no driver is registered for this harness",
   EnvTransform: "the env transform failed or did not return strings",
+  EnvPathMissing: "a closed environment needs PATH in set",
+  ModeNotAllowed: "the runtime does not allow this credential mode",
+  DriversThrew: "the driver table could not be read",
   ScratchFailed: "a run directory could not be created",
   VersionRejected: "the installed harness version is not in acceptVersions",
   NoResult: "the run ended without a result",

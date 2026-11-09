@@ -29,6 +29,7 @@ export const CLAUDE_PROFILE: Profile = deepFreeze({
     homeVar: measured("CLAUDE_CONFIG_DIR", { kind: EvidenceKind.Doc, ref: "https://code.claude.com/docs/en/authentication#log-in-with-multiple-accounts", harnessVersion: null, capturedAt: DOC_CAPTURED_AT }),
     worksHeadless: unmeasured("does a headless run work with an empty CLAUDE_CONFIG_DIR and an injected key?"),
   },
+  quiet: unmeasured("which environment variables does a quiet closed-environment run need to stay offline and non-interactive?"),
   cli: {
     flags: measured(
       [ClaudeCli.Print, ClaudeCli.Model, ClaudeCli.NoSessionPersistence, ClaudeCli.Tools, ClaudeCli.SettingSources, ClaudeCli.StrictMcpConfig, ClaudeCli.OutputFormat, ClaudeCli.SystemPrompt, ClaudeCli.Effort],

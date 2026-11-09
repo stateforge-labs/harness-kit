@@ -10,7 +10,7 @@ describe("the OpenCode profile", () => {
   test("every measured fact has evidence and every open question ends with a question mark", () => {
     const tally = walkEvidence(OPENCODE_PROFILE);
     expect(tally.measured).toBeGreaterThan(0);
-    expect(tally.unmeasured).toBe(3);
+    expect(tally.unmeasured).toBe(4);
     expect(tally.suggested).toBe(0);
   });
 

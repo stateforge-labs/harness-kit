@@ -2,6 +2,7 @@ import type { CredentialOf, CredentialSpec } from "../core/credential.ts";
 import type { RunFailure } from "../core/failure.ts";
 import { ok, type Result } from "../core/result.ts";
 import { CapabilityName, isUsable } from "../core/capability.ts";
+import { resolveTools } from "../core/policy.ts";
 import { Hermetic, Isolation, type RunRequest } from "../core/run.ts";
 import { EnvVar, type EnvSource } from "../env.ts";
 import { PromptText } from "../core/engine-constants.ts";
@@ -28,8 +29,9 @@ function optionsWith(request: RunRequest, overrides: Partial<ResolvedOptions>): 
     hermetic: Hermetic.None,
     persist: true,
     maxArgvBytes: request.maxArgvBytes ?? null,
-    cwd: request.cwd ?? CONTRACT_CWD,
+    cwd: typeof request.cwd === "string" ? request.cwd : CONTRACT_CWD,
     isolation: { kind: Isolation.None },
+    tools: resolveTools(undefined, undefined),
     ...overrides,
   };
 }
@@ -55,8 +57,8 @@ export function supportProblems<I extends string>(driver: HarnessDriver<I>, fixt
     { capability: CapabilityName.SettingsSources, options: optionsWith(request, { hermetic: Hermetic.Full }) },
   ];
   return cases.flatMap(({ capability, options }) => {
-    const outcome = captureThrow(() =>
-      driver.run.cli.invocation({ options, credential, instructions: request.instructions, input: request.input, outFile: CONTRACT_OUT_FILE, runId: CONTRACT_RUN_ID }),
+    const outcome = captureThrow(
+      () => driver.run.cli.describe?.({ options, credential, instructions: request.instructions, input: request.input, outFile: CONTRACT_OUT_FILE, runId: CONTRACT_RUN_ID }) ?? ok(null),
     );
     if (!outcome.ok) {
       return [`${capability}: ${threw(outcome)}`];
@@ -92,7 +94,7 @@ export function credentialProblems<I extends string>(driver: HarnessDriver<I>): 
 function foldedGarbage<I extends string>(driver: HarnessDriver<I>, stdout: string): Result<boolean, RunFailure> {
   let fold = foldStart();
   for (const line of stdout.split(PromptText.Line)) {
-    const events: readonly EngineEvent[] = driver.run.cli.parseLine(line);
+    const events: readonly EngineEvent[] = driver.run.cli.parseLine?.(line) ?? [];
     fold = events.reduce(foldStep, fold);
   }
   const end = { exit: { code: CONTRACT_EXIT_CODE, signal: null }, stderrTail: PromptText.Empty };

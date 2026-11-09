@@ -13,7 +13,7 @@ import { BIN_PATH, RUN_CWD, runtimeCtx, SCRATCH_FIRST, fsWithBinary } from "../s
 import { HELP_ARGS, HELP_TEXT, NOTICE, driverWith } from "../support/variants.ts";
 import { type HarnessDriver } from "../../src/driver/port.ts";
 import { fail, ok, type Result } from "../../src/core/result.ts";
-import { CapabilityName, Engine, UnsupportedReason, unsupported } from "../../src/core/capability.ts";
+import { CapabilityName, cell, Engine, UnsupportedReason, unsupported } from "../../src/core/capability.ts";
 import { policyFailure } from "../../src/core/credential-plan.ts";
 import { DEFAULT_LIMITS, OUT_FILE_NAME } from "../../src/driver/constants.ts";
 import { unparsable } from "../../src/core/kit.ts";
@@ -382,7 +382,7 @@ describe("pre-spawn order, further cases", () => {
   test("an unsupported effort fails before the binary lookup and spawns nothing", async () => {
     const chunked = chunkedRunner([VERSION]);
     const driver = driverWith({
-      capabilities: { ...FAKE_CAPABILITIES, [CapabilityName.Effort]: { [Engine.Cli]: unsupported(UnsupportedReason.NotImplemented) } },
+      capabilities: { ...FAKE_CAPABILITIES, [CapabilityName.Effort]: cell(unsupported(UnsupportedReason.NotImplemented)) },
     });
     const { ctx } = runtimeCtx({ runner: chunked.runner, fsOverride: fakeFs({}) });
     const failure = failureOf(await makeHandle(ctx, driver, "fake", options()).run(request({ effort: "high" })));

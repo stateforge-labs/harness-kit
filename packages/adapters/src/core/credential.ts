@@ -1,15 +1,15 @@
 import type { Secret } from "./secret.ts";
 
 export type ClaudeCredential =
-  | { readonly mode: "api-key"; readonly key: Secret }
+  | { readonly mode: "api-key"; readonly key: Secret; readonly baseUrl?: string }
   | { readonly mode: "login-store"; readonly acknowledgePolicy: true }
   | { readonly mode: "token"; readonly token: Secret; readonly acknowledgePolicy: true }
   | { readonly mode: "cloud"; readonly selector: string };
 
-export type CodexCredential = { readonly mode: "api-key"; readonly key: Secret } | { readonly mode: "login-store" };
+export type CodexCredential = { readonly mode: "api-key"; readonly key: Secret; readonly baseUrl?: string } | { readonly mode: "login-store" };
 
 export type OpenCodeCredential =
-  | { readonly mode: "api-key"; readonly key: Secret; readonly provider: string }
+  | { readonly mode: "api-key"; readonly key: Secret; readonly provider: string; readonly baseUrl?: string }
   | { readonly mode: "login-store"; readonly provider?: string };
 
 export interface CredentialByHarness {
@@ -25,6 +25,7 @@ export interface CredentialSpec {
   readonly provider?: string;
   readonly selector?: string;
   readonly acknowledgePolicy?: boolean;
+  readonly baseUrl?: string;
 }
 
 export type CredentialOf<I extends string> = I extends keyof CredentialByHarness ? CredentialByHarness[I] : CredentialSpec;

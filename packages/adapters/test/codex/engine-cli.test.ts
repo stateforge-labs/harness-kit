@@ -5,6 +5,7 @@ import { codexCli } from "../../src/codex/engines/cli.ts";
 import { codexExec } from "../../src/codex/exec.ts";
 import type { CodexCredential } from "../../src/core/credential.ts";
 import { secret } from "../../src/core/secret.ts";
+import { resolveTools } from "../../src/core/policy.ts";
 import { Hermetic } from "../../src/core/run.ts";
 import type { EngineInput, ResolvedOptions } from "../../src/driver/port.ts";
 import { adaptersFixtures } from "../support/fixtures.ts";
@@ -22,6 +23,7 @@ const base: ResolvedOptions = {
   maxArgvBytes: null,
   cwd: "/work",
   isolation: { kind: "none" },
+  tools: resolveTools(undefined, undefined),
 };
 
 function input(overrides: Partial<EngineInput<"codex">> = {}): EngineInput<"codex"> {

@@ -1,11 +1,11 @@
-import type { EngineIo, EngineRunInput } from "../driver/engine.ts";
+import type { CliRunInput, EngineIo } from "../driver/engine.ts";
 import { supervise } from "../driver/supervise.ts";
 
-function withoutSecrets(input: EngineRunInput): Record<string, string> {
+function withoutSecrets(input: CliRunInput): Record<string, string> {
   return Object.fromEntries(Object.entries(input.env).filter(([, value]) => input.redact(value) === value));
 }
 
-export async function runOnce(input: EngineRunInput, io: EngineIo, args: readonly string[], timeoutMs: number): Promise<string | null> {
+export async function runOnce(input: CliRunInput, io: EngineIo, args: readonly string[], timeoutMs: number): Promise<string | null> {
   const supervised = supervise({
     runner: io.runner,
     spec: { program: input.program, args, env: withoutSecrets(input), cwd: input.cwd, stdin: null },

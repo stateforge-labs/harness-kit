@@ -23,6 +23,7 @@ export const CODEX_PROFILE: Profile = deepFreeze({
     homeVar: measured("CODEX_HOME", HELP),
     worksHeadless: unmeasured("does a headless run work with an empty CODEX_HOME and an injected key?"),
   },
+  quiet: unmeasured("which environment variables does a quiet closed-environment run need to stay offline and non-interactive?"),
   cli: {
     flags: measured(
       [

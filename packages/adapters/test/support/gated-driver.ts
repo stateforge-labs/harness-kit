@@ -1,4 +1,4 @@
-import { type Capabilities, CapabilityName, Engine, unmeasuredSupport } from "../../src/core/capability.ts";
+import { type Capabilities, CapabilityName, cell, Engine, unmeasuredSupport } from "../../src/core/capability.ts";
 import { unmeasured } from "../../src/core/evidence.ts";
 import type { CredentialSpec } from "../../src/core/credential.ts";
 import { CredentialField, CredentialMode, type CredentialPlan, type CredentialPlanInput, finish, homeFailure, secretInjection, secretOf } from "../../src/core/credential-plan.ts";
@@ -21,7 +21,7 @@ const GATED_PROFILE: Profile = {
 
 const GATED_CAPABILITIES: Capabilities = {
   ...FAKE_CAPABILITIES,
-  [CapabilityName.SettingsSources]: { [Engine.Cli]: unmeasuredSupport("does the gated fake honour settings sources?") },
+  [CapabilityName.SettingsSources]: cell(unmeasuredSupport("does the gated fake honour settings sources?")),
 };
 
 function gatedFrom(spec: unknown): Result<CredentialSpec, RunFailure> {

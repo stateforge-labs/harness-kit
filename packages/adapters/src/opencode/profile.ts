@@ -23,6 +23,7 @@ export const OPENCODE_PROFILE: Profile = deepFreeze({
     homeVar: measured("XDG_DATA_HOME", { kind: EvidenceKind.Probe, ref: "probe: XDG_DATA_HOME relocates the OpenCode data directory", harnessVersion: OPENCODE_VERSION, capturedAt: DOC_CAPTURED_AT }),
     worksHeadless: unmeasured("does a --standalone run work with an empty XDG_DATA_HOME and an injected key?"),
   },
+  quiet: unmeasured("which environment variables does a quiet closed-environment run need to stay offline and non-interactive?"),
   cli: {
     flags: measured([OpenCodeCli.Standalone, OpenCodeCli.Format, OpenCodeCli.Title, OpenCodeCli.Model], HELP),
     versionArgs: measured([OpenCodeCli.Version], { kind: EvidenceKind.Capture, ref: "fixtures/opencode/headless/version.txt", harnessVersion: OPENCODE_VERSION, capturedAt: CAPTURED_AT }),

@@ -1,4 +1,4 @@
-import type { Engine } from "./capability.ts";
+import type { Engine, Support } from "./capability.ts";
 import type { PolicyNotice } from "./credential.ts";
 
 export const CredentialReason = {
@@ -14,6 +14,7 @@ export type CredentialReason = (typeof CredentialReason)[keyof typeof Credential
 export const CredentialUnsupportedReason = {
   UnknownMode: "unknown-mode",
   ModeNotOffered: "mode-not-offered",
+  ModeNotAllowed: "mode-not-allowed",
   PrivateHomeMovesLogin: "private-home-moves-login",
   PrivateHomeNoAuthCopy: "private-home-no-auth-copy",
 } as const;
@@ -46,7 +47,12 @@ export type RunFailure =
   | { readonly kind: "unavailable"; readonly message: string; readonly reason: UnavailableReason }
   | { readonly kind: "too-large"; readonly message: string; readonly limitBytes: number; readonly actualBytes: number; readonly field: "instructions" | "input" | "environment" }
   | { readonly kind: "output-too-large"; readonly message: string; readonly limitBytes: number; readonly actualBytes: number }
-  | { readonly kind: "unsupported"; readonly message: string; readonly capability: string; readonly engine: Engine; readonly why: string };
+  | { readonly kind: "unsupported"; readonly message: string; readonly capability: string; readonly engine: Engine; readonly why: string; readonly support?: Support }
+  | { readonly kind: "cancelled"; readonly message: string }
+  | { readonly kind: "max-turns"; readonly message: string; readonly turns: number }
+  | { readonly kind: "no-output"; readonly message: string }
+  | { readonly kind: "store-failed"; readonly message: string; readonly reason: string }
+  | { readonly kind: "session-not-found"; readonly message: string; readonly sessionId: string };
 
 export const RUN_FAILURE_KINDS = [
   "invalid-config",
@@ -64,6 +70,11 @@ export const RUN_FAILURE_KINDS = [
   "too-large",
   "output-too-large",
   "unsupported",
+  "cancelled",
+  "max-turns",
+  "no-output",
+  "store-failed",
+  "session-not-found",
 ] as const satisfies readonly RunFailure["kind"][];
 
 type MissingKinds = Exclude<RunFailure["kind"], (typeof RUN_FAILURE_KINDS)[number]>;

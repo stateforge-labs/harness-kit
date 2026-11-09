@@ -3,10 +3,9 @@ import { inspect } from "node:util";
 import { PlanNote, PLACEHOLDER_OUT_FILE } from "../../src/driver/constants.ts";
 import { Hermetic, Isolation } from "../../src/core/run.ts";
 import { FAKE_HOME, FAKE_INJECT, FAKE_STRIP } from "../support/fake-driver.ts";
-import { ambientEnv, SENTINEL, valueOf } from "../support/credential.ts";
+import { SENTINEL, valueOf } from "../support/credential.ts";
 import { prep } from "../support/prepare.ts";
 
-const OUT = "/scratch/out.txt";
 const ISO = "/scratch/iso";
 
 describe("plan", () => {
@@ -19,6 +18,9 @@ describe("plan", () => {
 
   test("the args carry the out-file placeholder, not a real path", () => {
     const plan = valueOf(prep()).plan;
+    if (plan.engine !== "cli") {
+      throw new Error("expected a cli plan");
+    }
     expect(plan.args).toContain(PLACEHOLDER_OUT_FILE);
     expect(plan.harness).toBe("fake");
     expect(plan.binary).toBe("fake-cli");
@@ -47,35 +49,19 @@ describe("plan", () => {
   });
 });
 
-describe("build", () => {
+describe("child env", () => {
   test("the secret is revealed only inside child.env", () => {
-    const built = valueOf(valueOf(prep()).build({ outFile: OUT, isolationDir: null }));
-    expect(built.child.env[FAKE_INJECT]).toBe(SENTINEL);
-    expect(built.child.env[FAKE_STRIP]).toBeUndefined();
-    expect(built.child.secrets).toEqual([SENTINEL]);
-    expect(JSON.stringify(built.invocation)).not.toContain(SENTINEL);
-    expect(inspect(built.invocation)).not.toContain(SENTINEL);
-  });
-
-  test("build replaces the placeholder with the real out-file", () => {
-    const built = valueOf(valueOf(prep()).build({ outFile: OUT, isolationDir: null }));
-    expect(built.invocation.args).toContain(OUT);
-    expect(built.invocation.args).not.toContain(PLACEHOLDER_OUT_FILE);
-    expect(built.invocation.outFile).toBe(OUT);
+    const prepared = valueOf(prep());
+    const child = prepared.childEnv(null);
+    expect(child.env[FAKE_INJECT]).toBe(SENTINEL);
+    expect(child.env[FAKE_STRIP]).toBeUndefined();
+    expect(child.secrets).toEqual([SENTINEL]);
+    expect(JSON.stringify(prepared.plan)).not.toContain(SENTINEL);
   });
 
   test("the private home is set to the isolation directory", () => {
-    const built = valueOf(valueOf(prep({ isolation: { kind: Isolation.PrivateHome, retain: "keep" } })).build({ outFile: OUT, isolationDir: ISO }));
-    expect(built.child.env[FAKE_HOME]).toBe(ISO);
-    expect(built.child.set).toEqual([FAKE_HOME]);
-  });
-
-  test("an environment over the budget is too-large on the environment field", () => {
-    const base = { ...ambientEnv([FAKE_STRIP], "/h/u"), BIG: "x".repeat(5000) };
-    const result = valueOf(prep({}, {}, base)).build({ outFile: OUT, isolationDir: null });
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.failure).toMatchObject({ kind: "too-large", field: "environment", limitBytes: 4096 });
-    }
+    const child = valueOf(prep({ isolation: { kind: Isolation.PrivateHome, retain: "keep" } })).childEnv(ISO);
+    expect(child.env[FAKE_HOME]).toBe(ISO);
+    expect(child.set).toEqual([FAKE_HOME]);
   });
 });

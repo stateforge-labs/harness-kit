@@ -6,7 +6,7 @@ import type { ProcessRunner, ProcessSpec } from "../../src/driver/ports.ts";
 import { opencodeCli } from "../../src/opencode/engines/cli.ts";
 import { removeResidue } from "../../src/opencode/engines/cleanup.ts";
 import { chunkedRunner } from "../support/chunked-runner.ts";
-import { ioWith, runInput } from "../support/interpret.ts";
+import { cliRunInput, ioWith, runInput } from "../support/interpret.ts";
 import { fakeClock, fakeFs } from "../support/fakes.ts";
 
 const TITLED = (id: string, title: string) => ({ id, title, updated: 1, created: 1, projectId: "p", directory: "/work" });
@@ -41,7 +41,7 @@ function rig(lists: readonly (readonly unknown[])[], env: Record<string, string>
       return Promise.resolve();
     },
   };
-  const input = runInput({ env, redact: (text) => text.replaceAll(SECRET, "[redacted]") });
+  const input = cliRunInput({ env, redact: (text) => text.replaceAll(SECRET, "[redacted]") });
   return { specs, sleeps, ctx: { input, stdoutTail: "", io } };
 }
 
@@ -86,11 +86,12 @@ describe("opencode residue cleanup", () => {
       specs.push(spec);
       return scripted.runner(spec);
     };
-    const run = opencodeCli.start(runInput(), ioWith(runner));
+    const run = opencodeCli.start(runInput<"opencode">(), ioWith(runner));
     for await (const event of run.events) {
       void event;
     }
     expect((await run.done).ok).toBe(true);
-    expect(specs.map((spec) => spec.args)).toEqual([[], ["session", "delete", "ses_seen"]]);
+    expect(specs).toHaveLength(2);
+    expect(specs[1]?.args).toEqual(["session", "delete", "ses_seen"]);
   });
 });

@@ -37,7 +37,7 @@ export const FailureKind = {
   Unsupported: "unsupported",
 } as const;
 
-export const PROFILE_FIELDS = ["id", "binary", "nestedEnv", "model", "effort", "suggested", "limits", "isolation", "cli"] as const satisfies readonly (keyof Profile)[];
+export const PROFILE_FIELDS = ["id", "binary", "nestedEnv", "model", "effort", "suggested", "limits", "isolation", "quiet", "cli"] as const satisfies readonly (keyof Profile)[];
 type MissingProfileField = Exclude<keyof Profile, (typeof PROFILE_FIELDS)[number]>;
 export const PROFILE_FIELDS_COMPLETE: [MissingProfileField] extends [never] ? true : never = true;
 

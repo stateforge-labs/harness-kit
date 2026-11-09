@@ -10,6 +10,7 @@ export interface Profile {
   readonly suggested: { readonly headlessModel: Suggested<string> | null };
   readonly limits: { readonly maxArgvBytes: Measured<number>; readonly maxArgBytes: Measured<number> };
   readonly isolation: { readonly homeVar: Measured<string>; readonly worksHeadless: Measured<boolean> };
+  readonly quiet: Measured<Readonly<Record<string, string>>>;
   readonly cli: {
     readonly flags: Measured<readonly string[]>;
     readonly versionArgs: Measured<readonly string[]>;

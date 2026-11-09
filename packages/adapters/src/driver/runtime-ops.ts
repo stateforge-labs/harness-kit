@@ -1,4 +1,7 @@
-import { Engine } from "../core/capability.ts";
+import { type Capabilities, Engine } from "../core/capability.ts";
+import { resolveTools } from "../core/policy.ts";
+import { Hermetic, Isolation } from "../core/run.ts";
+import type { ResolvedOptions } from "../core/raw-run.ts";
 import { measuredValue } from "../core/evidence.ts";
 import type { CredentialOf, CredentialSpec, PolicyNotice } from "../core/credential.ts";
 import type { RunFailure } from "../core/failure.ts";
@@ -6,7 +9,7 @@ import type { CredentialInspection } from "../core/inspect.ts";
 import { fail, type Result } from "../core/result.ts";
 import { ambientOf } from "./ambient.ts";
 import type { Availability, ProbeIo } from "./create-runtime.ts";
-import { AvailabilityReason, DirKind, RuntimeLabel } from "./constants.ts";
+import { AvailabilityReason, DirKind, PLACEHOLDER_OUT_FILE, PLACEHOLDER_RUN_ID, PROMPT_PROBE_CWD, PROMPT_PROBE_TEXT, RuntimeLabel } from "./constants.ts";
 import type { RuntimeContext } from "./context.ts";
 import { dropDir } from "./dirs.ts";
 import { probeEnv } from "./env-plan.ts";
@@ -127,4 +130,42 @@ export function inspectCredentials<H extends string>(
     return Promise.resolve(fail(unknownFailure(id)));
   }
   return execute(RuntimeLabel.Inspect, () => driver.credentials.inspect({ env: ctx.source, fs: ctx.fs, platform: ctx.platform }));
+}
+
+export function capabilitiesOf<H extends string>(drivers: Drivers<H>, id: string): Capabilities | null {
+  return lookupDriver(drivers, id)?.capabilities ?? null;
+}
+
+const PROBE_OPTIONS: ResolvedOptions = {
+  model: null,
+  effort: null,
+  hermetic: Hermetic.None,
+  persist: true,
+  maxArgvBytes: null,
+  cwd: PROMPT_PROBE_CWD,
+  isolation: { kind: Isolation.None },
+  tools: resolveTools(undefined, undefined),
+};
+
+export function promptLimitOf<H extends string>(drivers: Drivers<H>, id: string, engine: Engine): number | null {
+  const driver = lookupDriver(drivers, id);
+  const impl = engine === Engine.Sdk ? driver?.run.sdk : driver?.run.cli;
+  const mode = driver?.credentials.modes[0];
+  if (driver === null || impl === undefined || mode === undefined) {
+    return null;
+  }
+  const described = captureThrow(() =>
+    impl.describe?.({
+      options: PROBE_OPTIONS,
+      credential: { mode } as never,
+      instructions: PROMPT_PROBE_TEXT,
+      input: PROMPT_PROBE_TEXT,
+      outFile: PLACEHOLDER_OUT_FILE,
+      runId: PLACEHOLDER_RUN_ID,
+    }),
+  );
+  if (!described.ok || described.value === undefined || !described.value.ok || described.value.value.engine !== Engine.Cli) {
+    return null;
+  }
+  return described.value.value.args.some((arg) => arg.includes(PROMPT_PROBE_TEXT)) ? measuredValue(driver.profile.limits.maxArgBytes) : null;
 }

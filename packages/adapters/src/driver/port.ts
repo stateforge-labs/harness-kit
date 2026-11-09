@@ -4,6 +4,7 @@ import type { CredentialOf, CredentialSpec, PolicyNotice } from "../core/credent
 import type { CredentialPlan, CredentialPlanInput } from "../core/credential-plan.ts";
 import type { RunFailure } from "../core/failure.ts";
 import type { CredentialInspection, InspectIo } from "../core/inspect.ts";
+import type { ResolvedTools } from "../core/policy.ts";
 import type { Profile } from "../core/profile.ts";
 import type { Result } from "../core/result.ts";
 import type { Cost, TokenUsage } from "../core/run.ts";
@@ -12,7 +13,23 @@ import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
 import type { EngineImpl } from "./engine.ts";
 
-export type { AfterContext, CleanupContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "./engine.ts";
+export type {
+  AfterContext,
+  BinaryFacts,
+  CleanupContext,
+  CliEngine,
+  CliEngineParts,
+  CliRunInput,
+  EngineDescription,
+  EngineEnd,
+  EngineEvent,
+  EngineHost,
+  EngineImpl,
+  EngineIo,
+  EngineRun,
+  EngineRunInput,
+  Sleeper,
+} from "./engine.ts";
 
 export type { ProcessExit, ResolvedOptions } from "../core/raw-run.ts";
 
@@ -31,6 +48,17 @@ export interface Invocation {
   readonly stdin: string | null;
   readonly outFile: string | null;
   readonly argvCarries: readonly (typeof ArgvCarry)[keyof typeof ArgvCarry][];
+  readonly env?: Readonly<Record<string, string>>;
+}
+
+export interface PolicyInput {
+  readonly tools: ResolvedTools;
+  readonly credentialMode: string;
+}
+
+export interface PolicyApplied {
+  readonly args: readonly string[];
+  readonly env: Readonly<Record<string, string>>;
 }
 
 export interface ParsedRun {
@@ -47,6 +75,7 @@ export type Drivers<H extends string> = { readonly [K in H]: HarnessDriver<K> };
 export interface RunFacet<I extends string> {
   readonly engines: readonly Engine[];
   readonly cli: EngineImpl<I>;
+  readonly sdk?: EngineImpl<I>;
 }
 
 export interface CredentialFacet<I extends string> {

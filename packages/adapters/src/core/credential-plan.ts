@@ -45,6 +45,7 @@ export const CredentialMessage: Readonly<Record<CredentialReason, string>> = {
 export const CredentialUnsupportedMessage: Readonly<Record<CredentialUnsupportedReason, string>> = {
   [CredentialUnsupportedReason.UnknownMode]: "credential mode is not offered by this harness",
   [CredentialUnsupportedReason.ModeNotOffered]: "credential mode is not offered by this harness",
+  [CredentialUnsupportedReason.ModeNotAllowed]: "credential mode is not allowed by this runtime",
   [CredentialUnsupportedReason.PrivateHomeMovesLogin]: "a private home would move the login store; use an injected credential",
   [CredentialUnsupportedReason.PrivateHomeNoAuthCopy]: "a private home has no auth copy; use an injected credential",
 };

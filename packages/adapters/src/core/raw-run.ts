@@ -1,3 +1,4 @@
+import type { ResolvedTools } from "./policy.ts";
 import type { Effort, Hermetic, IsolationSpec } from "./run.ts";
 
 export interface ResolvedOptions {
@@ -8,6 +9,7 @@ export interface ResolvedOptions {
   readonly maxArgvBytes: number | null;
   readonly cwd: string;
   readonly isolation: IsolationSpec;
+  readonly tools: ResolvedTools;
 }
 
 export interface ProcessExit {

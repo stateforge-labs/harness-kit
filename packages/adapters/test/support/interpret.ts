@@ -1,7 +1,11 @@
 import type { RunFailure } from "../../src/core/failure.ts";
 import { fail, type Result } from "../../src/core/result.ts";
+import type { LibraryEvent } from "../../src/core/run.ts";
+import { resolveTools } from "../../src/core/policy.ts";
 import { DEFAULT_LIMITS } from "../../src/driver/constants.ts";
-import type { EngineEvent, EngineImpl, EngineIo, EngineRunInput } from "../../src/driver/engine.ts";
+import { ok } from "../../src/core/result.ts";
+import type { CliRunInput, EngineEvent, EngineHost, EngineImpl, EngineIo, EngineRunInput } from "../../src/driver/engine.ts";
+import { CLAUDE_PROFILE } from "../../src/claude/profile.ts";
 import { foldEnd, foldStart, foldStep } from "../../src/driver/fold.ts";
 import type { ParsedRun, ProcessExit } from "../../src/driver/port.ts";
 import type { ProcessRunner } from "../../src/driver/ports.ts";
@@ -21,7 +25,20 @@ export interface Interpreted {
   readonly result: Result<ParsedRun, RunFailure>;
 }
 
-const OUT_FILE = "/work/out.txt";
+const OUT_DIR = "/work";
+const OUT_FILE = `${OUT_DIR}/last-message.txt`;
+
+export function stubHost(events: LibraryEvent[] = []): EngineHost {
+  return {
+    emit: (event) => {
+      events.push(event);
+    },
+    locate: (program) => Promise.resolve(`/bin/${program}`),
+    version: () => Promise.resolve(ok(null)),
+    help: () => Promise.resolve("--standalone"),
+    scratch: () => Promise.resolve(OUT_DIR),
+  };
+}
 
 export function idleRunner(): ProcessRunner {
   return () => Promise.resolve(fail({ code: "spawn-failed", message: "no spawn expected" }));
@@ -31,18 +48,34 @@ export function ioWith(runner: ProcessRunner, files: Record<string, string> = {}
   return { runner, clock: fakeClock(0), fs: fakeFs({ files }), sleep: () => Promise.resolve() };
 }
 
-export function runInput(overrides: Partial<EngineRunInput> = {}): EngineRunInput {
+export function runInput<I extends string = string>(overrides: Partial<EngineRunInput<I>> = {}): EngineRunInput<I> {
   return {
-    program: "engine",
-    invocation: { program: "engine", args: [], stdin: null, outFile: null, argvCarries: [] },
+    options: { model: null, effort: null, hermetic: "none", persist: true, maxArgvBytes: null, cwd: "/work", isolation: { kind: "none" }, tools: resolveTools(undefined, undefined) },
+    credential: { mode: "login-store", acknowledgePolicy: true } as never,
+    instructions: "",
+    input: "go",
+    runId: "run-1",
+    profile: CLAUDE_PROFILE,
     env: {},
+    injected: [],
     cwd: "/work",
     signal: undefined,
     timeoutMs: undefined,
     limits: DEFAULT_LIMITS,
     redact: (text) => text,
     requestedModel: null,
+    host: stubHost(),
+    ...overrides,
+  };
+}
+
+export function cliRunInput(overrides: Partial<CliRunInput> = {}): CliRunInput {
+  return {
+    ...runInput(),
+    program: "engine",
+    invocation: { program: "engine", args: [], stdin: null, outFile: null, argvCarries: [] },
     outFile: null,
+    binary: { path: "/bin/engine", version: null },
     ...overrides,
   };
 }
@@ -51,10 +84,12 @@ export async function interpretEvents(engine: EngineImpl<string>, raw: Interpret
   const script: ChunkScript = { chunks: [raw.stdout], stderr: raw.stderrTail, code: raw.exit.code ?? 0 };
   const files: Record<string, string> = raw.outFileText === null ? {} : { [OUT_FILE]: raw.outFileText };
   const io = ioWith(chunkedRunner([script, ...extra]).runner, files);
-  const run = engine.start(runInput({ requestedModel: raw.requestedModel, outFile: raw.outFileText === null ? null : OUT_FILE }), io);
+  const run = engine.start(runInput({ requestedModel: raw.requestedModel }), io);
   const events: EngineEvent[] = [];
   for await (const event of run.events) {
-    events.push(event);
+    if (event.kind !== "started") {
+      events.push(event);
+    }
   }
   const done = await run.done;
   if (!done.ok) {

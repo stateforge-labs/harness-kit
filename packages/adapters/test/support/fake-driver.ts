@@ -1,5 +1,5 @@
 import { Harness } from "@stateforge-labs/harness-hooks";
-import { type Capabilities, CapabilityName, Engine, supported, unmeasuredSupport, unsupported, UnsupportedReason } from "../../src/core/capability.ts";
+import { type Capabilities, CapabilityName, cell, Engine, SDK_NOT_BUILT, supported, unmeasuredSupport, unsupported, UnsupportedReason } from "../../src/core/capability.ts";
 import { EvidenceKind, type EvidenceRef, measured, measuredValue, unmeasured } from "../../src/core/evidence.ts";
 import { CredentialField, CredentialMode, type CredentialPlan, type CredentialPlanInput, finish, homeFailure, secretInjection, unsupportedFailure } from "../../src/core/credential-plan.ts";
 import type { CredentialSpec } from "../../src/core/credential.ts";
@@ -8,7 +8,7 @@ import type { Profile } from "../../src/core/profile.ts";
 import { fail, ok, type Result } from "../../src/core/result.ts";
 import { ArgvCarry } from "../../src/core/engine-constants.ts";
 import { budgetOf, checkArgv, modelFlag, neutralOrNative, unparsable } from "../../src/core/kit.ts";
-import type { AfterContext, CliEngineParts, EngineEvent, EngineImpl } from "../../src/driver/engine.ts";
+import type { AfterContext, CliEngine, CliEngineParts, EngineEvent } from "../../src/driver/engine.ts";
 import { cliEngine } from "../../src/engine/cli.ts";
 import type { CredentialFacet, EngineInput, HarnessDriver, Invocation } from "../../src/driver/port.ts";
 
@@ -30,6 +30,7 @@ export const FAKE_PROFILE: Profile = {
   suggested: { headlessModel: null },
   limits: { maxArgvBytes: measured(FAKE_ARGV_BUDGET, EVIDENCE), maxArgBytes: measured(FAKE_ARG_BUDGET, EVIDENCE) },
   isolation: { homeVar: measured(FAKE_HOME, EVIDENCE), worksHeadless: unmeasured("headless private home is not measured") },
+  quiet: unmeasured("which variables does the fake need to stay quiet?"),
   cli: {
     flags: measured(["run"], EVIDENCE),
     versionArgs: measured(["--version"], EVIDENCE),
@@ -38,12 +39,22 @@ export const FAKE_PROFILE: Profile = {
 };
 
 export const FAKE_CAPABILITIES: Capabilities = {
-  [CapabilityName.Effort]: { [Engine.Cli]: supported },
-  [CapabilityName.StructuredOutput]: { [Engine.Cli]: unsupported(UnsupportedReason.NotImplemented) },
-  [CapabilityName.SessionsDelete]: { [Engine.Cli]: unsupported(UnsupportedReason.NotImplemented) },
-  [CapabilityName.Ephemeral]: { [Engine.Cli]: supported },
-  [CapabilityName.Cost]: { [Engine.Cli]: unsupported(UnsupportedReason.HarnessLimit) },
-  [CapabilityName.SettingsSources]: { [Engine.Cli]: unmeasuredSupport("does the fake honour settings sources") },
+  [CapabilityName.Effort]: cell(supported),
+  [CapabilityName.StructuredOutput]: cell(unsupported(UnsupportedReason.NotImplemented)),
+  [CapabilityName.SessionsDelete]: cell(unsupported(UnsupportedReason.NotImplemented)),
+  [CapabilityName.Ephemeral]: cell(supported),
+  [CapabilityName.Cost]: cell(unsupported(UnsupportedReason.HarnessLimit)),
+  [CapabilityName.SettingsSources]: cell(unmeasuredSupport("does the fake honour settings sources")),
+  [CapabilityName.BuiltinToolsOff]: cell(supported),
+  [CapabilityName.McpNone]: cell(supported),
+  [CapabilityName.McpAllowlist]: cell(unsupported(UnsupportedReason.EngineLimit)),
+  [CapabilityName.ClosedEnv]: cell(supported),
+  [CapabilityName.BaseUrl]: cell(supported),
+  [CapabilityName.Resume]: cell(SDK_NOT_BUILT),
+  [CapabilityName.ResumeCheckpoint]: cell(SDK_NOT_BUILT),
+  [CapabilityName.PerTurnUsage]: cell(SDK_NOT_BUILT),
+  [CapabilityName.UnknownToolDetection]: cell(SDK_NOT_BUILT),
+  [CapabilityName.SessionStore]: cell(SDK_NOT_BUILT),
 };
 
 export function fakeCredentialPlan(input: CredentialPlanInput<"fake">): Result<CredentialPlan, RunFailure> {
@@ -80,7 +91,7 @@ function fakeInvocation(input: EngineInput<"fake">): Result<Invocation, RunFailu
   return ok({ program: FAKE_PROFILE.binary, args, stdin: input.input, outFile: input.outFile, argvCarries: [ArgvCarry.Instructions] });
 }
 
-export const FAKE_CLI: EngineImpl<"fake"> = cliEngine<"fake">({
+export const FAKE_CLI: CliEngine<"fake"> = cliEngine<"fake">({
   invocation: fakeInvocation,
   parseLine: () => [],
   after: () => Promise.resolve([{ kind: "failure", failure: unparsable("fake engine does not interpret output") }]),
@@ -109,11 +120,11 @@ function echoAfter(ctx: AfterContext): Promise<readonly EngineEvent[]> {
   return Promise.resolve([{ kind: "cost", cost: { usd: null, basis: "unavailable" } }, ...final]);
 }
 
-export function echoEngine(overrides: Partial<CliEngineParts<"fake">> = {}): EngineImpl<"fake"> {
+export function echoEngine(overrides: Partial<CliEngineParts<"fake">> = {}): CliEngine<"fake"> {
   return cliEngine<"fake">({ invocation: fakeInvocation, parseLine: echoLine, after: echoAfter, ...overrides });
 }
 
-export const ECHO_CLI: EngineImpl<"fake"> = echoEngine();
+export const ECHO_CLI: CliEngine<"fake"> = echoEngine();
 
 export function echoDriver(): HarnessDriver<"fake"> {
   return { ...fakeDriver(), run: { engines: [Engine.Cli], cli: ECHO_CLI } };

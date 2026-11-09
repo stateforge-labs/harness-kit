@@ -43,12 +43,17 @@ describe("validation failures", () => {
     ["input empty", () => prep({}, { input: "" }), "input"],
     ["instructions not a string", () => prep({}, { instructions: 5 as unknown as string }), "instructions"],
     ["credential missing", () => prep({ credential: undefined as unknown as CredentialSpec }), "credential"],
-    ["engine not cli", () => prep({ engine: "sdk" as unknown as Engine }), "engine"],
+    ["engine unknown", () => prep({ engine: "bogus" as unknown as Engine }), "engine"],
     ["cwd not a string", () => prep({ cwd: 5 as unknown as string }), "cwd"],
+    ["cwd private with a bad retain", () => prep({ cwd: { private: "x" } as never }), "cwd"],
     ["limits zero stdout", () => prep({ limits: { maxStdoutBytes: 0 } }), "limits"],
     ["limits fractional stderr", () => prep({ limits: { maxStderrBytes: 2.5 } }), "limits"],
   ])("%s is invalid-config with its field", (_name, run, field) => {
     expect(failureOf(run())).toMatchObject({ kind: "invalid-config", field });
+  });
+
+  test("the sdk engine is unsupported while no driver offers it", () => {
+    expect(failureOf(prep({ engine: Engine.Sdk }))).toMatchObject({ kind: "unsupported", capability: "engine", engine: "sdk", why: "not-implemented" });
   });
 
   test("the cli engine is accepted", () => {

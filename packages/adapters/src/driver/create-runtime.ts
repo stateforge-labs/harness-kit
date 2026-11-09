@@ -1,4 +1,5 @@
 import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import { type Capabilities, Engine } from "../core/capability.ts";
 import { type CredentialOf, type CredentialSpec, type PolicyNotice } from "../core/credential.ts";
 import type { RunFailure } from "../core/failure.ts";
 import type { CredentialInspection } from "../core/inspect.ts";
@@ -11,7 +12,7 @@ import { type HeadlessHandle, makeHandle } from "./handle.ts";
 import type { Drivers, HarnessDriver } from "./port.ts";
 import type { RuntimeConfig } from "./ports.ts";
 import { defaultCwd, defaultPlatform, nodeClock, nodeFs, nodeRunner } from "./node-defaults.ts";
-import { available, credentialFrom, inspectCredentials, lookupDriver, makeClose, policyNotice, sweep } from "./runtime-ops.ts";
+import { available, capabilitiesOf, credentialFrom, inspectCredentials, lookupDriver, makeClose, policyNotice, promptLimitOf, sweep } from "./runtime-ops.ts";
 import { type EnvSource, processEnv } from "../env.ts";
 
 export interface ProbeIo {
@@ -35,6 +36,8 @@ export interface Runtime<H extends string = HarnessId> extends AsyncDisposable {
   credentialFrom<I extends H>(id: I, spec: CredentialSpec): Result<CredentialOf<I>, RunFailure>;
   policyNotice(id: H, mode: string): PolicyNotice | null;
   inspectCredentials(id: H): Promise<Result<CredentialInspection, RunFailure>>;
+  promptLimit(id: H, engine?: Engine): number | null;
+  capabilities(id: H): Capabilities | null;
   sweep(options: { readonly olderThanMs: number }): Promise<void>;
   close(): Promise<void>;
 }
@@ -55,6 +58,7 @@ export function contextOf<H extends string>(config: RuntimeConfig<H>): RuntimeCo
     platform,
     cwd: config.cwd ?? defaultCwd,
     onEvent: config.onEvent,
+    allowedModes: config.allowedModes,
     state: newState(),
   };
 }
@@ -69,6 +73,8 @@ export function buildRuntime<H extends string>(drivers: Drivers<H>, config: Runt
     credentialFrom: <I extends H>(id: I, spec: CredentialSpec) => credentialFrom(drivers, id, spec) as Result<CredentialOf<I>, RunFailure>,
     policyNotice: (id: H, mode: string) => policyNotice(drivers, id, mode),
     inspectCredentials: (id: H) => inspectCredentials(ctx, drivers, id),
+    promptLimit: (id: H, engine: Engine = Engine.Cli) => promptLimitOf(drivers, id, engine),
+    capabilities: (id: H) => capabilitiesOf(drivers, id),
     sweep: (options: { readonly olderThanMs: number }) => sweep(ctx, options),
     close,
     [Symbol.asyncDispose]: close,

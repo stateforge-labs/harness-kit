@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { ok } from "../../src/core/result.ts";
 import { unparsable } from "../../src/core/kit.ts";
-import { KILL_GRACE_MS, Signal } from "../../src/driver/constants.ts";
+import { KILL_GRACE_MS, PLACEHOLDER_OUT_FILE, Signal } from "../../src/driver/constants.ts";
 import { nextRunId } from "../../src/driver/context.ts";
 import type { EngineEvent } from "../../src/driver/engine.ts";
 import type { ProcessExit, ProcessRunner, RunningProcess } from "../../src/driver/ports.ts";
@@ -84,6 +84,7 @@ describe("cliEngine start", () => {
     const run = lineEngine.start(runInput(), ioWith(gate.runner));
     const iterator = run.events[Symbol.asyncIterator]();
     gate.push("first\n");
+    expect((await iterator.next()).value).toEqual({ kind: "started" });
     const first = await iterator.next();
     expect(first.done).toBe(false);
     expect(first.value).toEqual({ kind: "text", text: "first" });
@@ -105,7 +106,9 @@ describe("cliEngine start", () => {
     const run = lineEngine.start(runInput(), ioWith(runner));
     const seen: EngineEvent[] = [];
     for await (const event of run.events) {
-      seen.push(event);
+      if (event.kind !== "started") {
+        seen.push(event);
+      }
     }
     expect(seen).toEqual([
       { kind: "text", text: "one" },
@@ -118,7 +121,9 @@ describe("cliEngine start", () => {
     const run = lineEngine.start(runInput({ redact: (text) => text.replace("sk-SECRET", "[redacted]") }), ioWith(runner));
     const seen: EngineEvent[] = [];
     for await (const event of run.events) {
-      seen.push(event);
+      if (event.kind !== "started") {
+        seen.push(event);
+      }
     }
     expect(seen).toEqual([{ kind: "text", text: "key [redacted] here" }]);
   });
@@ -134,7 +139,9 @@ describe("cliEngine start", () => {
     const run = engine.start(runInput(), ioWith(runner));
     const seen: EngineEvent[] = [];
     for await (const event of run.events) {
-      seen.push(event);
+      if (event.kind !== "started") {
+        seen.push(event);
+      }
     }
     expect(seen).toHaveLength(1);
     expect(seen[0]).toMatchObject({ kind: "failure", failure: { kind: "unavailable", reason: "internal-error" } });
@@ -145,17 +152,22 @@ describe("cliEngine start", () => {
     const { runner } = chunkedRunner([{ chunks: ["x\ny\n"], stderr: "warn" }]);
     const contexts: { stdoutTail: string; outFileText: string | null; stderrTail: string }[] = [];
     const engine = cliEngine<"fake">({
-      invocation: fakeInvocationOnly,
+      invocation: (input) => {
+        const base = fakeInvocationOnly(input);
+        return base.ok ? ok({ ...base.value, args: [PLACEHOLDER_OUT_FILE] }) : base;
+      },
       parseLine: (line) => (line === "" ? [] : [{ kind: "text", text: line }]),
       after: (ctx) => {
         contexts.push({ stdoutTail: ctx.stdoutTail, outFileText: ctx.outFileText, stderrTail: ctx.end.stderrTail });
         return Promise.resolve([{ kind: "final", text: "done" }]);
       },
     });
-    const run = engine.start(runInput({ outFile: "/work/out.txt" }), ioWith(runner, { "/work/out.txt": "from file" }));
+    const run = engine.start(runInput(), ioWith(runner, { "/work/last-message.txt": "from file" }));
     const seen: EngineEvent[] = [];
     for await (const event of run.events) {
-      seen.push(event);
+      if (event.kind !== "started") {
+        seen.push(event);
+      }
     }
     expect(seen.map((event) => event.kind)).toEqual(["text", "text", "final"]);
     expect(contexts).toEqual([{ stdoutTail: "x\ny\n", outFileText: "from file", stderrTail: "warn" }]);
@@ -191,7 +203,9 @@ describe("cliEngine start", () => {
     const run = engine.start(runInput(), ioWith(runner));
     const seen: EngineEvent[] = [];
     for await (const event of run.events) {
-      seen.push(event);
+      if (event.kind !== "started") {
+        seen.push(event);
+      }
     }
     expect(seen[0]).toMatchObject({ kind: "failure", failure: { reason: "internal-error" } });
   });
@@ -201,6 +215,7 @@ describe("cliEngine start", () => {
     const run = lineEngine.start(runInput(), ioWith(gate.runner));
     const iterator = run.events[Symbol.asyncIterator]();
     gate.push("one\n");
+    await iterator.next();
     await iterator.next();
     const pending = iterator.next();
     run.cancel();
@@ -227,8 +242,7 @@ describe("cliEngine start", () => {
         void event;
       }
     })();
-    await Promise.resolve();
-    await Promise.resolve();
+    await new Promise<void>((resolve) => setTimeout(resolve, 5));
     clock.advance(100);
     clock.advance(KILL_GRACE_MS);
     await draining;
@@ -241,8 +255,9 @@ describe("cliEngine start", () => {
     const run = lineEngine.start(runInput(), ioWith(gate.runner));
     gate.push("one\n");
     for await (const event of run.events) {
-      void event;
-      break;
+      if (event.kind === "text") {
+        break;
+      }
     }
     const done = await run.done;
     expect(!done.ok && done.failure.kind).toBe("aborted");

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { inspect } from "node:util";
 import { CODEX_CREDENTIAL_VARS, codexCredentialPlan } from "../../src/codex/credentials.ts";
-import { buildChildEnv } from "../../src/driver/env-plan.ts";
+import { buildChildEnv, inheritEnv } from "../../src/driver/env-plan.ts";
 import { secret } from "../../src/core/secret.ts";
 import { EnvVar } from "../../src/env.ts";
 import type { IsolationSpec } from "../../src/core/run.ts";
@@ -13,7 +13,7 @@ const PRIVATE: IsolationSpec = { kind: "private-home", retain: "delete" };
 function childFor(credential: unknown, home: string, isolation: IsolationSpec = NONE, isolationDir: string | null = null) {
   const base = ambientEnv(CODEX_CREDENTIAL_VARS, home);
   const plan = valueOf(codexCredentialPlan(planInput<"codex">(credential, isolation, base)));
-  const child = buildChildEnv({ base, plan, nestedEnv: [], homeVar: EnvVar.CodexHome, isolationDir });
+  const child = buildChildEnv({ base: inheritEnv(base), plan, nestedEnv: [], homeVar: EnvVar.CodexHome, isolationDir });
   return { base, plan, child };
 }
 

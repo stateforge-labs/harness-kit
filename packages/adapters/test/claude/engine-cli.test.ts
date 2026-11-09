@@ -5,6 +5,7 @@ import { claudeCli } from "../../src/claude/engines/cli.ts";
 import { claudeHeadlessArgs } from "../../src/claude/launch.ts";
 import type { ClaudeCredential } from "../../src/core/credential.ts";
 import { secret } from "../../src/core/secret.ts";
+import { resolveTools } from "../../src/core/policy.ts";
 import { Hermetic } from "../../src/core/run.ts";
 import { ArgvCarry } from "../../src/core/engine-constants.ts";
 import type { EngineInput, ResolvedOptions } from "../../src/driver/port.ts";
@@ -22,6 +23,7 @@ const base: ResolvedOptions = {
   maxArgvBytes: null,
   cwd: "/work",
   isolation: { kind: "none" },
+  tools: resolveTools(undefined, undefined),
 };
 
 function input(overrides: Partial<EngineInput<"claude">> = {}): EngineInput<"claude"> {

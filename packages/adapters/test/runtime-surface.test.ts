@@ -5,22 +5,30 @@ describe("the ./runtime value surface", () => {
   test("exports the constants, the result helpers, the secret helpers and createRuntime", () => {
     expect(Object.keys(runtime).sort()).toEqual([
       "CapabilityName",
+      "ConfinementAxis",
       "CredentialReason",
       "CredentialUnsupportedReason",
       "Engine",
+      "EnvKind",
       "EvidenceKind",
       "Harness",
       "Hermetic",
       "Isolation",
+      "McpWhy",
       "RUN_FAILURE_KINDS",
       "SpawnPurpose",
+      "TOOLS_DEFAULT",
+      "TOOLS_OFF",
+      "ToolSetting",
       "UnavailableReason",
       "UnsupportedReason",
       "createRuntime",
       "fail",
       "isSecret",
+      "isUsable",
       "ok",
       "secret",
+      "supportWhy",
     ]);
   });
 

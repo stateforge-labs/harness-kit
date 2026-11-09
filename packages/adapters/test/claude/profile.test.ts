@@ -11,7 +11,7 @@ describe("the Claude profile", () => {
   test("every measured fact has evidence and every open question ends with a question mark", () => {
     const tally = walkEvidence(CLAUDE_PROFILE);
     expect(tally.measured).toBeGreaterThan(0);
-    expect(tally.unmeasured).toBe(1);
+    expect(tally.unmeasured).toBe(2);
     expect(tally.suggested).toBe(1);
   });
 

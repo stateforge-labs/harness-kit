@@ -5,6 +5,7 @@ import { opencodeCli } from "../../src/opencode/engines/cli.ts";
 import { opencodeArgs } from "../../src/opencode/launch.ts";
 import type { OpenCodeCredential } from "../../src/core/credential.ts";
 import { secret } from "../../src/core/secret.ts";
+import { resolveTools } from "../../src/core/policy.ts";
 import { Hermetic } from "../../src/core/run.ts";
 import type { EngineInput, ResolvedOptions } from "../../src/driver/port.ts";
 import { adaptersFixtures } from "../support/fixtures.ts";
@@ -24,6 +25,7 @@ const base: ResolvedOptions = {
   maxArgvBytes: null,
   cwd: "/work",
   isolation: { kind: "none" },
+  tools: resolveTools(undefined, undefined),
 };
 
 function input(overrides: Partial<EngineInput<"opencode">> = {}): EngineInput<"opencode"> {

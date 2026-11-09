@@ -7,7 +7,7 @@ import { Hermetic, Isolation, SpawnPurpose } from "../../src/core/run.ts";
 
 describe("constant objects", () => {
   test("the engine and capability names", () => {
-    expect(Engine).toEqual({ Cli: "cli" });
+    expect(Engine).toEqual({ Cli: "cli", Sdk: "sdk" });
     expect(UnsupportedReason).toEqual({ HarnessLimit: "harness-limit", EngineLimit: "engine-limit", NotImplemented: "not-implemented" });
     expect(CapabilityName).toEqual({
       Effort: "effort",
@@ -16,6 +16,16 @@ describe("constant objects", () => {
       Ephemeral: "ephemeral",
       Cost: "cost",
       SettingsSources: "settings-sources",
+      BuiltinToolsOff: "builtin-tools-off",
+      McpNone: "mcp-none",
+      McpAllowlist: "mcp-allowlist",
+      ClosedEnv: "closed-env",
+      BaseUrl: "base-url",
+      Resume: "resume",
+      ResumeCheckpoint: "resume-checkpoint",
+      PerTurnUsage: "per-turn-usage",
+      UnknownToolDetection: "unknown-tool-detection",
+      SessionStore: "session-store",
     });
   });
 
@@ -38,6 +48,7 @@ describe("constant objects", () => {
     expect(CredentialUnsupportedReason).toEqual({
       UnknownMode: "unknown-mode",
       ModeNotOffered: "mode-not-offered",
+      ModeNotAllowed: "mode-not-allowed",
       PrivateHomeMovesLogin: "private-home-moves-login",
       PrivateHomeNoAuthCopy: "private-home-no-auth-copy",
     });
@@ -52,7 +63,7 @@ describe("constant objects", () => {
     });
   });
 
-  test("RUN_FAILURE_KINDS lists the fifteen kinds in order", () => {
+  test("RUN_FAILURE_KINDS lists the twenty kinds in order", () => {
     expect([...RUN_FAILURE_KINDS]).toEqual([
       "invalid-config",
       "unknown-harness",
@@ -69,6 +80,11 @@ describe("constant objects", () => {
       "too-large",
       "output-too-large",
       "unsupported",
+      "cancelled",
+      "max-turns",
+      "no-output",
+      "store-failed",
+      "session-not-found",
     ]);
   });
 });

@@ -9,6 +9,11 @@ export const EngineReason = {
 
 export const EngineMessage = {
   Unsupported: "the run needs a capability this engine cannot use",
+  ConfinementUnsupported: "the requested confinement is not available on this engine",
+  BaseUrlUnsupported: "a base url is not available on this engine",
+  EngineUnsupported: "this engine is not available",
+  ClosedEnvUnsupported: "a closed environment is not available on this engine",
+  QuietUnmeasured: "the quiet environment of this harness is unmeasured",
   EffortUnmeasured: "effort.accepted is unmeasured for this harness",
   EffortRejected: "the effort value is not in the measured accepted list",
   StandaloneMissing: "this opencode build does not offer --standalone",
@@ -37,6 +42,7 @@ export const ArgvCarry = {
 } as const;
 
 export const CostBasis = {
+  Billed: "billed",
   List: "list",
   Unreported: "unreported",
   Unavailable: "unavailable",

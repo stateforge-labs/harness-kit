@@ -1,8 +1,9 @@
 import { Engine } from "../core/capability.ts";
 import type { RunFailure } from "../core/failure.ts";
 import { fail, ok, type Result } from "../core/result.ts";
-import { Hermetic, Isolation, type Effort, type HeadlessOptions, type IsolationSpec, type Limits, type RunRequest } from "../core/run.ts";
-import { ConfigField, ConfigMessage, DEFAULT_LIMITS, DEFAULT_PERSIST, Layer } from "./constants.ts";
+import { DEFAULT_ENV, EnvKind, resolveTools, type EnvPolicy, type ResolvedTools, ToolSetting, TOOLS_OFF } from "../core/policy.ts";
+import { Hermetic, Isolation, type CwdSpec, type Effort, type HeadlessOptions, type IsolationSpec, type Limits, type RunRequest } from "../core/run.ts";
+import { ConfigField, ConfigMessage, DEFAULT_LIMITS, DEFAULT_PERSIST, Layer, PrivateCwd } from "./constants.ts";
 
 export interface Picked<T> {
   readonly value: T;
@@ -17,6 +18,10 @@ export interface Merged {
   readonly maxArgvBytes: number | null;
   readonly timeoutMs: number | null;
   readonly cwd: string;
+  readonly privateCwd: "delete" | "keep" | null;
+  readonly engine: Engine;
+  readonly tools: ResolvedTools;
+  readonly env: EnvPolicy;
   readonly isolation: IsolationSpec;
   readonly signal: AbortSignal | null;
   readonly limits: Limits;
@@ -82,11 +87,36 @@ function checkConsumer<I extends string>(options: HeadlessOptions<I>): RunFailur
   if (options.credential === undefined || options.credential === null) {
     return invalidConfig(ConfigField.Credential, ConfigMessage.Required);
   }
-  return options.engine === undefined || options.engine === Engine.Cli ? null : invalidConfig(ConfigField.Engine, ConfigMessage.CliOnly);
+  return options.engine === undefined || Object.values<string>(Engine).includes(options.engine) ? null : invalidConfig(ConfigField.Engine, ConfigMessage.KnownEngine);
+}
+
+function privateOf(cwd: CwdSpec): "delete" | "keep" | null {
+  if (typeof cwd === "string") {
+    return null;
+  }
+  return cwd.private === PrivateCwd.Keep ? PrivateCwd.Keep : PrivateCwd.Delete;
 }
 
 function checkCwd(cwd: unknown): RunFailure | null {
-  return typeof cwd === "string" ? null : invalidConfig(ConfigField.Cwd, ConfigMessage.Text);
+  if (typeof cwd === "string") {
+    return null;
+  }
+  const retain = typeof cwd === "object" && cwd !== null ? (cwd as { readonly private?: unknown }).private : undefined;
+  return retain === PrivateCwd.Delete || retain === PrivateCwd.Keep ? null : invalidConfig(ConfigField.Cwd, ConfigMessage.CwdSpec);
+}
+
+function checkEnv(env: EnvPolicy): RunFailure | null {
+  if (typeof env !== "object" || env === null) {
+    return invalidConfig(ConfigField.Env, ConfigMessage.EnvPolicy);
+  }
+  if (env.kind === EnvKind.Inherit) {
+    return env.transform === undefined || typeof env.transform === "function" ? null : invalidConfig(ConfigField.Env, ConfigMessage.EnvPolicy);
+  }
+  return env.kind === EnvKind.Closed && typeof env.set === "object" && env.set !== null ? null : invalidConfig(ConfigField.Env, ConfigMessage.EnvPolicy);
+}
+
+function isFullOff(tools: ResolvedTools): boolean {
+  return tools.builtins === ToolSetting.Off && tools.settings === ToolSetting.None && tools.mcp !== ToolSetting.HarnessDefault && tools.mcp.length === 0;
 }
 
 export function mergeOptions<I extends string>(options: HeadlessOptions<I>, request: RunRequest, cwd: string): Result<Merged, RunFailure> {
@@ -107,13 +137,21 @@ export function mergeOptions<I extends string>(options: HeadlessOptions<I>, requ
   if (!limits.ok) {
     return fail(limits.failure);
   }
-  const workdir = pick<string>(request.cwd, options.cwd, cwd);
+  const workdir = pick<CwdSpec>(request.cwd, options.cwd, cwd);
   const cwdFailure = checkCwd(workdir.value);
   if (cwdFailure !== null) {
     return fail(cwdFailure);
   }
+  const envPolicy = pick<EnvPolicy>(request.env, options.env, DEFAULT_ENV);
+  const envFailure = checkEnv(envPolicy.value);
+  if (envFailure !== null) {
+    return fail(envFailure);
+  }
   const effort = pick<Effort | null>(request.effort, options.effort, null);
-  const hermetic = pick<Hermetic>(request.hermetic, options.hermetic, Hermetic.None);
+  const hermeticPick = pick<Hermetic>(request.hermetic, options.hermetic, Hermetic.None);
+  const fallbackTools = hermeticPick.value === Hermetic.Full ? TOOLS_OFF : undefined;
+  const tools = resolveTools(request.tools, options.tools ?? fallbackTools);
+  const hermetic = { value: isFullOff(tools) ? Hermetic.Full : Hermetic.None, layer: hermeticPick.layer };
   const persist = pick<boolean>(request.persist, options.persist, DEFAULT_PERSIST);
   const signal = pick<AbortSignal | null>(request.signal, options.signal, null);
   const isolation = pick<IsolationSpec>(undefined, options.isolation, NO_ISOLATION);
@@ -125,7 +163,11 @@ export function mergeOptions<I extends string>(options: HeadlessOptions<I>, requ
     persist: persist.value,
     maxArgvBytes: maxArgv.value,
     timeoutMs: timeout.value,
-    cwd: workdir.value,
+    cwd: typeof workdir.value === "string" ? workdir.value : cwd,
+    privateCwd: privateOf(workdir.value),
+    engine: options.engine ?? Engine.Cli,
+    tools,
+    env: envPolicy.value,
     isolation: isolation.value,
     signal: signal.value,
     limits: limits.value,

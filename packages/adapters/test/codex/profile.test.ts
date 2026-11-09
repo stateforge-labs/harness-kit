@@ -10,7 +10,7 @@ describe("the Codex profile", () => {
   test("every measured fact has evidence and every open question ends with a question mark", () => {
     const tally = walkEvidence(CODEX_PROFILE);
     expect(tally.measured).toBeGreaterThan(0);
-    expect(tally.unmeasured).toBe(2);
+    expect(tally.unmeasured).toBe(3);
     expect(tally.suggested).toBe(0);
   });
 

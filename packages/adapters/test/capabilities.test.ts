@@ -1,9 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { CAPABILITY_NAMES } from "./support/profile-walk.ts";
 import { CLAUDE_CAPABILITIES } from "../src/claude/capabilities.ts";
-import { CODEX_CAPABILITIES } from "../src/codex/capabilities.ts";
-import { OPENCODE_CAPABILITIES } from "../src/opencode/capabilities.ts";
-import type { Capabilities } from "../src/core/capability.ts";
+import { CODEX_CAPABILITIES, CODEX_MCP_NONE_HOW, CODEX_TOOLS_OFF_HOW } from "../src/codex/capabilities.ts";
+import {
+  OPENCODE_BUILTINS_OFF,
+  OPENCODE_CAPABILITIES,
+  OPENCODE_EPHEMERAL,
+  OPENCODE_MCP_NONE,
+  OPENCODE_SETTINGS_SKIP,
+} from "../src/opencode/capabilities.ts";
+import { AGENT_CELLS, type Capabilities, cell, SDK_NOT_BUILT, supported, unsupported, UnsupportedReason } from "../src/core/capability.ts";
 
 const TABLES: Readonly<Record<string, Capabilities>> = {
   claude: CLAUDE_CAPABILITIES,
@@ -11,56 +17,71 @@ const TABLES: Readonly<Record<string, Capabilities>> = {
   opencode: OPENCODE_CAPABILITIES,
 };
 
-const EXPECTED = {
-  claude: {
-    effort: { cli: { state: "supported" } },
-    "structured-output": { cli: { state: "unsupported", reason: "not-implemented" } },
-    "sessions-delete": { cli: { state: "unsupported", reason: "not-implemented" } },
-    ephemeral: { cli: { state: "supported" } },
-    cost: { cli: { state: "supported" } },
-    "settings-sources": { cli: { state: "supported" } },
-  },
-  codex: {
-    effort: { cli: { state: "supported" } },
-    "structured-output": { cli: { state: "unsupported", reason: "not-implemented" } },
-    "sessions-delete": { cli: { state: "unsupported", reason: "not-implemented" } },
-    ephemeral: { cli: { state: "supported" } },
-    cost: { cli: { state: "unsupported", reason: "harness-limit" } },
-    "settings-sources": { cli: { state: "supported" } },
-  },
-  opencode: {
-    effort: { cli: { state: "unmeasured", question: "2.2.6 documents provider/model#variant in --model; is there an effort flag?" } },
-    "structured-output": { cli: { state: "unmeasured", question: "does OpenCode 2.2.6 run have a structured output flag?" } },
-    "sessions-delete": { cli: { state: "unsupported", reason: "not-implemented" } },
-    ephemeral: { cli: { state: "unmeasured", question: "does `session delete` reach a `--standalone` run's session?" } },
-    cost: { cli: { state: "unmeasured", question: "committed capture is an error stream; does the real 2.2.6 step_finish carry cost?" } },
-    "settings-sources": { cli: { state: "unmeasured", question: "does any OpenCode flag or env skip user config for a headless run?" } },
-  },
-};
+const ENGINE_LIMIT = unsupported(UnsupportedReason.EngineLimit);
+const NOT_IMPLEMENTED = unsupported(UnsupportedReason.NotImplemented);
 
 describe("capability tables", () => {
   for (const [harness, table] of Object.entries(TABLES)) {
-    test(`${harness} has a cli cell for every capability`, () => {
+    test(`${harness} has a cell for every capability on both engines`, () => {
       expect(Object.keys(table).sort()).toEqual([...CAPABILITY_NAMES].sort());
       for (const name of CAPABILITY_NAMES) {
-        expect(Object.keys(table[name as keyof Capabilities])).toEqual(["cli"]);
+        expect(Object.keys(table[name as keyof Capabilities]).sort()).toEqual(["cli", "sdk"]);
       }
     });
 
-    test(`${harness} cells carry their reason or question`, () => {
+    test(`${harness} cells carry their reason, how or question`, () => {
       for (const name of CAPABILITY_NAMES) {
-        const cell = table[name as keyof Capabilities].cli;
-        if (cell.state === "unsupported") {
-          expect(cell.reason.length).toBeGreaterThan(0);
+        const support = table[name as keyof Capabilities].cli;
+        if (support.state === "unsupported") {
+          expect(support.reason.length).toBeGreaterThan(0);
         }
-        if (cell.state === "unmeasured") {
-          expect(cell.question.endsWith("?")).toBe(true);
+        if (support.state === "unmeasured") {
+          expect(support.question.endsWith("?")).toBe(true);
+        }
+        if (support.state === "emulated") {
+          expect(support.how.length).toBeGreaterThan(0);
         }
       }
     });
 
-    test(`${harness} matches the table in plan 1.3`, () => {
-      expect(table).toEqual(EXPECTED[harness as keyof typeof EXPECTED] as unknown as Capabilities);
+    test(`${harness} mcp-allowlist is an engine limit on the cli`, () => {
+      expect(table["mcp-allowlist"]).toEqual(cell(ENGINE_LIMIT));
+    });
+
+    test(`${harness} has no sdk engine built yet`, () => {
+      for (const name of CAPABILITY_NAMES) {
+        expect(table[name as keyof Capabilities].sdk).toEqual(SDK_NOT_BUILT);
+      }
     });
   }
+
+  test("claude supports the confinement cells", () => {
+    for (const name of ["builtin-tools-off", "mcp-none", "settings-sources", "closed-env", "base-url", "ephemeral", "effort", "cost"] as const) {
+      expect(CLAUDE_CAPABILITIES[name].cli).toEqual(supported);
+    }
+    expect(CLAUDE_CAPABILITIES["structured-output"].cli).toEqual(NOT_IMPLEMENTED);
+    expect(CLAUDE_CAPABILITIES["sessions-delete"].cli).toEqual(NOT_IMPLEMENTED);
+  });
+
+  test("codex emulates tools off and mcp none, and leaves env and base url unmeasured", () => {
+    expect(CODEX_CAPABILITIES["builtin-tools-off"].cli).toEqual({ state: "emulated", how: CODEX_TOOLS_OFF_HOW });
+    expect(CODEX_CAPABILITIES["mcp-none"].cli).toEqual({ state: "emulated", how: CODEX_MCP_NONE_HOW });
+    expect(CODEX_CAPABILITIES["settings-sources"].cli).toEqual(supported);
+    expect(CODEX_CAPABILITIES["closed-env"].cli.state).toBe("unmeasured");
+    expect(CODEX_CAPABILITIES["base-url"].cli.state).toBe("unmeasured");
+    expect(CODEX_CAPABILITIES.cost.cli).toEqual(unsupported(UnsupportedReason.HarnessLimit));
+  });
+
+  test("opencode cells are the named constants, so one line flips each", () => {
+    expect(OPENCODE_CAPABILITIES["builtin-tools-off"].cli).toBe(OPENCODE_BUILTINS_OFF);
+    expect(OPENCODE_CAPABILITIES["mcp-none"].cli).toBe(OPENCODE_MCP_NONE);
+    expect(OPENCODE_CAPABILITIES["settings-sources"].cli).toBe(OPENCODE_SETTINGS_SKIP);
+    expect(OPENCODE_CAPABILITIES.ephemeral.cli).toBe(OPENCODE_EPHEMERAL);
+  });
+
+  test("the agent cells are capability names", () => {
+    for (const name of AGENT_CELLS) {
+      expect(CAPABILITY_NAMES).toContain(name);
+    }
+  });
 });

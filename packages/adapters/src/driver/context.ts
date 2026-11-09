@@ -27,6 +27,7 @@ export interface RuntimeContext {
   readonly platform: string;
   readonly cwd: () => string;
   readonly onEvent: ((event: LibraryEvent) => void) | undefined;
+  readonly allowedModes?: readonly string[];
   readonly state: RuntimeState;
 }
 

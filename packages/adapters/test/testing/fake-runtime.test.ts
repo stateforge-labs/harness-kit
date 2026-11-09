@@ -17,6 +17,7 @@ function output(text: string): RunOutput {
     sessionId: null,
     engine: Engine.Cli,
     stability: "stable",
+    confinement: [],
     elapsedMs: 0,
     hermetic: Hermetic.None,
     persisted: true,

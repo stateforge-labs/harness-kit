@@ -12,6 +12,7 @@ import type { ParsedRun } from "./port.ts";
 export interface Fold {
   readonly text: string;
   readonly streamed: boolean;
+  readonly spawned: boolean;
   readonly final: string | null;
   readonly usage: TokenUsage;
   readonly cost: Cost;
@@ -25,6 +26,7 @@ export function foldStart(): Fold {
   return {
     text: PromptText.Empty,
     streamed: false,
+    spawned: false,
     final: null,
     usage: NO_USAGE,
     cost: { usd: null, basis: CostBasis.Unreported },
@@ -41,6 +43,8 @@ function summed(before: Cost, next: Cost): Cost {
 
 export function foldStep(f: Fold, e: EngineEvent): Fold {
   switch (e.kind) {
+    case "started":
+      return { ...f, spawned: true };
     case "text":
       return { ...f, text: f.text + e.text, streamed: true };
     case "unrecognised":

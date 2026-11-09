@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { CredentialPlan } from "../../src/core/credential-plan.ts";
 import { secret } from "../../src/core/secret.ts";
-import { buildChildEnv, probeEnv } from "../../src/driver/env-plan.ts";
+import { buildChildEnv, inheritEnv, probeEnv } from "../../src/driver/env-plan.ts";
 import { ambientEnv, SENTINEL } from "../support/credential.ts";
 
 function planWith(inject: CredentialPlan["inject"], strip: readonly string[]): CredentialPlan {
@@ -14,7 +14,7 @@ describe("buildChildEnv", () => {
 
   test("removes strip, injects secrets and literals, removes nested names, sets the home variable", () => {
     const child = buildChildEnv({
-      base,
+      base: inheritEnv(base),
       plan: planWith({ INJECT_SECRET: secret(SENTINEL), INJECT_LITERAL: "1" }, [...strip, "EMPTY_STRIP"]),
       nestedEnv: ["NESTED"],
       homeVar: "HOME_VAR",
@@ -34,7 +34,7 @@ describe("buildChildEnv", () => {
   });
 
   test("a null isolation directory sets nothing and leaves the home variable as the base had it", () => {
-    const child = buildChildEnv({ base, plan: planWith({}, strip), nestedEnv: [], homeVar: "HOME_VAR", isolationDir: null });
+    const child = buildChildEnv({ base: inheritEnv(base), plan: planWith({}, strip), nestedEnv: [], homeVar: "HOME_VAR", isolationDir: null });
     expect(child.set).toEqual([]);
     expect(child.env.HOME_VAR).toBeUndefined();
     expect(child.injected).toEqual([]);
@@ -43,7 +43,7 @@ describe("buildChildEnv", () => {
 
   test("an injected name overrides a base value, and a stripped name that is also injected ends up injected", () => {
     const child = buildChildEnv({
-      base,
+      base: inheritEnv(base),
       plan: planWith({ STRIP_A: secret(SENTINEL) }, strip),
       nestedEnv: [],
       homeVar: "HOME_VAR",
@@ -55,7 +55,7 @@ describe("buildChildEnv", () => {
 
   test("undefined base values are dropped, and scrubbed lists only names present and non-empty", () => {
     const child = buildChildEnv({
-      base: { HOME: "/h/u", ONLY_HERE: "x", UNSET: undefined },
+      base: inheritEnv({ HOME: "/h/u", ONLY_HERE: "x", UNSET: undefined }),
       plan: planWith({}, ["ONLY_HERE", "UNSET", "EMPTY_STRIP"]),
       nestedEnv: [],
       homeVar: "HOME_VAR",
@@ -67,7 +67,7 @@ describe("buildChildEnv", () => {
 
   test("the base object is not mutated", () => {
     const snapshot = { ...base };
-    buildChildEnv({ base, plan: planWith({ X: secret(SENTINEL) }, strip), nestedEnv: ["NESTED"], homeVar: "HOME_VAR", isolationDir: "/d" });
+    buildChildEnv({ base: inheritEnv(base), plan: planWith({ X: secret(SENTINEL) }, strip), nestedEnv: ["NESTED"], homeVar: "HOME_VAR", isolationDir: "/d" });
     expect(base).toEqual(snapshot);
   });
 });
