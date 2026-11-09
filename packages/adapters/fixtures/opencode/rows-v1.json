@@ -1,0 +1,975 @@
+{
+ "session": [
+  {
+   "id": "ses_00000000000000000000000002",
+   "project_id": "global",
+   "workspace_id": null,
+   "parent_id": null,
+   "slug": "tidy-canyon",
+   "directory": "/tmp/claude-0/-home-user-proj-2/00000000-0000-4000-8000-0000000001d3/scratchpad/oc-rec/wt",
+   "path": "",
+   "title": "dolore dolore et magna do adipiscing m",
+   "version": "1.19.3",
+   "share_url": null,
+   "summary_additions": null,
+   "summary_deletions": null,
+   "summary_files": null,
+   "summary_diffs": null,
+   "metadata": null,
+   "cost": 0,
+   "tokens_input": 0,
+   "tokens_output": 0,
+   "tokens_reasoning": 0,
+   "tokens_cache_read": 0,
+   "tokens_cache_write": 0,
+   "revert": null,
+   "permission": "[{\"permission\":\"*\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"read\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"external_directory\",\"pattern\":\"*\",\"action\":\"deny\"}]",
+   "agent": "build",
+   "model": "{\"id\":\"gpt-5\",\"providerID\":\"openai\",\"variant\":\"default\"}",
+   "time_created": 1793491200000,
+   "time_updated": 1793491200108,
+   "time_compacting": null,
+   "time_archived": null
+  },
+  {
+   "id": "ses_00000000000000000000000003",
+   "project_id": "REDACTED",
+   "workspace_id": null,
+   "parent_id": null,
+   "slug": "misty-mountain",
+   "directory": "/tmp/e96L-wt",
+   "path": "",
+   "title": "ipsum ipsum ut magna ut incididunt sit dolo",
+   "version": "1.19.3",
+   "share_url": null,
+   "summary_additions": 0,
+   "summary_deletions": 0,
+   "summary_files": 0,
+   "summary_diffs": null,
+   "metadata": null,
+   "cost": 0,
+   "tokens_input": 0,
+   "tokens_output": 0,
+   "tokens_reasoning": 0,
+   "tokens_cache_read": 0,
+   "tokens_cache_write": 0,
+   "revert": null,
+   "permission": "[{\"permission\":\"*\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"git_status\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"external_directory\",\"pattern\":\"*\",\"action\":\"deny\"}]",
+   "agent": "build",
+   "model": "{\"id\":\"deepseek-v4.1-flash-free\",\"providerID\":\"opencode\",\"variant\":\"default\"}",
+   "time_created": 1793494038590,
+   "time_updated": 1793494039460,
+   "time_compacting": null,
+   "time_archived": null
+  },
+  {
+   "id": "ses_00000000000000000000000004",
+   "project_id": "REDACTED",
+   "workspace_id": null,
+   "parent_id": null,
+   "slug": "playful-eagle",
+   "directory": "/tmp/e96L-wt",
+   "path": "",
+   "title": "magna lorem tempor inci",
+   "version": "1.19.3",
+   "share_url": null,
+   "summary_additions": 0,
+   "summary_deletions": 0,
+   "summary_files": 0,
+   "summary_diffs": null,
+   "metadata": null,
+   "cost": 0,
+   "tokens_input": 0,
+   "tokens_output": 0,
+   "tokens_reasoning": 0,
+   "tokens_cache_read": 0,
+   "tokens_cache_write": 0,
+   "revert": null,
+   "permission": "[{\"permission\":\"question\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"plan_enter\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"plan_exit\",\"pattern\":\"*\",\"action\":\"deny\"}]",
+   "agent": "build",
+   "model": "{\"id\":\"deepseek-v4.1-flash-free\",\"providerID\":\"opencode\",\"variant\":\"default\"}",
+   "time_created": 1793494124976,
+   "time_updated": 1793494125629,
+   "time_compacting": null,
+   "time_archived": null
+  },
+  {
+   "id": "ses_00000000000000000000000005",
+   "project_id": "REDACTED",
+   "workspace_id": null,
+   "parent_id": null,
+   "slug": "quiet-moon",
+   "directory": "/tmp/e96L-wt",
+   "path": "",
+   "title": "lorem sit elit magna amet sed dolor sit incid",
+   "version": "1.19.3",
+   "share_url": null,
+   "summary_additions": 0,
+   "summary_deletions": 0,
+   "summary_files": 0,
+   "summary_diffs": null,
+   "metadata": null,
+   "cost": 0.00121578,
+   "tokens_input": 1003,
+   "tokens_output": 469,
+   "tokens_reasoning": 275,
+   "tokens_cache_read": 3680,
+   "tokens_cache_write": 0,
+   "revert": null,
+   "permission": "[{\"permission\":\"*\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"git_status\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"external_directory\",\"pattern\":\"*\",\"action\":\"deny\"}]",
+   "agent": "build",
+   "model": "{\"id\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"variant\":\"default\"}",
+   "time_created": 1793494203334,
+   "time_updated": 1793494212901,
+   "time_compacting": null,
+   "time_archived": null
+  },
+  {
+   "id": "ses_00000000000000000000000006",
+   "project_id": "REDACTED",
+   "workspace_id": null,
+   "parent_id": null,
+   "slug": "kind-garden",
+   "directory": "/tmp/e96L-wt",
+   "path": "",
+   "title": "et magna adipiscing magna incididunt do ",
+   "version": "1.19.3",
+   "share_url": null,
+   "summary_additions": 0,
+   "summary_deletions": 0,
+   "summary_files": 0,
+   "summary_diffs": null,
+   "metadata": null,
+   "cost": 0.0010318800000000002,
+   "tokens_input": 1330,
+   "tokens_output": 187,
+   "tokens_reasoning": 322,
+   "tokens_cache_read": 3680,
+   "tokens_cache_write": 0,
+   "revert": null,
+   "permission": "[{\"permission\":\"*\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"proj_git_status\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"external_directory\",\"pattern\":\"*\",\"action\":\"deny\"}]",
+   "agent": "build",
+   "model": "{\"id\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"variant\":\"default\"}",
+   "time_created": 1793494323133,
+   "time_updated": 1793494330902,
+   "time_compacting": null,
+   "time_archived": null
+  },
+  {
+   "id": "ses_00000000000000000000000007",
+   "project_id": "REDACTED",
+   "workspace_id": null,
+   "parent_id": null,
+   "slug": "eager-meadow",
+   "directory": "/tmp/e96L-wt",
+   "path": "",
+   "title": "dolore adipiscing elit sit sed ei",
+   "version": "1.19.3",
+   "share_url": null,
+   "summary_additions": 0,
+   "summary_deletions": 0,
+   "summary_files": 0,
+   "summary_diffs": null,
+   "metadata": null,
+   "cost": 0.00067962,
+   "tokens_input": 1747,
+   "tokens_output": 38,
+   "tokens_reasoning": 82,
+   "tokens_cache_read": 1920,
+   "tokens_cache_write": 0,
+   "revert": null,
+   "permission": "[{\"permission\":\"*\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"bash\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"external_directory\",\"pattern\":\"*\",\"action\":\"deny\"}]",
+   "agent": "build",
+   "model": "{\"id\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"variant\":\"default\"}",
+   "time_created": 1793494389481,
+   "time_updated": 1793494412908,
+   "time_compacting": null,
+   "time_archived": null
+  },
+  {
+   "id": "ses_00000000000000000000000008",
+   "project_id": "REDACTED",
+   "workspace_id": null,
+   "parent_id": null,
+   "slug": "tidy-comet",
+   "directory": "/tmp/e96P-wt",
+   "path": "",
+   "title": "elit aliqua et ipsum adipiscing amet dolor ut",
+   "version": "1.19.3",
+   "share_url": null,
+   "summary_additions": 0,
+   "summary_deletions": 0,
+   "summary_files": 0,
+   "summary_diffs": null,
+   "metadata": null,
+   "cost": 0.0015312479999999998,
+   "tokens_input": 1817,
+   "tokens_output": 358,
+   "tokens_reasoning": 402,
+   "tokens_cache_read": 12358,
+   "tokens_cache_write": 0,
+   "revert": null,
+   "permission": "[{\"permission\":\"*\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"proj_proj_report\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"bash\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"edit\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"glob\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"grep\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"invalid\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"list\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"lsp\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"question\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"read\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"skill\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"task\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"todowrite\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"webfetch\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"websearch\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"write\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"external_directory\",\"pattern\":\"*\",\"action\":\"deny\"}]",
+   "agent": "build",
+   "model": "{\"id\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"variant\":\"default\"}",
+   "time_created": 1793503193740,
+   "time_updated": 1793503210869,
+   "time_compacting": null,
+   "time_archived": null
+  },
+  {
+   "id": "ses_00000000000000000000000009",
+   "project_id": "REDACTED",
+   "workspace_id": null,
+   "parent_id": null,
+   "slug": "nimble-circuit",
+   "directory": "/tmp/e96Qwt",
+   "path": "",
+   "title": "ut consectetur lorem labore et sit ",
+   "version": "1.19.3",
+   "share_url": null,
+   "summary_additions": 0,
+   "summary_deletions": 0,
+   "summary_files": 0,
+   "summary_diffs": null,
+   "metadata": null,
+   "cost": 0.003771948,
+   "tokens_input": 3202,
+   "tokens_output": 392,
+   "tokens_reasoning": 1930,
+   "tokens_cache_read": 4158,
+   "tokens_cache_write": 0,
+   "revert": null,
+   "permission": "[{\"permission\":\"*\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"proj_report\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"proj_read\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"proj_write\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"proj_edit\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"proj_glob\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"proj_grep\",\"pattern\":\"*\",\"action\":\"allow\"},{\"permission\":\"bash\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"edit\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"glob\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"grep\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"invalid\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"list\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"lsp\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"question\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"read\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"skill\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"task\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"todowrite\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"webfetch\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"websearch\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"write\",\"pattern\":\"*\",\"action\":\"deny\"},{\"permission\":\"external_directory\",\"pattern\":\"*\",\"action\":\"deny\"}]",
+   "agent": "build",
+   "model": "{\"id\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"variant\":\"default\"}",
+   "time_created": 1793505010674,
+   "time_updated": 1793505036489,
+   "time_compacting": null,
+   "time_archived": null
+  }
+ ],
+ "message": [
+  {
+   "id": "msg_00000000000000000000000067",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505010760,
+   "time_updated": 1793505036530,
+   "data": "{\"role\":\"user\",\"time\":{\"created\":1793505010760},\"agent\":\"build\",\"model\":{\"providerID\":\"opencode\",\"modelID\":\"deepseek-v4.1-flash\"},\"summary\":{\"diffs\":[]}}"
+  },
+  {
+   "id": "msg_00000000000000000000000068",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505011372,
+   "time_updated": 1793505034552,
+   "data": "{\"parentID\":\"msg_00000000000000000000000067\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96Qwt\",\"root\":\"/tmp/e96Qwt\"},\"cost\":0.00298416,\"tokens\":{\"total\":4814,\"input\":768,\"output\":356,\"reasoning\":1930,\"cache\":{\"write\":0,\"read\":1760}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793505011372,\"completed\":1793505034551},\"finish\":\"tool-calls\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000069",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505034558,
+   "time_updated": 1793505036481,
+   "data": "{\"parentID\":\"msg_00000000000000000000000067\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96Qwt\",\"root\":\"/tmp/e96Qwt\"},\"cost\":0.000787788,\"tokens\":{\"total\":4868,\"input\":2434,\"output\":36,\"reasoning\":0,\"cache\":{\"write\":0,\"read\":2398}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793505034558,\"completed\":1793505036480},\"finish\":\"stop\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000070",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503193795,
+   "time_updated": 1793503210883,
+   "data": "{\"role\":\"user\",\"time\":{\"created\":1793503193795},\"agent\":\"build\",\"model\":{\"providerID\":\"opencode\",\"modelID\":\"deepseek-v4.1-flash\"},\"summary\":{\"diffs\":[]}}"
+  },
+  {
+   "id": "msg_00000000000000000000000071",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503194196,
+   "time_updated": 1793503196752,
+   "data": "{\"parentID\":\"msg_00000000000000000000000070\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96P-wt\",\"root\":\"/tmp/e96P-wt\"},\"cost\":0.00015726,\"tokens\":{\"total\":2084,\"input\":269,\"output\":47,\"reasoning\":8,\"cache\":{\"write\":0,\"read\":1760}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793503194196,\"completed\":1793503196751},\"finish\":\"tool-calls\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000072",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503196754,
+   "time_updated": 1793503198817,
+   "data": "{\"parentID\":\"msg_00000000000000000000000070\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96P-wt\",\"root\":\"/tmp/e96P-wt\"},\"cost\":0.00022056,\"tokens\":{\"total\":2196,\"input\":348,\"output\":47,\"reasoning\":41,\"cache\":{\"write\":0,\"read\":1760}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793503196754,\"completed\":1793503198816},\"finish\":\"tool-calls\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000073",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503198819,
+   "time_updated": 1793503201338,
+   "data": "{\"parentID\":\"msg_00000000000000000000000070\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96P-wt\",\"root\":\"/tmp/e96P-wt\"},\"cost\":0.000272868,\"tokens\":{\"total\":2377,\"input\":242,\"output\":48,\"reasoning\":109,\"cache\":{\"write\":0,\"read\":1978}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793503198819,\"completed\":1793503201337},\"finish\":\"tool-calls\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000074",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503201340,
+   "time_updated": 1793503204955,
+   "data": "{\"parentID\":\"msg_00000000000000000000000070\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96P-wt\",\"root\":\"/tmp/e96P-wt\"},\"cost\":0.00034944,\"tokens\":{\"total\":2604,\"input\":311,\"output\":48,\"reasoning\":155,\"cache\":{\"write\":0,\"read\":2090}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793503201340,\"completed\":1793503204954},\"finish\":\"tool-calls\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000075",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503204957,
+   "time_updated": 1793503207986,
+   "data": "{\"parentID\":\"msg_00000000000000000000000070\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96P-wt\",\"root\":\"/tmp/e96P-wt\"},\"cost\":0.000284832,\"tokens\":{\"total\":2765,\"input\":356,\"output\":68,\"reasoning\":69,\"cache\":{\"write\":0,\"read\":2272}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793503204957,\"completed\":1793503207985},\"finish\":\"tool-calls\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000076",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503207988,
+   "time_updated": 1793503210866,
+   "data": "{\"parentID\":\"msg_00000000000000000000000070\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96P-wt\",\"root\":\"/tmp/e96P-wt\"},\"cost\":0.000246288,\"tokens\":{\"total\":2909,\"input\":291,\"output\":100,\"reasoning\":20,\"cache\":{\"write\":0,\"read\":2498}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793503207988,\"completed\":1793503210866},\"finish\":\"stop\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000077",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494389595,
+   "time_updated": 1793494390514,
+   "data": "{\"role\":\"user\",\"time\":{\"created\":1793494389595},\"agent\":\"build\",\"model\":{\"providerID\":\"opencode\",\"modelID\":\"deepseek-v4.1-flash\"},\"summary\":{\"diffs\":[]}}"
+  },
+  {
+   "id": "msg_00000000000000000000000078",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494390221,
+   "time_updated": 1793494408015,
+   "data": "{\"parentID\":\"msg_00000000000000000000000077\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96L-wt\",\"root\":\"/tmp/e96L-wt\"},\"cost\":0,\"tokens\":{\"input\":0,\"output\":0,\"reasoning\":0,\"cache\":{\"read\":0,\"write\":0}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793494390221,\"completed\":1793494408014},\"error\":{\"name\":\"MessageAbortedError\",\"data\":{\"message\":\"Aborted\"}}}"
+  },
+  {
+   "id": "msg_00000000000000000000000079",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494409235,
+   "time_updated": 1793494412927,
+   "data": "{\"role\":\"user\",\"time\":{\"created\":1793494409235},\"agent\":\"build\",\"model\":{\"providerID\":\"opencode\",\"modelID\":\"deepseek-v4.1-flash\"},\"summary\":{\"diffs\":[]}}"
+  },
+  {
+   "id": "msg_00000000000000000000000080",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494409712,
+   "time_updated": 1793494412904,
+   "data": "{\"parentID\":\"msg_00000000000000000000000079\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96L-wt\",\"root\":\"/tmp/e96L-wt\"},\"cost\":0.00067962,\"tokens\":{\"total\":3787,\"input\":1747,\"output\":38,\"reasoning\":82,\"cache\":{\"write\":0,\"read\":1920}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793494409712,\"completed\":1793494412903},\"finish\":\"stop\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000081",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494323199,
+   "time_updated": 1793494330917,
+   "data": "{\"role\":\"user\",\"time\":{\"created\":1793494323199},\"agent\":\"build\",\"model\":{\"providerID\":\"opencode\",\"modelID\":\"deepseek-v4.1-flash\"},\"summary\":{\"diffs\":[]}}"
+  },
+  {
+   "id": "msg_00000000000000000000000082",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494323796,
+   "time_updated": 1793494327581,
+   "data": "{\"parentID\":\"msg_00000000000000000000000081\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96L-wt\",\"root\":\"/tmp/e96L-wt\"},\"cost\":0.00052086,\"tokens\":{\"total\":2627,\"input\":589,\"output\":49,\"reasoning\":229,\"cache\":{\"write\":0,\"read\":1760}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793494323796,\"completed\":1793494327580},\"finish\":\"tool-calls\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000083",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494327583,
+   "time_updated": 1793494330894,
+   "data": "{\"parentID\":\"msg_00000000000000000000000081\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96L-wt\",\"root\":\"/tmp/e96L-wt\"},\"cost\":0.00051102,\"tokens\":{\"total\":2892,\"input\":741,\"output\":138,\"reasoning\":93,\"cache\":{\"write\":0,\"read\":1920}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793494327583,\"completed\":1793494330893},\"finish\":\"stop\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000084",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494203390,
+   "time_updated": 1793494212922,
+   "data": "{\"role\":\"user\",\"time\":{\"created\":1793494203390},\"agent\":\"build\",\"model\":{\"providerID\":\"opencode\",\"modelID\":\"deepseek-v4.1-flash\"},\"summary\":{\"diffs\":[]}}"
+  },
+  {
+   "id": "msg_00000000000000000000000085",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494203932,
+   "time_updated": 1793494209896,
+   "data": "{\"parentID\":\"msg_00000000000000000000000084\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96L-wt\",\"root\":\"/tmp/e96L-wt\"},\"cost\":0.00065916,\"tokens\":{\"total\":2530,\"input\":306,\"output\":249,\"reasoning\":215,\"cache\":{\"write\":0,\"read\":1760}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793494203932,\"completed\":1793494209895},\"finish\":\"tool-calls\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000086",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494209898,
+   "time_updated": 1793494212898,
+   "data": "{\"parentID\":\"msg_00000000000000000000000084\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96L-wt\",\"root\":\"/tmp/e96L-wt\"},\"cost\":0.00055662,\"tokens\":{\"total\":2897,\"input\":697,\"output\":220,\"reasoning\":60,\"cache\":{\"write\":0,\"read\":1920}},\"modelID\":\"deepseek-v4.1-flash\",\"providerID\":\"opencode\",\"time\":{\"created\":1793494209898,\"completed\":1793494212897},\"finish\":\"stop\"}"
+  },
+  {
+   "id": "msg_00000000000000000000000087",
+   "session_id": "ses_00000000000000000000000004",
+   "time_created": 1793494125045,
+   "time_updated": 1793494125635,
+   "data": "{\"role\":\"user\",\"time\":{\"created\":1793494125045},\"agent\":\"build\",\"model\":{\"providerID\":\"opencode\",\"modelID\":\"deepseek-v4.1-flash-free\"},\"summary\":{\"diffs\":[]}}"
+  },
+  {
+   "id": "msg_00000000000000000000000088",
+   "session_id": "ses_00000000000000000000000004",
+   "time_created": 1793494125550,
+   "time_updated": 1793494125551,
+   "data": "{\"parentID\":\"msg_00000000000000000000000087\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96L-wt\",\"root\":\"/tmp/e96L-wt\"},\"cost\":0,\"tokens\":{\"input\":0,\"output\":0,\"reasoning\":0,\"cache\":{\"read\":0,\"write\":0}},\"modelID\":\"deepseek-v4.1-flash-free\",\"providerID\":\"opencode\",\"time\":{\"created\":1793494125550}}"
+  },
+  {
+   "id": "msg_00000000000000000000000089",
+   "session_id": "ses_00000000000000000000000003",
+   "time_created": 1793494038658,
+   "time_updated": 1793494039466,
+   "data": "{\"role\":\"user\",\"time\":{\"created\":1793494038658},\"agent\":\"build\",\"model\":{\"providerID\":\"opencode\",\"modelID\":\"deepseek-v4.1-flash-free\"},\"summary\":{\"diffs\":[]}}"
+  },
+  {
+   "id": "msg_00000000000000000000000090",
+   "session_id": "ses_00000000000000000000000003",
+   "time_created": 1793494039166,
+   "time_updated": 1793494040329,
+   "data": "{\"parentID\":\"msg_00000000000000000000000089\",\"role\":\"assistant\",\"mode\":\"build\",\"agent\":\"build\",\"path\":{\"cwd\":\"/tmp/e96L-wt\",\"root\":\"/tmp/e96L-wt\"},\"cost\":0,\"tokens\":{\"input\":0,\"output\":0,\"reasoning\":0,\"cache\":{\"read\":0,\"write\":0}},\"modelID\":\"deepseek-v4.1-flash-free\",\"providerID\":\"opencode\",\"time\":{\"created\":1793494039166,\"completed\":1793494040328},\"error\":{\"name\":\"APIError\",\"data\":{\"message\":\"et sed dolor do do lorem sit do labore magna magna ut sit ipsum tempor consectetur ipsum incididunt lorem dolore \",\"statusCode\":403,\"isRetryable\":false,\"responseHeaders\":{\"cf-ray\":\"a4e81e512dcb7482-MIA\",\"connection\":\"keep-alive\",\"content-encoding\":\"br\",\"content-type\":\"application/json\",\"date\":\"adipiscing incididunt ut sed \",\"server\":\"cloudflare\",\"transfer-encoding\":\"chunked\",\"x-opencode-log-id\":\"00000000-0000-4000-8000-00000000026b\"},\"responseBody\":\"{\\\"type\\\":\\\"error\\\",\\\"error\\\":{\\\"type\\\":\\\"FreeTierError\\\",\\\"message\\\":\\\"et sed dolor do do lorem sit do labore magna magna ut sit ipsum tempor consectetur ipsum incididunt lorem dolore \\\"}}\",\"metadata\":{\"url\":\"https://opencode.ai/inference/openai/v1/chat/completions\"}}}}"
+  },
+  {
+   "id": "msg_00000000000000000000000091",
+   "session_id": "ses_00000000000000000000000002",
+   "time_created": 1793491200099,
+   "time_updated": 1793491200105,
+   "data": "{\"role\":\"user\",\"time\":{\"created\":1793491200099},\"agent\":\"build\",\"model\":{\"providerID\":\"openai\",\"modelID\":\"gpt-5\"}}"
+  }
+ ],
+ "part": [
+  {
+   "id": "prt_00000000000000000000000002",
+   "message_id": "msg_00000000000000000000000091",
+   "session_id": "ses_00000000000000000000000002",
+   "time_created": 1793491200106,
+   "time_updated": 1793491200107,
+   "data": "{\"type\":\"text\",\"text\":\"amet ipsum ips\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000003",
+   "message_id": "msg_00000000000000000000000089",
+   "session_id": "ses_00000000000000000000000003",
+   "time_created": 1793494038672,
+   "time_updated": 1793494038673,
+   "data": "{\"type\":\"text\",\"text\":\"aliqua consectetur labore do elit dolore ipsum labore magna dolore et aliqua lorem ut lorem elit tempor magna ut amet dolore sit tempor amet ut magna amet amet incididunt magna aliqua sit ut consectetur consectetur elit eiusmod amet et eiusmod do sed dolor dolore do sed consectetur consectetur ut consectetur amet dolor lorem elit labore ipsum sed ut sed lorem eiusmod elit sed amet sit amet eiusmod co\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000004",
+   "message_id": "msg_00000000000000000000000087",
+   "session_id": "ses_00000000000000000000000004",
+   "time_created": 1793494125054,
+   "time_updated": 1793494125055,
+   "data": "{\"type\":\"text\",\"text\":\"amet aliqua dolor eius\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000005",
+   "message_id": "msg_00000000000000000000000084",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494203401,
+   "time_updated": 1793494203405,
+   "data": "{\"type\":\"text\",\"text\":\"aliqua consectetur labore do elit dolore ipsum labore magna dolore et aliqua lorem ut lorem elit tempor magna ut amet dolore sit tempor amet ut magna amet amet incididunt magna aliqua sit ut consectetur consectetur elit eiusmod amet et eiusmod do sed dolor dolore do sed consectetur consectetur ut consectetur amet dolor lorem elit labore ipsum sed ut sed lorem eiusmod elit sed amet sit amet eiusmod co\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000006",
+   "message_id": "msg_00000000000000000000000085",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494206572,
+   "time_updated": 1793494206573,
+   "data": "{\"snapshot\":\"4b36dfd79db36d8c59d1fb032de66b57f0457b65\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000007",
+   "message_id": "msg_00000000000000000000000085",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494206574,
+   "time_updated": 1793494208028,
+   "data": "{\"type\":\"reasoning\",\"text\":\"elit lorem do et ipsum elit eiusmod dolor do adipiscing elit elit ipsum tempor dolor sed consecte\\n\\nut magna adipiscing consectetur lorem dolor sit amet amet sit ipsum lorem dolore amet et adipiscing amet magna dolor dolor dolore et et tempor elit lorem adipiscing magna magna incididunt elit labore eiusmod sed tempor eiusmod do lorem tempor dolor sit aliqua dolore et et elit amet do amet\\n\\nelit aliqua labore ut lorem et do labore aliqua si\\n\\nipsum dolore magna tempor lorem aliqua incididunt consectetur do ut lorem aliqua ut adi\\n\\net consectetur sed aliqua do tempor elit dolore labore dolore ipsum magna consectetu\\n\\nadipiscing eiusmod aliqua consectetur \\nmagna sit magna consectetur amet ipsum\\nmagna et magn\\nadipiscing dolor et sit magna tempor d\\n\\nut lorem et con\",\"time\":{\"start\":1793494206574,\"end\":1793494208027}}"
+  },
+  {
+   "id": "prt_00000000000000000000000008",
+   "message_id": "msg_00000000000000000000000085",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494208031,
+   "time_updated": 1793494209835,
+   "data": "{\"type\":\"text\",\"text\":\"dolor magna dolor sed et eiusmod labore\\n\\nincididunt eiusmod labore amet et do tempor labore do dolor incididunt dolore magna ut ut lorem incididunt et am\",\"time\":{\"start\":1793494208031,\"end\":1793494209833}}"
+  },
+  {
+   "id": "prt_00000000000000000000000009",
+   "message_id": "msg_00000000000000000000000085",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494208341,
+   "time_updated": 1793494208387,
+   "data": "{\"type\":\"tool\",\"tool\":\"read\",\"callID\":\"call_000000000000000000000020\",\"state\":{\"status\":\"error\",\"input\":{\"file_path\":\"/tmp/e96L-out/outside.txt\"},\"error\":\"ipsum sed ipsum consectetur ut et dolor tempor ipsum tempor incidi\",\"time\":{\"start\":1793494208383,\"end\":1793494208386}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000010",
+   "message_id": "msg_00000000000000000000000085",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494208445,
+   "time_updated": 1793494208612,
+   "data": "{\"type\":\"tool\",\"tool\":\"write\",\"callID\":\"call_000000000000000000000021\",\"state\":{\"status\":\"error\",\"input\":{\"file_path\":\"/tmp/e96L-wt/created.txt\",\"content\":\"hi\"},\"error\":\"ipsum sed ipsum consectetur ut et dolor tempor ipsum tempor incidi\",\"time\":{\"start\":1793494208609,\"end\":1793494208611}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000011",
+   "message_id": "msg_00000000000000000000000085",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494208620,
+   "time_updated": 1793494208828,
+   "data": "{\"type\":\"tool\",\"tool\":\"bash\",\"callID\":\"call_000000000000000000000022\",\"state\":{\"status\":\"error\",\"input\":{\"command\":\"echo lorem\",\"description\":\"adipiscing incid\"},\"error\":\"ipsum sed ipsum consectetur ut et dolor tempor ipsum tempor incidi\",\"time\":{\"start\":1793494208825,\"end\":1793494208827}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000012",
+   "message_id": "msg_00000000000000000000000085",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494208839,
+   "time_updated": 1793494209829,
+   "data": "{\"type\":\"tool\",\"tool\":\"write\",\"callID\":\"call_000000000000000000000023\",\"state\":{\"status\":\"error\",\"input\":{\"file_path\":\"/tmp/e96L-out/escape.txt\",\"content\":\"x\"},\"error\":\"ipsum sed ipsum consectetur ut et dolor tempor ipsum tempor incidi\",\"time\":{\"start\":1793494209822,\"end\":1793494209828}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000013",
+   "message_id": "msg_00000000000000000000000085",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494209858,
+   "time_updated": 1793494209860,
+   "data": "{\"reason\":\"tool-calls\",\"snapshot\":\"4b36dfd79db36d8c59d1fb032de66b57f0457b65\",\"type\":\"step-finish\",\"tokens\":{\"total\":2530,\"input\":306,\"output\":249,\"reasoning\":215,\"cache\":{\"write\":0,\"read\":1760}},\"cost\":0.00065916}"
+  },
+  {
+   "id": "prt_00000000000000000000000014",
+   "message_id": "msg_00000000000000000000000086",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494211002,
+   "time_updated": 1793494211003,
+   "data": "{\"snapshot\":\"4b36dfd79db36d8c59d1fb032de66b57f0457b65\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000015",
+   "message_id": "msg_00000000000000000000000086",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494211066,
+   "time_updated": 1793494211634,
+   "data": "{\"type\":\"reasoning\",\"text\":\"dolor dolor adipiscing adipiscing tempor sit tempor ipsum sed et dolore amet et tempor ut sit eiusmod dolore ut sed adipiscing incididunt adipiscing sit labore lorem labore consectetur magna tempor elit et lorem do ipsum d\\n\\ntempor et dolore labore dolor eiusmod lorem eiusmod amet et ipsum sed labore\",\"time\":{\"start\":1793494211066,\"end\":1793494211633}}"
+  },
+  {
+   "id": "prt_00000000000000000000000016",
+   "message_id": "msg_00000000000000000000000086",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494211635,
+   "time_updated": 1793494212879,
+   "data": "{\"type\":\"text\",\"text\":\"eiusmod ipsum adipiscing labore ipsum eiusmod tempor dolor sed consectetur dolor sed do sit inci\\n\\ndo sit incididunt sit sed adipiscing magna consectetur lorem aliqua labore dolor tempor aliqua aliqua et lorem sed tempor adipiscing lorem dolor et do el\\ndo ipsum eiusmod aliqua sit et et ut ut sit ipsum eiusmod consectetur sed elit ut ut incididunt magna amet tempor amet\\nmagna consectetur lorem amet et incididunt tempor aliqua do eiusmod ipsum amet ut ipsum et labore magna adipiscing dolo\\nipsum lorem magna lorem aliqua dolor do ut dolor et amet sed aliqua magna magna magna incididunt tempor aliqua eiusmod l\\naliqua tempor adipiscing amet incididunt do dolore tempor adipiscing ipsum dolore dolor ut adipiscing sit magna dolore\\n\\ntempor elit dolore sed magna aliqua incididunt sed et dolor sit adipiscing aliqua tempor consectetur ipsum ipsum sed s\",\"time\":{\"start\":1793494211635,\"end\":1793494212878}}"
+  },
+  {
+   "id": "prt_00000000000000000000000017",
+   "message_id": "msg_00000000000000000000000086",
+   "session_id": "ses_00000000000000000000000005",
+   "time_created": 1793494212888,
+   "time_updated": 1793494212889,
+   "data": "{\"reason\":\"stop\",\"snapshot\":\"4b36dfd79db36d8c59d1fb032de66b57f0457b65\",\"type\":\"step-finish\",\"tokens\":{\"total\":2897,\"input\":697,\"output\":220,\"reasoning\":60,\"cache\":{\"write\":0,\"read\":1920}},\"cost\":0.00055662}"
+  },
+  {
+   "id": "prt_00000000000000000000000018",
+   "message_id": "msg_00000000000000000000000081",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494323208,
+   "time_updated": 1793494323209,
+   "data": "{\"type\":\"text\",\"text\":\"aliqua consectetur labore do elit dolore ipsum labore magna dolore et aliqua lorem ut lorem elit tempor magna ut amet dolore sit tempor amet ut magna amet amet incididunt magna aliqua sit ut consectetur consectetur elit eiusmod amet et eiusmod do sed dolor dolore do sed consectetur consectetur ut consectetur amet dolor lorem elit labore ipsum sed ut sed lorem eiusmod elit sed amet sit amet eiusmod co\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000019",
+   "message_id": "msg_00000000000000000000000082",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494325866,
+   "time_updated": 1793494325869,
+   "data": "{\"snapshot\":\"4b36dfd79db36d8c59d1fb032de66b57f0457b65\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000020",
+   "message_id": "msg_00000000000000000000000082",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494325872,
+   "time_updated": 1793494327338,
+   "data": "{\"type\":\"reasoning\",\"text\":\"lorem ut aliqua incididunt elit sit do dolor tempor elit sit lorem et adipiscing tempor et eiusmod adipiscing sed do consectetur dolore consectetur incididunt et ipsum magna sit dolor magn\\n\\nlorem magna ut aliqua magna lorem dolore ut ipsum sit tempor dolor tempor sed et ut aliqua lorem tempor consectetur sit lorem et dolor consectetur aliqua amet sit elit adipiscing lorem u\\n\\nsit adipiscing dolore elit incididunt ut sit incididunt dolore et consectetur eiusmod eiusmod aliq\\n\\nsed aliqua labore tempor lorem et et ut incididunt adipiscing incididunt elit aliqua ut \\n\\neiusmod dolor magna consectetur lorem \\n\\nlabore dolor et et labore magna magna tempor aliqua labore sed dolor aliqua tempor aliqua sit labore lorem eiusmod ut ut dolor consectetur tempor consectetur dolor et sed elit lorem do et magna adipiscing lorem adipiscing eiusmod aliqua ipsum do magna consectetur elit \\n\\neiusmod ipsum magna e\",\"time\":{\"start\":1793494325872,\"end\":1793494327336}}"
+  },
+  {
+   "id": "prt_00000000000000000000000021",
+   "message_id": "msg_00000000000000000000000082",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494327339,
+   "time_updated": 1793494327526,
+   "data": "{\"type\":\"tool\",\"tool\":\"proj_git_status\",\"callID\":\"call_000000000000000000000024\",\"state\":{\"status\":\"completed\",\"input\":{\"worktree\":\"/tmp/e96L-wt\"},\"output\":\"{\\\"ok\\\":false,\\\"why\\\":\\\"labore labore incididunt dolor am\\\",\\\"refusal\\\":\\\"tool-not-routed\\\"}\",\"metadata\":{\"truncated\":false},\"title\":\"\",\"time\":{\"start\":1793494327446,\"end\":1793494327525}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000022",
+   "message_id": "msg_00000000000000000000000082",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494327538,
+   "time_updated": 1793494327540,
+   "data": "{\"reason\":\"tool-calls\",\"snapshot\":\"4b36dfd79db36d8c59d1fb032de66b57f0457b65\",\"type\":\"step-finish\",\"tokens\":{\"total\":2627,\"input\":589,\"output\":49,\"reasoning\":229,\"cache\":{\"write\":0,\"read\":1760}},\"cost\":0.00052086}"
+  },
+  {
+   "id": "prt_00000000000000000000000023",
+   "message_id": "msg_00000000000000000000000083",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494329747,
+   "time_updated": 1793494329748,
+   "data": "{\"snapshot\":\"4b36dfd79db36d8c59d1fb032de66b57f0457b65\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000024",
+   "message_id": "msg_00000000000000000000000083",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494329749,
+   "time_updated": 1793494330041,
+   "data": "{\"type\":\"reasoning\",\"text\":\"consectetur et eiusmod adipiscing sit adipiscing ipsum et sit do dolor ipsum eiusmod sit elit dolore\\n\\neiusmod et magna et sit sit sit lorem labore consectetur dolore consectetur do incidid\\n\\nmagna labore amet adipiscing sit aliqua magna adipiscing dolor consectetur ipsum sed amet adipiscing dolore sit adipiscing \",\"time\":{\"start\":1793494329749,\"end\":1793494330039}}"
+  },
+  {
+   "id": "prt_00000000000000000000000025",
+   "message_id": "msg_00000000000000000000000083",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494330042,
+   "time_updated": 1793494330841,
+   "data": "{\"type\":\"text\",\"text\":\"et sit amet amet do adipiscing sit consectetur incididunt magna amet eiusmod incididunt sit eiusmod ipsum sit et dol\\ndolore amet ipsum do magna do et labore lorem incididunt ipsum consectetur \\ntempor aliqua amet do ipsum consectetur tempor sit ut dolore tempor lorem do \\namet incididunt lorem et tempor sed adipiscing sit do eiusmod lorem adipiscing ipsum \\naliqua ut sit do aliqua ut labore dolore ipsum magna dolore dolore labore in\\n\\nsit \",\"time\":{\"start\":1793494330042,\"end\":1793494330839}}"
+  },
+  {
+   "id": "prt_00000000000000000000000026",
+   "message_id": "msg_00000000000000000000000083",
+   "session_id": "ses_00000000000000000000000006",
+   "time_created": 1793494330871,
+   "time_updated": 1793494330872,
+   "data": "{\"reason\":\"stop\",\"snapshot\":\"4b36dfd79db36d8c59d1fb032de66b57f0457b65\",\"type\":\"step-finish\",\"tokens\":{\"total\":2892,\"input\":741,\"output\":138,\"reasoning\":93,\"cache\":{\"write\":0,\"read\":1920}},\"cost\":0.00051102}"
+  },
+  {
+   "id": "prt_00000000000000000000000027",
+   "message_id": "msg_00000000000000000000000077",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494389610,
+   "time_updated": 1793494389612,
+   "data": "{\"type\":\"text\",\"text\":\"tempor labore dolore ipsum dolore tempor lorem elit consectetur eiusmod aliqua sed ipsum dolor cons\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000028",
+   "message_id": "msg_00000000000000000000000078",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494392236,
+   "time_updated": 1793494392237,
+   "data": "{\"snapshot\":\"4b36dfd79db36d8c59d1fb032de66b57f0457b65\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000029",
+   "message_id": "msg_00000000000000000000000078",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494392239,
+   "time_updated": 1793494392825,
+   "data": "{\"type\":\"reasoning\",\"text\":\"magna ipsum sed adipiscing ipsum et incididunt incididunt ut sit et sit lorem adipiscing consectetur elit dolor consectetur amet sit et sit lorem aliqua et dolor incididunt amet lorem adipiscing dolor et amet eiu\\n\\nlorem amet do dolor lorem amet tempor dolor aliqua eiusmod aliqua consectetur ip\",\"time\":{\"start\":1793494392239,\"end\":1793494392823}}"
+  },
+  {
+   "id": "prt_00000000000000000000000030",
+   "message_id": "msg_00000000000000000000000078",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494392827,
+   "time_updated": 1793494408004,
+   "data": "{\"type\":\"tool\",\"tool\":\"bash\",\"callID\":\"call_000000000000000000000025\",\"state\":{\"status\":\"completed\",\"input\":{\"command\":\"echo lorem\",\"timeout\":610000},\"output\":\"sit dolore \\n\\n<shell_metadata>\\namet dolor do do magna e\\n</shell_metadata>\",\"metadata\":{\"output\":\"sit dolore \\n\\n<shell_metadata>\\namet dolor do do magna e\\n</shell_metadata>\",\"exit\":null,\"truncated\":false},\"title\":\"magna ips\",\"time\":{\"start\":1793494392969,\"end\":1793494408002}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000031",
+   "message_id": "msg_00000000000000000000000079",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494409244,
+   "time_updated": 1793494409245,
+   "data": "{\"type\":\"text\",\"text\":\"et ut magna do elit do do ipsum tempor tempor consectetur lorem aliqua dolore do sit lorem sit m\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000032",
+   "message_id": "msg_00000000000000000000000080",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494411881,
+   "time_updated": 1793494411883,
+   "data": "{\"snapshot\":\"4b36dfd79db36d8c59d1fb032de66b57f0457b65\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000033",
+   "message_id": "msg_00000000000000000000000080",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494411885,
+   "time_updated": 1793494412669,
+   "data": "{\"type\":\"reasoning\",\"text\":\"eiusmod magna amet ipsum tempor ut aliqua labore adipiscing dolore dolor ipsum dolor magna magna tempor ut lorem amet elit eiusmod incididunt sed labore aliqua labore eiusmod elit sit dolore adipiscing magna elit consectetur amet lorem adipiscing amet ipsum dolor\\n\\nut magna labore et sit lorem do elit dolor amet tempor eiusmod dolore tempor incididunt lore\",\"time\":{\"start\":1793494411885,\"end\":1793494412668}}"
+  },
+  {
+   "id": "prt_00000000000000000000000034",
+   "message_id": "msg_00000000000000000000000080",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494412670,
+   "time_updated": 1793494412847,
+   "data": "{\"type\":\"text\",\"text\":\"do sit magna magna do amet consectetur do incididunt et ut adipiscing adipiscing lorem consectetur labore et et dolore do dolo\",\"time\":{\"start\":1793494412670,\"end\":1793494412845}}"
+  },
+  {
+   "id": "prt_00000000000000000000000035",
+   "message_id": "msg_00000000000000000000000080",
+   "session_id": "ses_00000000000000000000000007",
+   "time_created": 1793494412869,
+   "time_updated": 1793494412871,
+   "data": "{\"reason\":\"stop\",\"snapshot\":\"4b36dfd79db36d8c59d1fb032de66b57f0457b65\",\"type\":\"step-finish\",\"tokens\":{\"total\":3787,\"input\":1747,\"output\":38,\"reasoning\":82,\"cache\":{\"write\":0,\"read\":1920}},\"cost\":0.00067962}"
+  },
+  {
+   "id": "prt_00000000000000000000000036",
+   "message_id": "msg_00000000000000000000000070",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503193804,
+   "time_updated": 1793503193805,
+   "data": "{\"type\":\"text\",\"text\":\"ipsum aliqua et aliqua sit aliqua sit do et sed amet sit sed amet adipiscing magna et incididunt amet lorem lorem consectetur dolor eiusmod dolor dolore et adipiscing inc\\n\\nsit do elit et magna dolore aliqua elit tempor labore amet sit dolor dolor sit magna lorem ut labore ipsum elit dolore sed ut et ut incididunt incididunt ut sit adipiscing lo\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000037",
+   "message_id": "msg_00000000000000000000000071",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503196691,
+   "time_updated": 1793503196693,
+   "data": "{\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000038",
+   "message_id": "msg_00000000000000000000000071",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503196694,
+   "time_updated": 1793503196700,
+   "data": "{\"type\":\"reasoning\",\"text\":\"lorem labore magna incididunt m\",\"time\":{\"start\":1793503196694,\"end\":1793503196699}}"
+  },
+  {
+   "id": "prt_00000000000000000000000039",
+   "message_id": "msg_00000000000000000000000071",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503196701,
+   "time_updated": 1793503196714,
+   "data": "{\"type\":\"tool\",\"tool\":\"bash\",\"callID\":\"call_000000000000000000000026\",\"state\":{\"status\":\"error\",\"input\":{\"command\":\"echo lorem\"},\"error\":\"ipsum sed ipsum consectetur ut et dolor tempor ipsum tempor incidi\",\"time\":{\"start\":1793503196710,\"end\":1793503196713}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000040",
+   "message_id": "msg_00000000000000000000000071",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503196731,
+   "time_updated": 1793503196733,
+   "data": "{\"reason\":\"tool-calls\",\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-finish\",\"tokens\":{\"total\":2084,\"input\":269,\"output\":47,\"reasoning\":8,\"cache\":{\"write\":0,\"read\":1760}},\"cost\":0.00015726}"
+  },
+  {
+   "id": "prt_00000000000000000000000041",
+   "message_id": "msg_00000000000000000000000072",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503198044,
+   "time_updated": 1793503198045,
+   "data": "{\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000042",
+   "message_id": "msg_00000000000000000000000072",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503198055,
+   "time_updated": 1793503198674,
+   "data": "{\"type\":\"reasoning\",\"text\":\"et ipsum consectetur ut tempor magna dolor magna eiusmod magna lorem magna dolor ipsum adipiscing magna ut consectetur tempor amet magna labore ipsum magna eiusmod consectetur eiusmod sed consec\",\"time\":{\"start\":1793503198055,\"end\":1793503198673}}"
+  },
+  {
+   "id": "prt_00000000000000000000000043",
+   "message_id": "msg_00000000000000000000000072",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503198684,
+   "time_updated": 1793503198703,
+   "data": "{\"type\":\"tool\",\"tool\":\"bash\",\"callID\":\"call_000000000000000000000027\",\"state\":{\"status\":\"error\",\"input\":{\"command\":\"echo lorem\"},\"error\":\"ipsum sed ipsum consectetur ut et dolor tempor ipsum tempor incidi\",\"time\":{\"start\":1793503198699,\"end\":1793503198702}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000044",
+   "message_id": "msg_00000000000000000000000072",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503198801,
+   "time_updated": 1793503198802,
+   "data": "{\"reason\":\"tool-calls\",\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-finish\",\"tokens\":{\"total\":2196,\"input\":348,\"output\":47,\"reasoning\":41,\"cache\":{\"write\":0,\"read\":1760}},\"cost\":0.00022056}"
+  },
+  {
+   "id": "prt_00000000000000000000000045",
+   "message_id": "msg_00000000000000000000000073",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503199995,
+   "time_updated": 1793503199996,
+   "data": "{\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000046",
+   "message_id": "msg_00000000000000000000000073",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503200006,
+   "time_updated": 1793503201100,
+   "data": "{\"type\":\"reasoning\",\"text\":\"eiusmod incididunt eiusmod amet amet magna dolor adipiscing aliqua lorem magna magna amet eiusmod tempor dolore lorem sed eiusmod elit sed amet labore ut tempor et sit elit ipsum tempor adipiscing labore lorem sed adipiscing dolore do elit dolore tempor do sit et lorem eiusmod sit aliqua t\\n\\neiusmod et dolore tempor lorem dolor sit sed amet incididunt ipsum eiusmod adipiscing consectetur adipiscing et dolor aliqua incididunt incididunt aliqua dolor lorem incididunt dolore ut lorem labore si\\n\\nipsum labore adipiscing eiusmod aliqua ipsum do\",\"time\":{\"start\":1793503200006,\"end\":1793503201099}}"
+  },
+  {
+   "id": "prt_00000000000000000000000047",
+   "message_id": "msg_00000000000000000000000073",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503201105,
+   "time_updated": 1793503201292,
+   "data": "{\"type\":\"tool\",\"tool\":\"bash\",\"callID\":\"call_000000000000000000000028\",\"state\":{\"status\":\"error\",\"input\":{\"command\":\"echo lorem\"},\"error\":\"ipsum sed ipsum consectetur ut et dolor tempor ipsum tempor incidi\",\"time\":{\"start\":1793503201280,\"end\":1793503201292}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000048",
+   "message_id": "msg_00000000000000000000000073",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503201323,
+   "time_updated": 1793503201324,
+   "data": "{\"reason\":\"tool-calls\",\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-finish\",\"tokens\":{\"total\":2377,\"input\":242,\"output\":48,\"reasoning\":109,\"cache\":{\"write\":0,\"read\":1978}},\"cost\":0.000272868}"
+  },
+  {
+   "id": "prt_00000000000000000000000049",
+   "message_id": "msg_00000000000000000000000074",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503202983,
+   "time_updated": 1793503202984,
+   "data": "{\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000050",
+   "message_id": "msg_00000000000000000000000074",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503202986,
+   "time_updated": 1793503204654,
+   "data": "{\"type\":\"reasoning\",\"text\":\"et amet magna aliqua dolor amet elit sed eiusmod adipiscing incididunt labore eiusmod ipsum ipsum et sit dolore elit labore sit labore et sed sed eiusmod amet eiusmod eiusmod sit amet amet ut consectetur lorem labore m\\n\\nelit ipsum consectetur adipiscing incididunt elit amet ipsum sed dolore incididunt consectetur sit et do tempor lorem magna aliqua ut ut magna ipsum dolor et elit eiusmod lorem dolore elit incididunt dolore do sit do incididunt aliqua sit incididunt eiusmod dolore dolor eiusmod \\n\\nut amet lorem et incididunt sed amet aliqua aliqua sit labore ut dolor aliqua et ut tempor eiusmod aliqua elit do do et dolor sed tempor amet aliqua lorem lorem adipisci\\n\\net amet et sit elit tempor eiusmod do tempor adipiscing \",\"time\":{\"start\":1793503202986,\"end\":1793503204653}}"
+  },
+  {
+   "id": "prt_00000000000000000000000051",
+   "message_id": "msg_00000000000000000000000074",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503204656,
+   "time_updated": 1793503204877,
+   "data": "{\"type\":\"tool\",\"tool\":\"read\",\"callID\":\"call_000000000000000000000029\",\"state\":{\"status\":\"error\",\"input\":{\"filePath\":\"/tmp/e96P-wt/calc.py\"},\"error\":\"ipsum sed ipsum consectetur ut et dolor tempor ipsum tempor incidi\",\"time\":{\"start\":1793503204874,\"end\":1793503204876}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000052",
+   "message_id": "msg_00000000000000000000000074",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503204940,
+   "time_updated": 1793503204941,
+   "data": "{\"reason\":\"tool-calls\",\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-finish\",\"tokens\":{\"total\":2604,\"input\":311,\"output\":48,\"reasoning\":155,\"cache\":{\"write\":0,\"read\":2090}},\"cost\":0.00034944}"
+  },
+  {
+   "id": "prt_00000000000000000000000053",
+   "message_id": "msg_00000000000000000000000075",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503206819,
+   "time_updated": 1793503206821,
+   "data": "{\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000054",
+   "message_id": "msg_00000000000000000000000075",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503206821,
+   "time_updated": 1793503207642,
+   "data": "{\"type\":\"reasoning\",\"text\":\"sit incididunt amet aliqua labore adipiscing et amet aliqua consectetur dolore magna amet ut magna labore consectetur ut et labore dolor do eiusmod magna sit elit dolore \\n\\net adipiscing incididunt dolore ut lorem tempor sit tempor do tempor aliqua dolor ipsum ipsum ut dolor \\n\\ndolor labore lorem ut magna dolore amet sit ei\",\"time\":{\"start\":1793503206821,\"end\":1793503207641}}"
+  },
+  {
+   "id": "prt_00000000000000000000000055",
+   "message_id": "msg_00000000000000000000000075",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503207643,
+   "time_updated": 1793503207950,
+   "data": "{\"type\":\"tool\",\"tool\":\"report\",\"callID\":\"call_000000000000000000000030\",\"state\":{\"status\":\"error\",\"input\":{\"outcome\":\"blocked\",\"summary\":\"sit magna ut lorem et lorem amet et consectetur consectetur magna a\"},\"error\":\"ipsum sed ipsum consectetur ut et dolor tempor ipsum tempor incidi\",\"time\":{\"start\":1793503207947,\"end\":1793503207949}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000056",
+   "message_id": "msg_00000000000000000000000075",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503207970,
+   "time_updated": 1793503207971,
+   "data": "{\"reason\":\"tool-calls\",\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-finish\",\"tokens\":{\"total\":2765,\"input\":356,\"output\":68,\"reasoning\":69,\"cache\":{\"write\":0,\"read\":2272}},\"cost\":0.000284832}"
+  },
+  {
+   "id": "prt_00000000000000000000000057",
+   "message_id": "msg_00000000000000000000000076",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503209849,
+   "time_updated": 1793503209850,
+   "data": "{\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000058",
+   "message_id": "msg_00000000000000000000000076",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503209851,
+   "time_updated": 1793503210066,
+   "data": "{\"type\":\"reasoning\",\"text\":\"amet adipiscing amet dolore magna et labore elit labore ipsum lorem lorem et incididunt inc\",\"time\":{\"start\":1793503209851,\"end\":1793503210065}}"
+  },
+  {
+   "id": "prt_00000000000000000000000059",
+   "message_id": "msg_00000000000000000000000076",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503210067,
+   "time_updated": 1793503210839,
+   "data": "{\"type\":\"text\",\"text\":\"eiusmod dolor adipiscing consectetur aliqua aliqua magna incididunt amet do ut sit ipsum magna elit do consectetur tempo\\n\\nadipiscing consectet\\n\\neiusmod et\\nelit labo\\neiusmod elit i\\n    lorem tempor\\nadi\\n\\nlorem dolore ad\\nelit labo\\nut ut ut dolor sed d\\n\\nlorem sit incid\\n    amet dolore sit incid\\nadi\\n\\nconsectetur sed sed et ut et amet adipiscing dolore a\",\"time\":{\"start\":1793503210066,\"end\":1793503210838}}"
+  },
+  {
+   "id": "prt_00000000000000000000000060",
+   "message_id": "msg_00000000000000000000000076",
+   "session_id": "ses_00000000000000000000000008",
+   "time_created": 1793503210847,
+   "time_updated": 1793503210847,
+   "data": "{\"reason\":\"stop\",\"snapshot\":\"d2dde19c912509373e8359be4eb200ceb2886a23\",\"type\":\"step-finish\",\"tokens\":{\"total\":2909,\"input\":291,\"output\":100,\"reasoning\":20,\"cache\":{\"write\":0,\"read\":2498}},\"cost\":0.000246288}"
+  },
+  {
+   "id": "prt_00000000000000000000000061",
+   "message_id": "msg_00000000000000000000000067",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505010776,
+   "time_updated": 1793505010778,
+   "data": "{\"type\":\"text\",\"text\":\"dolor labore amet incididunt dolore lorem magna labore sed dolore incididunt amet amet lorem consectetur consectetur ipsum sed labore labore do tempor aliqua adipiscing do eiusmod elit do\\n\\nsit do elit et magna dolore aliqua elit tempor labore amet sit dolor dolor sit magna lorem ut labore ipsum elit dolore sed ut et ut incididunt incididunt ut sit adipiscing lo\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000062",
+   "message_id": "msg_00000000000000000000000068",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505014355,
+   "time_updated": 1793505014357,
+   "data": "{\"snapshot\":\"3484a6759c9ff124b600299545fe1ecd28e618dc\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000063",
+   "message_id": "msg_00000000000000000000000068",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505014359,
+   "time_updated": 1793505031808,
+   "data": "{\"type\":\"reasoning\",\"text\":\"amet dolor dolore lorem elit labore eiusmod et dolor dolore mag\\n\\ntempor et sit aliqua adipiscing aliqua tempor incididunt sed ipsum magna ut magna dolore aliqua ut consecte\\n\\ndolor dolore sit tempor magna sit aliqua elit lorem sit sit incididunt ipsum tempor et et dolor lorem dolore ipsum dolore sed elit aliqua et adipiscing sit lorem eiusmod aliqua \\n\\nsit ipsum eiusmod do do labore amet dolor magna aliqua labore magna tempor consectetur lorem dolor magna elit consectetur elit do i\\n\\nsed ut incididunt consectetur elit labore amet dolore elit incididunt lorem dolor ipsum dolor dolor et adipiscing elit labore ut incididunt labore sed dolore consectetur magna ut adipiscing sed ut magna dolor do labore et elit do adipiscing dolor dolor tempor lor\\n\\nut amet sed lorem et ut amet sit sit eiusmod incididunt lorem dolor tempor adipiscing incididunt lorem dolor dolore sed eiusmod incididunt aliqua amet lorem ut ut do incididunt amet consectetur eiusmod consectetur dolor incididunt labore magna do magna magna ut dolore eiusmod consectetur elit ut sit temp\\n\\nmagna aliqua labore lorem et elit dolor lorem sit do ipsum labore do tempor lorem sed tempor dolor ut eiusmod eiusmod magna lorem dolore do ut elit sit elit ipsum incididunt magna eiusmod do tempor ipsum et dolore et consecte\\n\\nut ipsum dolor sit sed sed consectetur incididunt dolore do sed magna adipiscing ut et ut labore ma\\n\\nincididunt sed tempor elit ut et eiusmod incididunt elit do aliqua tempor et ipsum aliqua ipsum aliqua sit lorem incididunt et ut aliqua do dolor amet sit dolor ut magna incididunt elit labore lorem incididunt lorem sit magna a\\n\\ndo sed dolor ipsum ipsum sed do labore adipiscing magna labor\\n\\net eiusmod ut incididunt incididunt magna sit ut labore et labore ipsum aliqua dolor incididunt et labore consectetur consectetur tempor sed dolore elit ut ut tempor sit tempor sit adipiscing labore l\\n\\ndolore adipiscing et eiusmod labore consectetur ut sed adipiscing lorem dolore consectetur amet eiusmod elit eiusmod lorem elit eiusmod lorem consectetur lorem incididunt ipsum ipsum tempor eiusmod aliqua sed mag\\n\\naliqua do sit lorem dolor ut dolor amet labore amet incididunt ut aliqua dolor ipsum eiusmod dolore consectetur incididunt magna elit do aliqua elit labore sit adipiscing et lorem sed aliqua do aliqua et incididunt sed do ut sed sed aliqua sed dolore consectetur et u\\n\\nadipiscing amet magna dolore et magna labore sit sit consectetur labore et et dolor aliqua tempor ut sit sed do ut ipsum \\n\\ndolor do sed amet adipiscing do lorem ipsum amet amet ipsum tempor sed ipsum sit consectetur amet ipsum ut aliqua do elit lorem et sit eiusmod sed ali\\n\\nsit lorem incididunt labore consectetur elit ut et lorem lorem adipiscing tempor adipiscing lorem do et tempor elit eiusmod tempor dolor dolor ipsum\\n\\nsed ut incididunt do ipsum adipiscing amet consectetur adipiscing et ut do amet consectetur dolore sed sit ut sed labore tempor labore incididunt dolore sed magna do amet sed elit dolore consectetur ut elit adipiscing mag\\n\\nmagna do sed magna sit amet magna eiusmod dolor lorem labore tempor ipsum et dolore eiusmod labore incididunt aliqua sed eiusmod ipsum eiusmod et lorem tempor consectetur adipiscing labore et lorem tempor dolore\\n\\ndo lorem eiusmod dolore elit lorem tempor ut do ut aliqua adipiscing incididunt lorem labore do sit ut ipsum consectetur ipsum dolor adipiscing dolor dolore aliqua elit eiusmod tempor lorem magna\\n\\ndolore eiusmod tempor adipiscing sed lorem lorem magna adipiscing magna incididunt adipiscing magna magna do consectetur dolor sit lorem elit tempor dolore labore \\n\\nut elit labore do magna ipsum do ut ut magna magna magna consectetur eiusmod consectetur consectetur aliqua sed eiusmod dolore et dolor dolore ipsum et dolor dolore magna sit ut aliqua labore dolore adipiscing incididunt do \\n\\nincididunt dolor dolore et elit adipiscing amet et ut sit lorem incididunt ipsum elit labore do adipi\\n\\nlabore ut lorem et adipiscing sit consectetur eiusmod sed adipiscing eiusmod lorem consectetur labore aliqua sit ut eiusmod ut labore elit amet et ut do dolor sit labore ut sed eiusmod do labore do sit ut ut eiusmod magna dolor elit ipsum dolore sed magna sed adipiscing eiusmod dolore do dolore magna e\\n\\namet do tempor adipiscing magna consectetur magna ipsum sit sit tempor sit elit adipiscing sed aliqua magna elit incididunt ipsum labore incididunt tempo\\n\\nut lorem adipiscing amet labore magna dolore adipiscing labore incididunt ut labore dolore dolor elit do aliq\\n\\ndo ipsum ut dolore dolore et dolore ut lorem dolor ut sed tempor incididunt tempor sit eiusmod elit labore eiusmod lorem aliqua labore sed \\n\\nconsectetur tempor ipsum ut sit magna sed ut ut amet dolor amet eiusmod dolore ut eiusmod incididunt magna et do elit c\\n\\ndo dolore amet adipiscing sed amet consectetur amet sit et amet dolore sed sed magna tempor sit magna et aliqua aliqua et do et adipiscing sit incididunt lorem consectetur consectetur consectetur sed lorem sed eiusmod magna incididunt amet sit ut adipiscing tempor tempor ipsum labore sit elit incidid\\n\\ndolore elit labore sit dolor eiusmod dolor sed magna do ipsum ut dolor et sit labore lorem dolore magna consectetur eiusmod magna dolor labore elit aliqua incididunt elit adipiscing sed dolore labore lorem et ipsum elit do dolor do incididunt magna dolore sit sed do \\n\\nsit dolor et sed amet elit eiusmod amet labore dolor ut dolore tempor lorem consectetur elit amet ei\\n\\ntempor labore consectetur ut tempor ipsum eiusmod do lorem lorem sed dolore ipsum aliqua elit adipiscing ut aliqua eiusmod aliqua adipiscing ipsum et tempor sed dolore adipiscin\\n\\neiusmod amet tempor sed magna adipiscing consectetur incididunt incididunt aliqua amet sit et tempor amet ut ut lorem et sit dolore sed et adipiscing sit sed incididunt et ipsum elit magna aliqua eiusmod labore magna sit incididunt do ipsum ipsum et dolor ut ipsum dolor incididunt tempor tempor lorem consectetur sed et tempor amet et elit dolore et ut ut aliqua aliqua magna eiu\\n\\ndolor ut eiusmod eiusmod sit consectetur et dolor sed ipsum magna sed sit amet sed sed ipsum \\n\\nelit eiusmod et incididunt incididunt do amet magna elit consectetur adipiscing elit tempor dolore et ut tempor lorem amet aliqua et magna magna tempor et incididun\\n\\nut et tempor incididunt aliqua labore dolore ut ame\\n\\ndo adipiscing elit adipiscing do adipiscing sed sed magna sed ipsum aliqua ipsum magna lorem ipsum tempor dolor dolor labore amet magna amet adipiscing et eiusmod aliqua ut dolore lorem ipsum consectetur dolor adipiscing lorem dolor dolore magna sed\\n\\neiusmod tempor elit consectetur tempor dolor ipsum elit ipsum adipiscing sit lorem lorem amet magna adipiscing aliqua adipiscing lo\\n\\nsed dolore elit sit aliqua dolor sed sed elit sed dolore dolore et consectetur lorem do elit lorem dolor incididunt dolor adipiscing et labore ut dolore elit eiusmod dolor et et do magna et dolor aliqua labore labore dolor eiusmod sed aliqua do do magna et lorem sit do do \\n\\nlorem ut labore ut adipiscing consectetur sit adipiscing ut magn\\n\\nadipiscing ut eiusmod tempor ipsum eiusmod adipiscing elit elit consectetur ame\\n\\ndolore ipsum lorem sit elit dolore tempor labore tempor i\\n\\nsit amet et eiusmod sit eiusmod eiusmod labore do sit eiusmod dolor do tempor aliqua ut do dolor magna sit tempor do aliqua aliqua elit dolore sit ut et magna eiusmod dolor dolore adipiscing consectetur sed tempor aliqua tempor dolor incididunt tempor sit sed lorem et lorem magna sit dolor dolore et sit et amet dolore do eiusmod lorem ipsum elit ut sit tem\\n\\nlabore adipiscing amet incididunt do elit ipsum aliqua amet elit tempor adipiscing sed labore amet magna ipsum ipsum do amet et adipiscing lorem labore labore et elit t\\n\\neiusmod magna tempor consectetur dolore lorem ut sit aliqua do dolore incididunt ut lorem labore sed dolore tempor lorem dolore consectetur et sit dolor elit dolore magna eiusmod tempor adipiscing do sit lor\\n\\namet labore et dolor dolor dolore eiusmod elit lorem tempor consectetur incididunt eiusmod consectetur ipsum tempor labore ut ut lorem dolore eiusmod elit elit tempor magna incididunt incididunt aliqua dolor incididunt \\n\\nlabore elit dol\\n\\nut ipsum ut incididunt ipsum\\n\\nipsum incididunt amet sit eiusmod dolor ut et dolor labore aliqua elit eiusmod lorem incididunt tempor \\n\\nadipiscing adipiscing \\n\\nmagna lorem aliqua amet consectetur aliqua aliqua labore amet \\n\\nipsum dolore ipsum amet eiusmod labore dolor lorem aliqua elit ei\\n\\nincididunt elit labore eiusmod sit lorem do sit dolore et labore amet sed do elit tempor et adipiscing ipsum amet elit \\n\\ndolore sit eiusmod magna ut incididunt ut do do lorem et consectetur ipsum tempor ut adipiscing lab\\n\\nelit magna incididunt\",\"time\":{\"start\":1793505014359,\"end\":1793505031803}}"
+  },
+  {
+   "id": "prt_00000000000000000000000064",
+   "message_id": "msg_00000000000000000000000068",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505031811,
+   "time_updated": 1793505034413,
+   "data": "{\"type\":\"text\",\"text\":\"do elit dolore sed labore elit dolore adipiscing ut incididunt aliqua tempor aliqua et do consectetur amet ut dolor sed sed adipiscing elit aliqua elit aliqua dol\",\"time\":{\"start\":1793505031811,\"end\":1793505034410}}"
+  },
+  {
+   "id": "prt_00000000000000000000000065",
+   "message_id": "msg_00000000000000000000000068",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505032267,
+   "time_updated": 1793505034440,
+   "data": "{\"type\":\"tool\",\"tool\":\"proj_report\",\"callID\":\"call_000000000000000000000031\",\"state\":{\"status\":\"completed\",\"input\":{\"verdict\":\"blocked\",\"summary\":\"amet adipiscing tempor sed aliqua lorem do adipiscing tempor eiusmod labore lorem lorem dolore ipsum elit eiusmod lorem sed ut sed do dolor sed aliqua magna sed consectetur ut incididunt ipsum magna aliqua adipiscing ut magna ut magna sed sed magna sit consectetur aliqua tempor aliqua dolore dolor incididunt elit tempor dolore do ipsum et labore amet sed ipsum sit elit sit eiusmod lor\\n\\nsed dolore labore ut dolor amet tempor ipsum adipiscing lorem ut elit amet ipsum sit labore do aliqua eiusmod adipiscing sed elit sit magna sit amet lorem elit aliqua dolore ut tempor dolor ipsum sit dolore labore tempor dolor magna consectetur labore incididunt sit adipiscing ipsum sit magna eiusmod ipsum et dolor aliq\\n\\ndo amet dolor eiusmod amet tempor ut consectetur ipsum ipsum adipiscing incididunt elit sed sed dolore consectetur aliqua lore\",\"reportPath\":\"/tmp/e96Qwt/report.md\",\"head\":\"0000000\",\"runIds\":[]},\"output\":\"{\\\"accepted\\\":\\\"locally\\\"}\",\"metadata\":{\"truncated\":false},\"title\":\"\",\"time\":{\"start\":1793505034376,\"end\":1793505034437}}}"
+  },
+  {
+   "id": "prt_00000000000000000000000066",
+   "message_id": "msg_00000000000000000000000068",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505034503,
+   "time_updated": 1793505034505,
+   "data": "{\"reason\":\"tool-calls\",\"snapshot\":\"3484a6759c9ff124b600299545fe1ecd28e618dc\",\"type\":\"step-finish\",\"tokens\":{\"total\":4814,\"input\":768,\"output\":356,\"reasoning\":1930,\"cache\":{\"write\":0,\"read\":1760}},\"cost\":0.00298416}"
+  },
+  {
+   "id": "prt_00000000000000000000000067",
+   "message_id": "msg_00000000000000000000000069",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505035985,
+   "time_updated": 1793505035987,
+   "data": "{\"snapshot\":\"3484a6759c9ff124b600299545fe1ecd28e618dc\",\"type\":\"step-start\"}"
+  },
+  {
+   "id": "prt_00000000000000000000000068",
+   "message_id": "msg_00000000000000000000000069",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505035994,
+   "time_updated": 1793505036370,
+   "data": "{\"type\":\"text\",\"text\":\"sed incididunt aliqua aliqua eiusmod elit sit sit incididunt incididunt ipsum elit do consectetur aliqua dolore ipsum se\",\"time\":{\"start\":1793505035994,\"end\":1793505036358}}"
+  },
+  {
+   "id": "prt_00000000000000000000000069",
+   "message_id": "msg_00000000000000000000000069",
+   "session_id": "ses_00000000000000000000000009",
+   "time_created": 1793505036426,
+   "time_updated": 1793505036427,
+   "data": "{\"reason\":\"stop\",\"snapshot\":\"3484a6759c9ff124b600299545fe1ecd28e618dc\",\"type\":\"step-finish\",\"tokens\":{\"total\":4868,\"input\":2434,\"output\":36,\"reasoning\":0,\"cache\":{\"write\":0,\"read\":2398}},\"cost\":0.000787788}"
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "pid": 2328842,
+ "sessionId": "00000000-0000-4000-8000-0000000001be",
+ "cwd": "/home/user/proj-3",
+ "startedAt": 1793491200000,
+ "procStart": "51863275",
+ "version": "2.1.314",
+ "peerProtocol": 1,
+ "peerFeatures": [
+  "notify_idle",
+  "reply_across_default_dirs",
+  "artifact_yield"
+ ],
+ "kind": "interactive",
+ "entrypoint": "cli",
+ "pidDomain": "REDACTED",
+ "asksForConvertedSkills": false,
+ "messagingSocketPath": "REDACTED",
+ "name": "ut lab-consectet-te",
+ "nameSource": "derived",
+ "nameSince": 1793491200000,
+ "status": "idle",
+ "updatedAt": 1793539070727,
+ "statusUpdatedAt": 1793539070727,
+ "bridgeSessionId": "session_000000000000000000000001"
+}

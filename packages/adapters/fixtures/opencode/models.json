@@ -1,0 +1,19 @@
+{
+ "anthropic": {
+  "id": "anthropic",
+  "name": "Anthropic",
+  "models": {
+   "claude-opus-5-5": { "id": "claude-opus-5-5", "limit": { "context": 1000000, "output": 64000 } },
+   "claude-sonnet-5": { "id": "claude-sonnet-5", "limit": { "context": 200000, "output": 64000 } },
+   "claude-zero": { "id": "claude-zero", "limit": { "context": 0, "output": 1000 } },
+   "claude-unsized": { "id": "claude-unsized" }
+  }
+ },
+ "opencode": {
+  "id": "opencode",
+  "name": "OpenCode",
+  "models": {
+   "deepseek-v4.1-flash": { "id": "deepseek-v4.1-flash", "limit": { "context": 128000, "output": 8192 } }
+  }
+ }
+}

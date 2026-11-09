@@ -1,0 +1,32 @@
+{
+ "pid": 1986077,
+ "sessionId": "00000000-0000-4000-8000-0000000001bd",
+ "cwd": "/home/user/proj-6",
+ "startedAt": 1793491200000,
+ "procStart": "54514586",
+ "version": "2.1.319",
+ "peerProtocol": 1,
+ "peerFeatures": [
+  "notify_idle",
+  "reply_across_default_dirs",
+  "artifact_yield"
+ ],
+ "kind": "interactive",
+ "entrypoint": "cli",
+ "pidDomain": "REDACTED",
+ "asksForConvertedSkills": null,
+ "messagingSocketPath": "REDACTED",
+ "name": "do cons-elit i-dolor-et -aliqua do",
+ "nameSource": "auto",
+ "nameSince": 1793530384239,
+ "updatedAt": 1793575077589,
+ "status": "busy",
+ "statusUpdatedAt": 1793575077589,
+ "formerNames": [
+  {
+   "name": "et -ut al-do cons-consectet-ipsu",
+   "until": 1793530384239,
+   "sessionId": "00000000-0000-4000-8000-0000000001bd"
+  }
+ ]
+}

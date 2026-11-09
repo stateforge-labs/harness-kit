@@ -1,0 +1,7 @@
+{"type":"tool","tool":"read","callID":"call_synthetic_0001","state":{"status":"pending","input":{"filePath":"docs/example.md"}}}
+{"type":"tool","tool":"shell","callID":"call_synthetic_0002","state":{"status":"running","input":{"command":"echo lorem"}}}
+{"type":"text","text":"lorem ipsum dolor","synthetic":true}
+{"type":"text","text":"lorem ipsum dolor","ignored":true}
+{"type":"text","text":"   "}
+{"type":"text","text":"amet consectetur"}
+{"type":"file","mime":"text/plain","url":"https://example.com/lorem.txt"}

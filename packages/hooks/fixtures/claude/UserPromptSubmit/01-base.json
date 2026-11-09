@@ -2,7 +2,7 @@
   "session_id": "fx-UserPromptSubmit-1",
   "transcript_path": "/home/user/.claude/projects/p/fx-UserPromptSubmit-1.jsonl",
   "cwd": "/tmp/work",
-  "scratchpad_dir": "/home/user/.cache/claude-tmp/claude-1000/-tmp-work/fx-UserPromptSubmit-1/scratchpad",
+  "scratchpad_dir": "/home/user/.cache/tmp/-tmp-work/fx-UserPromptSubmit-1/scratchpad",
   "prompt_id": "00000000-0000-4000-8000-000000000000",
   "permission_mode": "auto",
   "hook_event_name": "UserPromptSubmit",

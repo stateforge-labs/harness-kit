@@ -1,0 +1,3 @@
+{"role":"assistant","time":{"created":1793505040000,"completed":1793505041500},"summary":true,"mode":"compaction","providerID":"opencode","modelID":"deepseek-v4.1-flash"}
+{"role":"user","time":{"created":1793505042000},"summary":{"diffs":[]},"model":{"providerID":"opencode","modelID":"deepseek-v4.1-flash"}}
+{"role":"assistant","time":{"created":1793505043000},"mode":"build","summary":true}

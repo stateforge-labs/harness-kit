@@ -2,7 +2,7 @@
   "session_id": "fx-PostToolUse-8",
   "transcript_path": "/home/user/.claude/projects/p/fx-PostToolUse-8.jsonl",
   "cwd": "/tmp/work",
-  "scratchpad_dir": "/home/user/.cache/claude-tmp/claude-1000/-tmp-work/fx-PostToolUse-8/scratchpad",
+  "scratchpad_dir": "/home/user/.cache/tmp/-tmp-work/fx-PostToolUse-8/scratchpad",
   "prompt_id": "00000000-0000-4000-8000-000000000000",
   "permission_mode": "auto",
   "agent_id": "aresearcher-071a9e0a4ead0b0a",

@@ -1,0 +1,11 @@
+{
+ "agentType": "general-purpose",
+ "isBuiltIn": true,
+ "launchedWithDefaults": true,
+ "description": "amet dolor amet dolor magna sed do ut",
+ "toolUseId": "toolu_000000000000000000000059",
+ "spawnDepth": 1,
+ "requestShape": "background",
+ "requestNonInteractive": true,
+ "finished": true
+}

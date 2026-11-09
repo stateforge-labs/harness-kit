@@ -1,0 +1,116 @@
+{
+ "headless/claude-result.json": {
+  "source": "headless-run",
+  "harnessVersion": "2.1.319",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "headless/help.txt": {
+  "source": "headless-run",
+  "harnessVersion": "2.1.319",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "headless/version.txt": {
+  "source": "headless-run",
+  "harnessVersion": "2.1.319",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "projects/-home-user-proj-2/00000000-0000-4000-8000-000000000003.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.302",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "projects/-home-user-proj-2/00000000-0000-4000-8000-000000000031.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.302",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "projects/-home-user-proj-4/00000000-0000-4000-8000-000000000065.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.302",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "projects/-home-user-proj-6/00000000-0000-4000-8000-00000000008b.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.316",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "projects/-home-user-proj-6/00000000-0000-4000-8000-0000000000d8.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.317",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "projects/-home-user-proj-6/00000000-0000-4000-8000-000000000108.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.319",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "projects/-home-user/00000000-0000-4000-8000-00000000013b.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.269",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "projects/-home-user/00000000-0000-4000-8000-000000000196/subagents/agent-a0000000000000001.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.316",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "projects/-home-user/00000000-0000-4000-8000-000000000196/subagents/agent-a0000000000000001.meta.json": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.316",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "screens/idle.txt": {
+  "source": "tmux-capture",
+  "harnessVersion": "2.1.319",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "screens/trust-dialog.txt": {
+  "source": "tmux-capture",
+  "harnessVersion": "2.1.319",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "sessions/1986077.json": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.319",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "sessions/2328842.json": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.314",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "synthetic/rules.jsonl": {
+  "source": "synthetic",
+  "harnessVersion": "unknown",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "hand-written"
+ },
+ "tree.txt": {
+  "source": "local-capture",
+  "harnessVersion": "2.1.319",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "synthetic/usage.jsonl": {
+  "source": "synthetic",
+  "harnessVersion": "unknown",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "hand-written"
+ }
+}

@@ -1,0 +1,18 @@
+OpenAI Codex v0.167.0
+--------
+workdir: /home/user/.cache/tmp/-home-user-proj-6/00000000-0000-4000-8000-0000000001bd/scratchpad/ip/dolore-sed-ips
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 00000000-0000-4000-8000-0000000001fc
+--------
+user
+Reply with the single word ok.
+codex
+ok
+tokens used
+3,834
+ok

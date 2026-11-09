@@ -1,0 +1,34 @@
+{
+ "1.19.3": {
+  "tools": [
+   "proj_git_status",
+   "proj_report",
+   "bash",
+   "read",
+   "report",
+   "write"
+  ],
+  "statuses": [
+   "completed",
+   "error"
+  ]
+ },
+ "2.2.6": {
+  "tools": [
+   "edit",
+   "execute",
+   "patch",
+   "read",
+   "shell",
+   "skill",
+   "subagent",
+   "webfetch",
+   "websearch",
+   "write"
+  ],
+  "statuses": [
+   "completed",
+   "error"
+  ]
+ }
+}

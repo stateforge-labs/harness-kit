@@ -1,0 +1,74 @@
+{
+ "headless/codex-exec-stdout.txt": {
+  "source": "headless-run",
+  "harnessVersion": "0.167.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "headless/codex-last.md": {
+  "source": "headless-run",
+  "harnessVersion": "0.167.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "headless/help.txt": {
+  "source": "headless-run",
+  "harnessVersion": "0.167.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "headless/version.txt": {
+  "source": "headless-run",
+  "harnessVersion": "0.167.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "screens/hooks-review.txt": {
+  "source": "tmux-capture",
+  "harnessVersion": "0.167.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "screens/idle.txt": {
+  "source": "tmux-capture",
+  "harnessVersion": "0.167.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "sessions/2026/11/01/rollout-2026-11-01T00-00-00-00000000-0000-4000-8000-0000000001fe.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "0.163.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "sessions/2026/11/01/rollout-2026-11-01T00-00-00-00000000-0000-4000-8000-00000000021e.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "0.163.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "sessions/2026/11/01/rollout-2026-11-01T00-00-00-00000000-0000-4000-8000-000000000229.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "0.163.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "sessions/2026/11/01/rollout-2026-11-01T00-00-00-00000000-0000-4000-8000-000000000244.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "0.164.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "sessions/2026/11/01/rollout-2026-11-01T00-00-00-00000000-0000-4000-8000-000000000255.jsonl": {
+  "source": "local-capture",
+  "harnessVersion": "0.166.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ },
+ "headless/features.txt": {
+  "source": "headless-run",
+  "harnessVersion": "0.167.0",
+  "capturedAt": "2026-11-08",
+  "maskedBy": "tools/mask-captures.ts@6f68cda"
+ }
+}

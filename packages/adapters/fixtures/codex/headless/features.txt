@@ -1,0 +1,7 @@
+browser_use                              stable             true
+computer_use                             stable             true
+hooks                                    stable             true
+multi_agent                              stable             true
+plugins                                  stable             true
+skill_search                             stable             true
+tool_suggest                             stable             true
