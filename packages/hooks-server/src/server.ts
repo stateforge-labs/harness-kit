@@ -1,7 +1,8 @@
 import { ConfigError, ServerConfig } from "./config.ts";
 import { adapters as allAdapters, EnvVar, Pipeline, policyLayer, WORKTREE_TIMEOUT_MS, worktreeLayer, type HarnessAdapter, type Middleware } from "@stateforge-labs/harness-hooks";
 import { loadMiddleware } from "./middleware-loader.ts";
-import { HookHandler } from "./http/hook-handler.ts";
+import { AdmissionMode, createHookHandler, serveBun, type RunningEndpoint } from "@stateforge-labs/harness-hooks/endpoint";
+import { logEvent } from "./log.ts";
 import { installGracefulShutdown } from "./shutdown.ts";
 
 export class HookServerBuilder {
@@ -24,20 +25,23 @@ export class HookServerBuilder {
     return this;
   }
 
-  build() {
+  async build(): Promise<RunningEndpoint> {
     if (!this.#config || !this.#adapters) throw new Error("HookServerBuilder needs withConfig() and withAdapters() before build()");
     const config = this.#config;
     const pipeline = new Pipeline({ timeoutMs: config.middlewareTimeoutMs })
       .use(...this.#middleware)
       .use(worktreeLayer, { timeoutMs: WORKTREE_TIMEOUT_MS })
       .use(policyLayer);
-    const handler = new HookHandler(config, this.#adapters, pipeline);
-    return Bun.serve({
-      port: config.port,
-      hostname: config.host,
-      maxRequestBodySize: config.maxBodyBytes,
-      fetch: (req) => handler.handle(req),
+    const handler = createHookHandler({
+      adapters: this.#adapters,
+      pipeline,
+      admission: config.token === "" ? { mode: AdmissionMode.Loopback } : { mode: AdmissionMode.Token, token: config.token },
+      maxBodyBytes: config.maxBodyBytes,
+      onHandled: ({ payload, handled }) => {
+        void logEvent(config.logFile, payload, handled, config.logFullPayload, new Date().toISOString(), config.logMaxBytes);
+      },
     });
+    return serveBun({ handler, listen: { port: config.port, host: config.host }, maxBodyBytes: config.maxBodyBytes });
   }
 }
 
@@ -53,7 +57,7 @@ if (import.meta.main) {
     process.exit(2);
   }
   if (config.token === "") console.warn(`${EnvVar.HookToken} is empty: auth disabled (loopback only)`);
-  const server = new HookServerBuilder().withConfig(config).withAdapters(allAdapters).use(...middleware).build();
-  console.log(`harness-hooks listening on ${server.hostname}:${server.port}`);
+  const server = await new HookServerBuilder().withConfig(config).withAdapters(allAdapters).use(...middleware).build();
+  if ("port" in server.address) console.log(`harness-hooks listening on ${server.address.host}:${server.address.port}`);
   installGracefulShutdown(server, config.shutdownGraceMs);
 }

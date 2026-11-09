@@ -1,7 +1,7 @@
 import { flushLog } from "./log.ts";
 
 export interface Stoppable {
-  stop(closeActiveConnections?: boolean): Promise<void>;
+  close(options?: { force?: boolean }): Promise<void>;
 }
 
 export function installGracefulShutdown(server: Stoppable, graceMs: number): void {
@@ -17,10 +17,10 @@ export function installGracefulShutdown(server: Stoppable, graceMs: number): voi
       void flushLog().then(() => process.exit(code));
     };
     const giveUp = setTimeout(() => {
-      void server.stop(true);
+      void server.close({ force: true });
       finish(1);
     }, graceMs);
-    void server.stop().then(() => {
+    void server.close().then(() => {
       clearTimeout(giveUp);
       finish(0);
     });

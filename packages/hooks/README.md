@@ -56,9 +56,25 @@ the middleware section of the [architecture page](https://github.com/stateforge-
 | --- | --- |
 | `@stateforge-labs/harness-hooks` | `adapters` (registry by harness id), `handle(adapter, raw, pipeline)`, `Pipeline` (per-layer `{ timeoutMs, onFault }`), `defaultPipeline`, `policyLayer`, `worktreeLayer`, `onKinds`, `mergeReplies`, `toolAllowlist`, `denyText`, `continueText`, `policy`, the neutral types (`NeutralEvent`, `NeutralReply`, `HarnessAdapter`, ...), and the on-disk paths `shimPath`, `opencodePluginPath` and `schemasDir` |
 | `@stateforge-labs/harness-hooks` (per harness) | `claudeSchemas`, `codexSchemas`, `opencodeSchemas` (hook name to zod schema), `claudeEnums`, `codexEnums`, `opencodeEnums` (closed value sets as zod enums), `claudeToolInputs`, `anyToolInput` and `checkToolInput` (Claude tool input schemas) |
+| `@stateforge-labs/harness-hooks/endpoint` | The embeddable HTTP endpoint: `createHookHandler({ adapters, pipeline, admission, maxBodyBytes, onHandled? })` returns a web-standard `(req: Request) => Promise<Response>` serving `POST /hook/<harness>` and `GET /healthz`; `serveNode` (node:http) and `serveBun` bind it to a TCP port or a unix socket and return `{ address, close() }`. It reads no environment and writes no log |
 | `@stateforge-labs/harness-hooks/shim` | The command shim. It reads a hook payload from stdin and posts it to `POST /hook/<harness>`. It fails open to `{}`; with `HOOK_SHIM_FAIL=closed` it refuses PreToolUse and PermissionRequest instead |
 | `@stateforge-labs/harness-hooks/opencode-plugin` | The OpenCode plugin. It adds the rules to each model request and throws on a deny. It fails open, or closed with `HOOK_PLUGIN_FAIL=closed` |
 | `@stateforge-labs/harness-hooks/schemas/*` | JSON Schema per harness event, generated from the zod schemas (documentation only) |
+
+```ts
+import { adapters, defaultPipeline } from "@stateforge-labs/harness-hooks";
+import { AdmissionMode, createHookHandler, serveNode } from "@stateforge-labs/harness-hooks/endpoint";
+
+const handler = createHookHandler({
+  adapters,
+  pipeline: defaultPipeline(),
+  admission: { mode: AdmissionMode.Token, token: process.argv[2]! },
+  maxBodyBytes: 1_000_000,
+});
+const endpoint = await serveNode({ handler, listen: { socketPath: "/run/hooks.sock" } });
+```
+
+Admission is a bearer token (constant-time compare) or `{ mode: AdmissionMode.Loopback }`, which accepts only a loopback `Host` and a JSON content type. A body over `maxBodyBytes` is answered `413`.
 
 Anything not listed is internal. The package ships only `dist/` and `schemas/`. The captured and synthetic payloads, with their `.expected.json`
 and `.log.json` snapshots, live in the repository under [`packages/hooks/fixtures/`](https://github.com/stateforge-labs/harness-kit/tree/main/packages/hooks/fixtures).
