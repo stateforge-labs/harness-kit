@@ -13,6 +13,7 @@ and the project uses [Semantic Versioning](https://semver.org).
 ### `@stateforge-labs/harness-adapters`
 
 - The package is public. It has one subpath per harness (`claude`, `codex`, `opencode`), the OpenCode store reader (`opencode/store`) and the TUI chrome (`tui`).
+- OpenCode parts and messages: `parsePart()` and `parseMessage()` report unseen types and statuses as issues, `isToolInFlight()` and `humanText()`. `openOpencodeStore()` reads the database read-only with `node:sqlite` and returns `null` when it cannot open it.
 - Tool facts per harness: `toolClass()` (shell, read, edit, web, agent, other) and `toolTarget()` (the file or pattern a tool acts on). Codex exec sources are parsed for shell, apply_patch and web uses.
 - `adapterEnv()` resolves `HOME`, `XDG_DATA_HOME` and `CODEX_HOME` with their defaults. It is the only environment reader in the package.
 

@@ -289,6 +289,7 @@ packages/adapters/src/
   claude/index.ts   Claude Code module   (@stateforge-labs/harness-adapters/claude)
   codex/index.ts    Codex module         (.../codex)
   opencode/index.ts OpenCode module      (.../opencode)
+  opencode/parts.ts  OpenCode parts and messages, in-flight tools, human text (.../opencode)
   opencode/store.ts OpenCode store reader, the only node:sqlite importer (.../opencode/store)
   tui/index.ts      TUI screen chrome    (.../tui)
 ```
