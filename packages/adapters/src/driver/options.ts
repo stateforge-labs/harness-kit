@@ -1,7 +1,8 @@
 import { Harness } from "@stateforge-labs/harness-hooks";
 import { Engine } from "../core/capability.ts";
 import { presentNames, type CredentialPlan } from "../core/credential-plan.ts";
-import { EngineMessage, EnvField, NO_HOME_VAR, PLACEHOLDER_OUT_FILE, PlanNote } from "./constants.ts";
+import { EngineMessage } from "../core/engine-constants.ts";
+import { EnvField, NO_HOME_VAR, PLACEHOLDER_OUT_FILE, PlanNote } from "./constants.ts";
 import { type ChildEnv, buildChildEnv } from "./env-plan.ts";
 import type { EnvSource } from "../env.ts";
 import { fail, ok, type Result } from "../core/result.ts";
@@ -10,7 +11,7 @@ import { argvBytes, envBytes } from "../core/limits.ts";
 import { measuredValue } from "../core/evidence.ts";
 import { type HeadlessOptions, type IsolationSpec, type Limits, Isolation, Hermetic, type Plan, type RunRequest } from "../core/run.ts";
 import { CredentialMode } from "../core/credential-plan.ts";
-import { budgetOf, gatesFor } from "./kit.ts";
+import { budgetOf, gatesFor } from "../core/kit.ts";
 import { mergeOptions } from "./options-merge.ts";
 import type { CliEngine, HarnessDriver, Invocation, ResolvedOptions } from "./port.ts";
 

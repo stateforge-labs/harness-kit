@@ -4,7 +4,7 @@ import { type Result } from "../core/result.ts";
 import { CapabilityName, isUsable } from "../core/capability.ts";
 import { Hermetic, Isolation, type RunRequest } from "../core/run.ts";
 import { EnvVar, type EnvSource } from "../env.ts";
-import { PromptText } from "./constants.ts";
+import { PromptText } from "../core/engine-constants.ts";
 import { CONTRACT_CWD, CONTRACT_EFFORT, CONTRACT_EXIT_CODE, CONTRACT_GARBAGE_SPECS, CONTRACT_GARBAGE_TEXT, CONTRACT_HOME, CONTRACT_OUT_FILE, CONTRACT_PLAIN_SPEC, ContractText, FailureKind } from "./contract-constants.ts";
 import { captureThrow } from "./execute.ts";
 import type { ContractFixtures } from "./contract.ts";

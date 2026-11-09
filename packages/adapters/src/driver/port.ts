@@ -6,19 +6,12 @@ import type { RunFailure } from "../core/failure.ts";
 import type { CredentialInspection, InspectIo } from "../core/inspect.ts";
 import type { Profile } from "../core/profile.ts";
 import type { Result } from "../core/result.ts";
-import type { Cost, Effort, Hermetic, IsolationSpec, TokenUsage } from "../core/run.ts";
+import type { Cost, TokenUsage } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
-import type { ArgvCarry } from "./constants.ts";
+import type { ArgvCarry } from "../core/engine-constants.ts";
+import type { RawRun, ResolvedOptions } from "../core/raw-run.ts";
 
-export interface ResolvedOptions {
-  readonly model: string | null;
-  readonly effort: Effort | null;
-  readonly hermetic: Hermetic;
-  readonly persist: boolean;
-  readonly maxArgvBytes: number | null;
-  readonly cwd: string;
-  readonly isolation: IsolationSpec;
-}
+export type { ProcessExit, RawRun, ResolvedOptions } from "../core/raw-run.ts";
 
 export interface EngineInput<I extends string> {
   readonly options: ResolvedOptions;
@@ -34,19 +27,6 @@ export interface Invocation {
   readonly stdin: string | null;
   readonly outFile: string | null;
   readonly argvCarries: readonly (typeof ArgvCarry)[keyof typeof ArgvCarry][];
-}
-
-export interface ProcessExit {
-  readonly code: number | null;
-  readonly signal: string | null;
-}
-
-export interface RawRun {
-  readonly stdout: string;
-  readonly stderrTail: string;
-  readonly exit: ProcessExit;
-  readonly outFileText: string | null;
-  readonly requestedModel: string | null;
 }
 
 export interface ParsedRun {

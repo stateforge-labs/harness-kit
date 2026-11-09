@@ -7,17 +7,7 @@ import type { IsolationSpec } from "../core/run.ts";
 import { EnvVar } from "../env.ts";
 import { ClaudeCloudEnv } from "./constants.ts";
 import { claudePolicyNotice } from "./policy-notice.ts";
-
-export const CLAUDE_CREDENTIAL_VARS: readonly string[] = [
-  EnvVar.AnthropicApiKey,
-  EnvVar.AnthropicAuthToken,
-  EnvVar.AnthropicBaseUrl,
-  EnvVar.ClaudeCodeOauthToken,
-  EnvVar.ClaudeCodeOauthTokenFd,
-  EnvVar.ClaudeCodeUseBedrock,
-  EnvVar.ClaudeCodeUseVertex,
-  EnvVar.ClaudeCodeUseFoundry,
-];
+import { CLAUDE_CREDENTIAL_VARS } from "../core/credential-vars.ts";
 
 const CLAUDE_MODES: readonly string[] = [CredentialMode.ApiKey, CredentialMode.LoginStore, CredentialMode.Token, CredentialMode.Cloud];
 
@@ -105,3 +95,5 @@ function claudeCredentialOf(spec: CredentialSpec): Result<ClaudeCredential, RunF
 export function credentialFromClaude(spec: unknown): Result<ClaudeCredential, RunFailure> {
   return credentialFromSpec<"claude">(CLAUDE_MODES, claudeCredentialOf, spec);
 }
+
+export { CLAUDE_CREDENTIAL_VARS };

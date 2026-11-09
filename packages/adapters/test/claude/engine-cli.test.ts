@@ -6,7 +6,7 @@ import { claudeHeadlessArgs } from "../../src/claude/launch.ts";
 import type { ClaudeCredential } from "../../src/core/credential.ts";
 import { secret } from "../../src/core/secret.ts";
 import { Hermetic } from "../../src/core/run.ts";
-import { ArgvCarry } from "../../src/driver/constants.ts";
+import { ArgvCarry } from "../../src/core/engine-constants.ts";
 import type { EngineInput, RawRun, ResolvedOptions } from "../../src/driver/port.ts";
 import { adaptersFixtures } from "../support/fixtures.ts";
 

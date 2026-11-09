@@ -1,7 +1,8 @@
 import { type RunFailure, UnavailableReason } from "../core/failure.ts";
 import { argvBytes, envBytes, LINUX_MAX_ARGV_BYTES } from "../core/limits.ts";
 import type { Limits } from "../core/run.ts";
-import { EngineMessage, EnvField, ExitCode, SpawnCode, StopReason, SuperviseMessage } from "./constants.ts";
+import { EngineMessage } from "../core/engine-constants.ts";
+import { EnvField, ExitCode, SpawnCode, StopReason, SuperviseMessage } from "./constants.ts";
 import type { ProcessExit } from "./port.ts";
 import type { ProcessSpec, SpawnError } from "./ports.ts";
 

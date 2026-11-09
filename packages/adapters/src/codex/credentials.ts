@@ -5,8 +5,7 @@ import { CredentialUnsupportedReason, type RunFailure } from "../core/failure.ts
 import { fail, ok, type Result } from "../core/result.ts";
 import type { IsolationSpec } from "../core/run.ts";
 import { EnvVar } from "../env.ts";
-
-export const CODEX_CREDENTIAL_VARS: readonly string[] = [EnvVar.OpenAiApiKey, EnvVar.CodexApiKey];
+import { CODEX_CREDENTIAL_VARS } from "../core/credential-vars.ts";
 
 const CODEX_MODES: readonly string[] = [CredentialMode.ApiKey, CredentialMode.LoginStore];
 
@@ -50,3 +49,5 @@ function codexCredentialOf(spec: CredentialSpec): Result<CodexCredential, RunFai
 export function credentialFromCodex(spec: unknown): Result<CodexCredential, RunFailure> {
   return credentialFromSpec<"codex">(CODEX_MODES, codexCredentialOf, spec);
 }
+
+export { CODEX_CREDENTIAL_VARS };

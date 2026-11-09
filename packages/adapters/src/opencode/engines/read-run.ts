@@ -1,5 +1,5 @@
 import { num, obj, parseRow, str } from "../../core/rows.ts";
-import { PromptText } from "../../driver/constants.ts";
+import { PromptText } from "../../core/engine-constants.ts";
 import { OpenCodeErrorField, OpenCodeStreamField, OpenCodeStreamType } from "../constants.ts";
 import { OpenCodeStreamEventType } from "../enums.ts";
 

@@ -4,7 +4,7 @@ import { fakeRuntime, type FakeRuntime, type FakeScripts } from "../../src/testi
 import { Engine } from "../../src/core/capability.ts";
 import type { RunFailure } from "../../src/core/failure.ts";
 import { Hermetic, Isolation, type RunOutput, type RunRequest } from "../../src/core/run.ts";
-import { NO_USAGE } from "../../src/driver/kit.ts";
+import { NO_USAGE } from "../../src/core/kit.ts";
 
 const REQUEST: RunRequest = { instructions: "do", input: "work" };
 

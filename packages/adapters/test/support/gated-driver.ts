@@ -6,8 +6,8 @@ import { credentialFromSpec } from "../../src/core/credential-from.ts";
 import { type RunFailure, UnavailableReason } from "../../src/core/failure.ts";
 import type { Profile } from "../../src/core/profile.ts";
 import { fail, ok, type Result } from "../../src/core/result.ts";
-import { ArgvCarry } from "../../src/driver/constants.ts";
-import { gatesFor, unparsable } from "../../src/driver/kit.ts";
+import { ArgvCarry } from "../../src/core/engine-constants.ts";
+import { gatesFor, unparsable } from "../../src/core/kit.ts";
 import type { CredentialFacet, EngineInput, HarnessDriver, Invocation } from "../../src/driver/port.ts";
 import { FAKE_CAPABILITIES, FAKE_INJECT, FAKE_PROFILE, FAKE_STRIP } from "./fake-driver.ts";
 

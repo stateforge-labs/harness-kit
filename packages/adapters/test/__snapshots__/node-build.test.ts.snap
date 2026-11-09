@@ -1,0 +1,962 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`Step 11c: the built package the runtime declaration surface matches its snapshot 1`] = `
+"// runtime/index.d.ts
+import { type HarnessId } from "@stateforge-labs/harness-hooks";
+import { type Runtime } from "../driver/create-runtime.ts";
+import type { Drivers } from "../driver/port.ts";
+import type { RuntimeConfig } from "../driver/ports.ts";
+export { Harness, type HarnessId } from "@stateforge-labs/harness-hooks";
+export { Engine, UnsupportedReason, CapabilityName, type Capabilities, type Support } from "../core/capability.ts";
+export { EvidenceKind, type EvidenceRef, type Measured, type Suggested } from "../core/evidence.ts";
+export { ok, fail, type Result } from "../core/result.ts";
+export { type ClaudeCredential, type CodexCredential, type CredentialByHarness, type CredentialEvidence, type CredentialOf, type CredentialSpec, type OpenCodeCredential, type PolicyNotice, type PolicyQuote, } from "../core/credential.ts";
+export { isSecret, secret, type Secret } from "../core/secret.ts";
+export { type SessionId } from "../core/session.ts";
+export { CredentialReason, CredentialUnsupportedReason, RUN_FAILURE_KINDS, UnavailableReason, type RunFailure, } from "../core/failure.ts";
+export { Hermetic, Isolation, SpawnPurpose, type Cost, type CommonOptions, type Effort, type HeadlessOptions, type IsolationSpec, type LibraryEvent, type Limits, type Plan, type RunEvent, type RunOutput, type RunRequest, type TokenUsage, } from "../core/run.ts";
+export type { HeadlessHandle } from "../driver/handle.ts";
+export type { Runtime } from "../driver/create-runtime.ts";
+export * from "./experimental.ts";
+/** Creates a runtime over the three built-in harnesses. */
+export declare function createRuntime(config?: RuntimeConfig & {
+    readonly drivers?: undefined;
+}): Runtime<HarnessId>;
+export declare function createRuntime<H extends string>(config: RuntimeConfig<H> & {
+    readonly drivers: Drivers<H>;
+}): Runtime<H>;
+
+// driver/create-runtime.d.ts
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import { type CredentialOf, type CredentialSpec, type PolicyNotice } from "../core/credential.ts";
+import type { RunFailure } from "../core/failure.ts";
+import type { CredentialInspection } from "../core/inspect.ts";
+import type { HeadlessOptions } from "../core/run.ts";
+import type { Result } from "../core/result.ts";
+import { AvailabilityReason } from "./constants.ts";
+import { type RuntimeContext } from "./context.ts";
+import { type HeadlessHandle } from "./handle.ts";
+import type { Drivers, HarnessDriver } from "./port.ts";
+import type { RuntimeConfig } from "./ports.ts";
+export interface ProbeIo {
+    readonly timeoutMs: number;
+    readonly signal?: AbortSignal;
+}
+export interface Availability {
+    readonly id: string;
+    readonly installed: {
+        readonly path: string;
+        readonly version: string | null;
+    } | null;
+    readonly bundled: null;
+    readonly reason: (typeof AvailabilityReason)[keyof typeof AvailabilityReason] | null;
+}
+/** A runtime over a set of harness drivers: headless runs, credentials, probes and cleanup. */
+export interface Runtime<H extends string = HarnessId> extends AsyncDisposable {
+    driver<I extends H>(id: I): HarnessDriver<I>;
+    driver(id: string): HarnessDriver | null;
+    available(order: readonly H[], io: ProbeIo): Promise<readonly Availability[]>;
+    headless<I extends H>(id: I, options: HeadlessOptions<I>): HeadlessHandle<I>;
+    credentialFrom<I extends H>(id: I, spec: CredentialSpec): Result<CredentialOf<I>, RunFailure>;
+    policyNotice(id: H, mode: string): PolicyNotice | null;
+    inspectCredentials(id: H): Promise<Result<CredentialInspection, RunFailure>>;
+    sweep(options: {
+        readonly olderThanMs: number;
+    }): Promise<void>;
+    close(): Promise<void>;
+}
+export declare function contextOf<H extends string>(config: RuntimeConfig<H>): RuntimeContext;
+export declare function buildRuntime<H extends string>(drivers: Drivers<H>, config: RuntimeConfig<H>): Runtime<H>;
+
+// driver/port.d.ts
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { Capabilities, Engine } from "../core/capability.ts";
+import type { CredentialOf, CredentialSpec, PolicyNotice } from "../core/credential.ts";
+import type { CredentialPlan, CredentialPlanInput } from "../core/credential-plan.ts";
+import type { RunFailure } from "../core/failure.ts";
+import type { CredentialInspection, InspectIo } from "../core/inspect.ts";
+import type { Profile } from "../core/profile.ts";
+import type { Result } from "../core/result.ts";
+import type { Cost, TokenUsage } from "../core/run.ts";
+import type { SessionId } from "../core/session.ts";
+import type { ArgvCarry } from "../core/engine-constants.ts";
+import type { RawRun, ResolvedOptions } from "../core/raw-run.ts";
+export type { ProcessExit, RawRun, ResolvedOptions } from "../core/raw-run.ts";
+export interface EngineInput<I extends string> {
+    readonly options: ResolvedOptions;
+    readonly credential: CredentialOf<I>;
+    readonly instructions: string;
+    readonly input: string;
+    readonly outFile: string;
+}
+export interface Invocation {
+    readonly program: string;
+    readonly args: readonly string[];
+    readonly stdin: string | null;
+    readonly outFile: string | null;
+    readonly argvCarries: readonly (typeof ArgvCarry)[keyof typeof ArgvCarry][];
+}
+export interface ParsedRun {
+    readonly text: string;
+    readonly usage: TokenUsage;
+    readonly cost: Cost;
+    readonly model: string | null;
+    readonly sessionId: SessionId | null;
+    readonly unrecognised: readonly unknown[];
+}
+export interface CliEngine<I extends string> {
+    invocation(input: EngineInput<I>): Result<Invocation, RunFailure>;
+    interpret(raw: RawRun): Result<ParsedRun, RunFailure>;
+    textOf(line: string): string | null;
+    readonly helpArgs: readonly string[] | null;
+    checkHelp(help: string): Result<null, RunFailure>;
+}
+export type Drivers<H extends string> = {
+    readonly [K in H]: HarnessDriver<K>;
+};
+export interface RunFacet<I extends string> {
+    readonly engines: readonly Engine[];
+    readonly cli: CliEngine<I>;
+}
+export interface CredentialFacet<I extends string> {
+    readonly modes: readonly string[];
+    readonly from: (spec: CredentialSpec) => Result<CredentialOf<I>, RunFailure>;
+    readonly plan: (input: CredentialPlanInput<I>) => Result<CredentialPlan, RunFailure>;
+    readonly policyNotice: (mode: string) => PolicyNotice | null;
+    readonly inspect: (io: InspectIo) => Promise<Result<CredentialInspection, RunFailure>>;
+}
+export interface HarnessDriver<I extends string = HarnessId> {
+    readonly id: I;
+    readonly profile: Profile;
+    readonly capabilities: Capabilities;
+    readonly credentials: CredentialFacet<I>;
+    readonly run: RunFacet<I>;
+}
+
+// driver/ports.d.ts
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { Clock, RuntimeFs } from "../core/io.ts";
+import type { Result } from "../core/result.ts";
+import type { LibraryEvent } from "../core/run.ts";
+import type { EnvSource } from "../env.ts";
+import type { Signal, SpawnCode } from "./constants.ts";
+import type { Drivers, ProcessExit } from "./port.ts";
+export type { Clock, DirEntryInfo, RuntimeFs } from "../core/io.ts";
+export type { ProcessExit } from "./port.ts";
+export interface ProcessSpec {
+    readonly program: string;
+    readonly args: readonly string[];
+    readonly env: Readonly<Record<string, string>>;
+    readonly cwd: string;
+    readonly stdin: string | null;
+}
+export interface RunningProcess {
+    readonly pid: number | null;
+    readonly stdout: AsyncIterable<Uint8Array>;
+    readonly stderr: AsyncIterable<Uint8Array>;
+    readonly exited: Promise<ProcessExit>;
+    signalGroup(signal: Signal): void;
+}
+export interface SpawnError {
+    readonly code: SpawnCode;
+    readonly message: string;
+}
+export type ProcessRunner = (spec: ProcessSpec) => Promise<Result<RunningProcess, SpawnError>>;
+export interface RuntimeConfig<H extends string = HarnessId> {
+    readonly env?: (base: EnvSource) => EnvSource;
+    readonly source?: EnvSource;
+    readonly spawn?: ProcessRunner;
+    readonly fs?: RuntimeFs;
+    readonly clock?: Clock;
+    readonly platform?: string;
+    readonly cwd?: () => string;
+    readonly onEvent?: (event: LibraryEvent) => void;
+    readonly drivers?: Drivers<H>;
+}
+
+// core/capability.d.ts
+/** The execution engine. 0.2.0 has only the CLI. */
+export declare const Engine: {
+    readonly Cli: "cli";
+};
+export type Engine = (typeof Engine)[keyof typeof Engine];
+export declare const UnsupportedReason: {
+    readonly HarnessLimit: "harness-limit";
+    readonly EngineLimit: "engine-limit";
+    readonly NotImplemented: "not-implemented";
+};
+export type UnsupportedReason = (typeof UnsupportedReason)[keyof typeof UnsupportedReason];
+export declare const SupportState: {
+    readonly Supported: "supported";
+    readonly Emulated: "emulated";
+    readonly Unsupported: "unsupported";
+    readonly Unmeasured: "unmeasured";
+};
+export type SupportState = (typeof SupportState)[keyof typeof SupportState];
+/** Whether a capability works, per engine. */
+export type Support = {
+    readonly state: "supported";
+} | {
+    readonly state: "emulated";
+    readonly how: string;
+} | {
+    readonly state: "unsupported";
+    readonly reason: UnsupportedReason;
+} | {
+    readonly state: "unmeasured";
+    readonly question: string;
+};
+export declare const CapabilityName: {
+    readonly Effort: "effort";
+    readonly StructuredOutput: "structured-output";
+    readonly SessionsDelete: "sessions-delete";
+    readonly Ephemeral: "ephemeral";
+    readonly Cost: "cost";
+    readonly SettingsSources: "settings-sources";
+};
+export type CapabilityName = (typeof CapabilityName)[keyof typeof CapabilityName];
+export type Capabilities = Readonly<Record<CapabilityName, {
+    readonly [E in Engine]: Support;
+}>>;
+export declare const supported: Support;
+export declare function unsupported(reason: UnsupportedReason): Support;
+export declare function emulated(how: string): Support;
+export declare function unmeasuredSupport(question: string): Support;
+export declare function isUsable(support: Support): boolean;
+export declare function supportWhy(support: Support): string;
+
+// core/evidence.d.ts
+export declare const EvidenceKind: {
+    readonly Capture: "capture";
+    readonly Doc: "doc";
+    readonly Probe: "probe";
+    readonly Shipped: "shipped";
+};
+export type EvidenceKind = (typeof EvidenceKind)[keyof typeof EvidenceKind];
+export declare const MeasuredState: {
+    readonly Measured: "measured";
+    readonly Unmeasured: "unmeasured";
+};
+export type MeasuredState = (typeof MeasuredState)[keyof typeof MeasuredState];
+export interface EvidenceRef {
+    readonly kind: EvidenceKind;
+    readonly ref: string;
+    readonly harnessVersion: string | null;
+    readonly capturedAt: string;
+}
+/** A fact that carries its evidence, or the question that is still open. */
+export type Measured<T> = {
+    readonly state: "measured";
+    readonly value: T;
+    readonly evidence: EvidenceRef;
+} | {
+    readonly state: "unmeasured";
+    readonly question: string;
+};
+export type Suggested<T> = {
+    readonly value: T;
+    readonly evidence: EvidenceRef;
+    readonly applied: false;
+};
+export declare function measured<T>(value: T, evidence: EvidenceRef): Measured<T>;
+export declare function unmeasured(question: string): Measured<never>;
+export declare function measuredValue<T>(fact: Measured<T>): T | null;
+
+// core/result.d.ts
+/** Success or failure as a value. */
+export type Result<T, F> = {
+    readonly ok: true;
+    readonly value: T;
+} | {
+    readonly ok: false;
+    readonly failure: F;
+};
+export declare function ok<T>(value: T): Result<T, never>;
+export declare function fail<F>(failure: F): Result<never, F>;
+
+// core/credential.d.ts
+import type { Secret } from "./secret.ts";
+export type ClaudeCredential = {
+    readonly mode: "api-key";
+    readonly key: Secret;
+} | {
+    readonly mode: "login-store";
+    readonly acknowledgePolicy: true;
+} | {
+    readonly mode: "token";
+    readonly token: Secret;
+    readonly acknowledgePolicy: true;
+} | {
+    readonly mode: "cloud";
+    readonly selector: string;
+};
+export type CodexCredential = {
+    readonly mode: "api-key";
+    readonly key: Secret;
+} | {
+    readonly mode: "login-store";
+};
+export type OpenCodeCredential = {
+    readonly mode: "api-key";
+    readonly key: Secret;
+    readonly provider: string;
+} | {
+    readonly mode: "login-store";
+    readonly provider?: string;
+};
+export interface CredentialByHarness {
+    readonly claude: ClaudeCredential;
+    readonly codex: CodexCredential;
+    readonly opencode: OpenCodeCredential;
+}
+export interface CredentialSpec {
+    readonly mode: string;
+    readonly key?: Secret;
+    readonly token?: Secret;
+    readonly provider?: string;
+    readonly selector?: string;
+    readonly acknowledgePolicy?: boolean;
+}
+export type CredentialOf<I extends string> = I extends keyof CredentialByHarness ? CredentialByHarness[I] : CredentialSpec;
+export interface PolicyQuote {
+    readonly text: string;
+    readonly source: string;
+}
+export interface PolicyNotice {
+    readonly harness: "claude";
+    readonly mode: "login-store" | "token";
+    readonly quotes: readonly PolicyQuote[];
+    readonly retrievedAt: string;
+}
+export interface CredentialEvidence {
+    readonly requested: string;
+    readonly observed: string | null;
+    readonly verified: boolean;
+    readonly scrubbed: readonly string[];
+    readonly billing: "per-token" | "subscription" | "unverified";
+    readonly acknowledgement: {
+        readonly noticeRetrievedAt: string;
+    } | null;
+}
+
+// core/secret.d.ts
+export declare const SECRET_BRAND: unique symbol;
+export declare const SECRET_REVEAL: unique symbol;
+export interface Secret {
+    readonly [SECRET_BRAND]: true;
+    readonly [SECRET_REVEAL]: () => string;
+}
+/** Wraps a credential value so it never prints, serialises or interpolates. */
+export declare function secret(value: string): Secret;
+export declare function isSecret(value: unknown): value is Secret;
+export declare function reveal(value: Secret): string;
+export declare function secretIsEmpty(value: Secret): boolean;
+
+// core/session.d.ts
+declare const brand: unique symbol;
+export type SessionId = string & {
+    readonly [brand]: true;
+};
+export declare function asSessionId(raw: string): SessionId | null;
+export {};
+
+// core/failure.d.ts
+import type { Engine } from "./capability.ts";
+import type { PolicyNotice } from "./credential.ts";
+export declare const CredentialReason: {
+    readonly NotASecret: "not-a-secret";
+    readonly HomeUnset: "home-unset";
+    readonly MissingField: "missing-field";
+    readonly EmptySecret: "empty-secret";
+    readonly UnknownSelector: "unknown-selector";
+    readonly ProviderUnmeasured: "provider-unmeasured";
+};
+export type CredentialReason = (typeof CredentialReason)[keyof typeof CredentialReason];
+export declare const CredentialUnsupportedReason: {
+    readonly UnknownMode: "unknown-mode";
+    readonly ModeNotOffered: "mode-not-offered";
+    readonly PrivateHomeMovesLogin: "private-home-moves-login";
+    readonly PrivateHomeNoAuthCopy: "private-home-no-auth-copy";
+};
+export type CredentialUnsupportedReason = (typeof CredentialUnsupportedReason)[keyof typeof CredentialUnsupportedReason];
+export declare const UnavailableReason: {
+    readonly BinaryMissing: "binary-missing";
+    readonly SpawnFailed: "spawn-failed";
+    readonly VersionNotAccepted: "version-not-accepted";
+    readonly RuntimeClosed: "runtime-closed";
+    readonly InternalError: "internal-error";
+    readonly ScratchFailed: "scratch-failed";
+    readonly ScriptExhausted: "script-exhausted";
+};
+export type UnavailableReason = (typeof UnavailableReason)[keyof typeof UnavailableReason];
+/** Why a run did not produce an output; discriminate on kind and keep a default branch. */
+export type RunFailure = {
+    readonly kind: "invalid-config";
+    readonly message: string;
+    readonly field: string;
+} | {
+    readonly kind: "unknown-harness";
+    readonly message: string;
+    readonly id: string;
+} | {
+    readonly kind: "credential";
+    readonly message: string;
+    readonly reason: CredentialReason;
+    readonly field: string;
+} | {
+    readonly kind: "credential-unsupported";
+    readonly message: string;
+    readonly mode: string;
+    readonly reason: CredentialUnsupportedReason;
+} | {
+    readonly kind: "policy-not-acknowledged";
+    readonly message: string;
+    readonly notice: PolicyNotice;
+} | {
+    readonly kind: "credential-mismatch";
+    readonly message: string;
+    readonly requested: string;
+    readonly observed: string;
+} | {
+    readonly kind: "auth-rejected";
+    readonly message: string;
+    readonly stderrTail: string;
+} | {
+    readonly kind: "timeout";
+    readonly message: string;
+    readonly timeoutMs: number;
+} | {
+    readonly kind: "aborted";
+    readonly message: string;
+} | {
+    readonly kind: "exit";
+    readonly message: string;
+    readonly code: number | null;
+    readonly signal: string | null;
+    readonly stderrTail: string;
+} | {
+    readonly kind: "unparsable";
+    readonly message: string;
+    readonly reason: string;
+} | {
+    readonly kind: "unavailable";
+    readonly message: string;
+    readonly reason: UnavailableReason;
+} | {
+    readonly kind: "too-large";
+    readonly message: string;
+    readonly limitBytes: number;
+    readonly actualBytes: number;
+    readonly field: "instructions" | "input" | "environment";
+} | {
+    readonly kind: "output-too-large";
+    readonly message: string;
+    readonly limitBytes: number;
+    readonly actualBytes: number;
+} | {
+    readonly kind: "unsupported";
+    readonly message: string;
+    readonly capability: string;
+    readonly engine: Engine;
+    readonly why: string;
+};
+export declare const RUN_FAILURE_KINDS: readonly ["invalid-config", "unknown-harness", "credential", "credential-unsupported", "policy-not-acknowledged", "credential-mismatch", "auth-rejected", "timeout", "aborted", "exit", "unparsable", "unavailable", "too-large", "output-too-large", "unsupported"];
+type MissingKinds = Exclude<RunFailure["kind"], (typeof RUN_FAILURE_KINDS)[number]>;
+export declare const RUN_FAILURE_KINDS_COMPLETE: [MissingKinds] extends [never] ? true : never;
+export {};
+
+// core/run.d.ts
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { Engine } from "./capability.ts";
+import type { CredentialEvidence, CredentialOf } from "./credential.ts";
+import type { RunFailure } from "./failure.ts";
+import type { Result } from "./result.ts";
+import type { SessionId } from "./session.ts";
+export declare const Hermetic: {
+    readonly None: "none";
+    readonly Full: "full";
+};
+export type Hermetic = (typeof Hermetic)[keyof typeof Hermetic];
+export declare const Isolation: {
+    readonly None: "none";
+    readonly PrivateHome: "private-home";
+};
+export type Isolation = (typeof Isolation)[keyof typeof Isolation];
+export type IsolationSpec = {
+    readonly kind: "none";
+} | {
+    readonly kind: "private-home";
+    readonly retain: "delete" | "keep";
+};
+export type Effort = "low" | "medium" | "high" | "harness-default" | {
+    readonly native: string;
+};
+export interface Limits {
+    readonly maxStdoutBytes: number;
+    readonly maxStderrBytes: number;
+}
+export interface TokenUsage {
+    readonly inputTokens: number | null;
+    readonly outputTokens: number | null;
+    readonly cacheReadTokens: number | null;
+    readonly cacheWriteTokens: number | null;
+    readonly reasoningTokens: number | null;
+    readonly totalTokens: number | null;
+}
+export interface Cost {
+    readonly usd: number | null;
+    readonly basis: "list" | "unreported" | "unavailable";
+}
+export interface CommonOptions {
+    readonly model?: string;
+    readonly effort?: Effort;
+    readonly timeoutMs?: number;
+    readonly cwd?: string;
+    readonly maxArgvBytes?: number;
+    readonly hermetic?: Hermetic;
+    readonly persist?: boolean;
+    readonly signal?: AbortSignal;
+    readonly limits?: Partial<Limits>;
+}
+export interface HeadlessOptions<I extends string = HarnessId> extends CommonOptions {
+    readonly credential: CredentialOf<I>;
+    readonly engine?: Engine;
+    readonly isolation?: IsolationSpec;
+    readonly acceptVersions?: readonly string[];
+}
+export interface RunRequest extends CommonOptions {
+    readonly instructions: string;
+    readonly input: string;
+}
+export interface RunOutput {
+    readonly text: string;
+    readonly usage: TokenUsage;
+    readonly cost: Cost;
+    readonly model: string | null;
+    readonly sessionId: SessionId | null;
+    readonly engine: Engine;
+    readonly stability: "stable" | "experimental";
+    readonly elapsedMs: number;
+    readonly hermetic: Hermetic;
+    readonly persisted: boolean;
+    readonly isolationDir: string | null;
+    readonly binary: {
+        readonly path: string;
+        readonly version: string | null;
+        readonly source: "installed" | "bundled";
+    };
+    readonly cwd: string;
+    readonly credential: CredentialEvidence;
+}
+export type RunEvent = {
+    readonly kind: "started";
+    readonly engine: Engine;
+} | {
+    readonly kind: "text";
+    readonly text: string;
+} | {
+    readonly kind: "unrecognised";
+    readonly payload: unknown;
+} | {
+    readonly kind: "finished";
+    readonly result: Result<RunOutput, RunFailure>;
+};
+export declare const SpawnPurpose: {
+    readonly Run: "run";
+    readonly Version: "version";
+    readonly Help: "help";
+};
+export type SpawnPurpose = (typeof SpawnPurpose)[keyof typeof SpawnPurpose];
+export type LibraryEvent = {
+    readonly kind: "spawn";
+    readonly harness: string;
+    readonly engine: Engine;
+    readonly purpose: SpawnPurpose;
+    readonly argc: number;
+} | {
+    readonly kind: "exit";
+    readonly harness: string;
+    readonly purpose: SpawnPurpose;
+    readonly code: number | null;
+    readonly signal: string | null;
+    readonly durationMs: number;
+    readonly outcome: "ok" | RunFailure["kind"];
+} | {
+    readonly kind: "credential-plan";
+    readonly harness: string;
+    readonly mode: string;
+    readonly injected: readonly string[];
+    readonly stripped: readonly string[];
+} | {
+    readonly kind: "engine-selected";
+    readonly harness: string;
+    readonly engine: Engine;
+} | {
+    readonly kind: "isolation-created";
+    readonly harness: string;
+    readonly retain: "delete" | "keep";
+} | {
+    readonly kind: "isolation-removed";
+    readonly harness: string;
+    readonly retain: "delete" | "keep";
+};
+export interface Plan {
+    readonly harness: string;
+    readonly engine: Engine;
+    readonly binary: string;
+    readonly args: readonly string[];
+    readonly stdinBytes: number;
+    readonly argvCarries: readonly ("instructions" | "input")[];
+    readonly env: {
+        readonly inject: readonly string[];
+        readonly strip: readonly string[];
+        readonly set: readonly string[];
+    };
+    readonly options: Readonly<Record<string, unknown>>;
+    readonly layers: Readonly<Record<string, "fact" | "consumer" | "call">>;
+    readonly isolation: IsolationSpec;
+    readonly notes: readonly string[];
+}
+
+// driver/handle.d.ts
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import { type Plan, type RunEvent, type RunOutput, type RunRequest, type HeadlessOptions } from "../core/run.ts";
+import type { RunFailure } from "../core/failure.ts";
+import { type Result } from "../core/result.ts";
+import { type RuntimeContext } from "./context.ts";
+import type { HarnessDriver } from "./port.ts";
+export interface HeadlessHandle<I extends string = HarnessId> {
+    readonly id: I;
+    plan(request: RunRequest): Result<Plan, RunFailure>;
+    run(request: RunRequest): Promise<Result<RunOutput, RunFailure>>;
+    stream(request: RunRequest): AsyncIterable<RunEvent>;
+}
+export declare function makeHandle<I extends string>(ctx: RuntimeContext, driver: HarnessDriver<I> | null, id: I, options: HeadlessOptions<I>): HeadlessHandle<I>;
+
+// driver/create-runtime.d.ts
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import { type CredentialOf, type CredentialSpec, type PolicyNotice } from "../core/credential.ts";
+import type { RunFailure } from "../core/failure.ts";
+import type { CredentialInspection } from "../core/inspect.ts";
+import type { HeadlessOptions } from "../core/run.ts";
+import type { Result } from "../core/result.ts";
+import { AvailabilityReason } from "./constants.ts";
+import { type RuntimeContext } from "./context.ts";
+import { type HeadlessHandle } from "./handle.ts";
+import type { Drivers, HarnessDriver } from "./port.ts";
+import type { RuntimeConfig } from "./ports.ts";
+export interface ProbeIo {
+    readonly timeoutMs: number;
+    readonly signal?: AbortSignal;
+}
+export interface Availability {
+    readonly id: string;
+    readonly installed: {
+        readonly path: string;
+        readonly version: string | null;
+    } | null;
+    readonly bundled: null;
+    readonly reason: (typeof AvailabilityReason)[keyof typeof AvailabilityReason] | null;
+}
+/** A runtime over a set of harness drivers: headless runs, credentials, probes and cleanup. */
+export interface Runtime<H extends string = HarnessId> extends AsyncDisposable {
+    driver<I extends H>(id: I): HarnessDriver<I>;
+    driver(id: string): HarnessDriver | null;
+    available(order: readonly H[], io: ProbeIo): Promise<readonly Availability[]>;
+    headless<I extends H>(id: I, options: HeadlessOptions<I>): HeadlessHandle<I>;
+    credentialFrom<I extends H>(id: I, spec: CredentialSpec): Result<CredentialOf<I>, RunFailure>;
+    policyNotice(id: H, mode: string): PolicyNotice | null;
+    inspectCredentials(id: H): Promise<Result<CredentialInspection, RunFailure>>;
+    sweep(options: {
+        readonly olderThanMs: number;
+    }): Promise<void>;
+    close(): Promise<void>;
+}
+export declare function contextOf<H extends string>(config: RuntimeConfig<H>): RuntimeContext;
+export declare function buildRuntime<H extends string>(drivers: Drivers<H>, config: RuntimeConfig<H>): Runtime<H>;
+
+// runtime/experimental.d.ts
+export type { CliEngine, CredentialFacet, Drivers, HarnessDriver, Invocation, RunFacet } from "../driver/port.ts";
+export type { Clock, ProcessRunner, ProcessSpec, RunningProcess, RuntimeConfig, RuntimeFs } from "../driver/ports.ts";
+export type { Availability, ProbeIo } from "../driver/create-runtime.ts";
+export type { Profile } from "../core/profile.ts";
+"
+`;
+
+exports[`Step 11c: the built package the experimental declaration surface matches its snapshot 1`] = `
+"// runtime/experimental.d.ts
+export type { CliEngine, CredentialFacet, Drivers, HarnessDriver, Invocation, RunFacet } from "../driver/port.ts";
+export type { Clock, ProcessRunner, ProcessSpec, RunningProcess, RuntimeConfig, RuntimeFs } from "../driver/ports.ts";
+export type { Availability, ProbeIo } from "../driver/create-runtime.ts";
+export type { Profile } from "../core/profile.ts";
+
+// driver/port.d.ts
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { Capabilities, Engine } from "../core/capability.ts";
+import type { CredentialOf, CredentialSpec, PolicyNotice } from "../core/credential.ts";
+import type { CredentialPlan, CredentialPlanInput } from "../core/credential-plan.ts";
+import type { RunFailure } from "../core/failure.ts";
+import type { CredentialInspection, InspectIo } from "../core/inspect.ts";
+import type { Profile } from "../core/profile.ts";
+import type { Result } from "../core/result.ts";
+import type { Cost, TokenUsage } from "../core/run.ts";
+import type { SessionId } from "../core/session.ts";
+import type { ArgvCarry } from "../core/engine-constants.ts";
+import type { RawRun, ResolvedOptions } from "../core/raw-run.ts";
+export type { ProcessExit, RawRun, ResolvedOptions } from "../core/raw-run.ts";
+export interface EngineInput<I extends string> {
+    readonly options: ResolvedOptions;
+    readonly credential: CredentialOf<I>;
+    readonly instructions: string;
+    readonly input: string;
+    readonly outFile: string;
+}
+export interface Invocation {
+    readonly program: string;
+    readonly args: readonly string[];
+    readonly stdin: string | null;
+    readonly outFile: string | null;
+    readonly argvCarries: readonly (typeof ArgvCarry)[keyof typeof ArgvCarry][];
+}
+export interface ParsedRun {
+    readonly text: string;
+    readonly usage: TokenUsage;
+    readonly cost: Cost;
+    readonly model: string | null;
+    readonly sessionId: SessionId | null;
+    readonly unrecognised: readonly unknown[];
+}
+export interface CliEngine<I extends string> {
+    invocation(input: EngineInput<I>): Result<Invocation, RunFailure>;
+    interpret(raw: RawRun): Result<ParsedRun, RunFailure>;
+    textOf(line: string): string | null;
+    readonly helpArgs: readonly string[] | null;
+    checkHelp(help: string): Result<null, RunFailure>;
+}
+export type Drivers<H extends string> = {
+    readonly [K in H]: HarnessDriver<K>;
+};
+export interface RunFacet<I extends string> {
+    readonly engines: readonly Engine[];
+    readonly cli: CliEngine<I>;
+}
+export interface CredentialFacet<I extends string> {
+    readonly modes: readonly string[];
+    readonly from: (spec: CredentialSpec) => Result<CredentialOf<I>, RunFailure>;
+    readonly plan: (input: CredentialPlanInput<I>) => Result<CredentialPlan, RunFailure>;
+    readonly policyNotice: (mode: string) => PolicyNotice | null;
+    readonly inspect: (io: InspectIo) => Promise<Result<CredentialInspection, RunFailure>>;
+}
+export interface HarnessDriver<I extends string = HarnessId> {
+    readonly id: I;
+    readonly profile: Profile;
+    readonly capabilities: Capabilities;
+    readonly credentials: CredentialFacet<I>;
+    readonly run: RunFacet<I>;
+}
+
+// driver/ports.d.ts
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { Clock, RuntimeFs } from "../core/io.ts";
+import type { Result } from "../core/result.ts";
+import type { LibraryEvent } from "../core/run.ts";
+import type { EnvSource } from "../env.ts";
+import type { Signal, SpawnCode } from "./constants.ts";
+import type { Drivers, ProcessExit } from "./port.ts";
+export type { Clock, DirEntryInfo, RuntimeFs } from "../core/io.ts";
+export type { ProcessExit } from "./port.ts";
+export interface ProcessSpec {
+    readonly program: string;
+    readonly args: readonly string[];
+    readonly env: Readonly<Record<string, string>>;
+    readonly cwd: string;
+    readonly stdin: string | null;
+}
+export interface RunningProcess {
+    readonly pid: number | null;
+    readonly stdout: AsyncIterable<Uint8Array>;
+    readonly stderr: AsyncIterable<Uint8Array>;
+    readonly exited: Promise<ProcessExit>;
+    signalGroup(signal: Signal): void;
+}
+export interface SpawnError {
+    readonly code: SpawnCode;
+    readonly message: string;
+}
+export type ProcessRunner = (spec: ProcessSpec) => Promise<Result<RunningProcess, SpawnError>>;
+export interface RuntimeConfig<H extends string = HarnessId> {
+    readonly env?: (base: EnvSource) => EnvSource;
+    readonly source?: EnvSource;
+    readonly spawn?: ProcessRunner;
+    readonly fs?: RuntimeFs;
+    readonly clock?: Clock;
+    readonly platform?: string;
+    readonly cwd?: () => string;
+    readonly onEvent?: (event: LibraryEvent) => void;
+    readonly drivers?: Drivers<H>;
+}
+
+// driver/create-runtime.d.ts
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import { type CredentialOf, type CredentialSpec, type PolicyNotice } from "../core/credential.ts";
+import type { RunFailure } from "../core/failure.ts";
+import type { CredentialInspection } from "../core/inspect.ts";
+import type { HeadlessOptions } from "../core/run.ts";
+import type { Result } from "../core/result.ts";
+import { AvailabilityReason } from "./constants.ts";
+import { type RuntimeContext } from "./context.ts";
+import { type HeadlessHandle } from "./handle.ts";
+import type { Drivers, HarnessDriver } from "./port.ts";
+import type { RuntimeConfig } from "./ports.ts";
+export interface ProbeIo {
+    readonly timeoutMs: number;
+    readonly signal?: AbortSignal;
+}
+export interface Availability {
+    readonly id: string;
+    readonly installed: {
+        readonly path: string;
+        readonly version: string | null;
+    } | null;
+    readonly bundled: null;
+    readonly reason: (typeof AvailabilityReason)[keyof typeof AvailabilityReason] | null;
+}
+/** A runtime over a set of harness drivers: headless runs, credentials, probes and cleanup. */
+export interface Runtime<H extends string = HarnessId> extends AsyncDisposable {
+    driver<I extends H>(id: I): HarnessDriver<I>;
+    driver(id: string): HarnessDriver | null;
+    available(order: readonly H[], io: ProbeIo): Promise<readonly Availability[]>;
+    headless<I extends H>(id: I, options: HeadlessOptions<I>): HeadlessHandle<I>;
+    credentialFrom<I extends H>(id: I, spec: CredentialSpec): Result<CredentialOf<I>, RunFailure>;
+    policyNotice(id: H, mode: string): PolicyNotice | null;
+    inspectCredentials(id: H): Promise<Result<CredentialInspection, RunFailure>>;
+    sweep(options: {
+        readonly olderThanMs: number;
+    }): Promise<void>;
+    close(): Promise<void>;
+}
+export declare function contextOf<H extends string>(config: RuntimeConfig<H>): RuntimeContext;
+export declare function buildRuntime<H extends string>(drivers: Drivers<H>, config: RuntimeConfig<H>): Runtime<H>;
+
+// core/profile.d.ts
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { Measured, Suggested } from "./evidence.ts";
+export interface Profile {
+    readonly id: HarnessId;
+    readonly binary: string;
+    readonly nestedEnv: Measured<readonly string[]>;
+    readonly model: {
+        readonly syntax: Measured<string>;
+    };
+    readonly effort: {
+        readonly accepted: Measured<readonly string[]>;
+    };
+    readonly suggested: {
+        readonly headlessModel: Suggested<string> | null;
+    };
+    readonly limits: {
+        readonly maxArgvBytes: Measured<number>;
+        readonly maxArgBytes: Measured<number>;
+    };
+    readonly isolation: {
+        readonly homeVar: Measured<string>;
+        readonly worksHeadless: Measured<boolean>;
+    };
+    readonly cli: {
+        readonly flags: Measured<readonly string[]>;
+        readonly versionArgs: Measured<readonly string[]>;
+        readonly credentialInjection: Measured<boolean>;
+    };
+}
+export declare function deepFreeze<T>(value: T): T;
+"
+`;
+
+exports[`Step 11c: the built package the testing declaration surface matches its snapshot 1`] = `
+"// testing/index.d.ts
+export { fakeRuntime, type FakeRuntime, type FakeScripts } from "./fake-runtime.ts";
+export { driverContract, type ContractCheck, type ContractFixtures } from "../driver/contract.ts";
+export { fakeProcessRunner, type FakeProcessRunner, type FakeProcessScript } from "./fake-runner.ts";
+export { fakeFs, type FakeDir, type FakeFs, type FakeFsInit } from "./fake-fs.ts";
+export { fakeClock } from "./fake-clock.ts";
+
+// testing/fake-runtime.d.ts
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import { type RunFailure } from "../core/failure.ts";
+import { type HeadlessOptions, type Plan, type RunOutput, type RunRequest } from "../core/run.ts";
+import type { HeadlessHandle } from "../driver/handle.ts";
+export interface FakeScripts {
+    readonly [id: string]: readonly (RunOutput | RunFailure)[] | undefined;
+}
+export interface FakeRuntime {
+    headless<I extends HarnessId>(id: I, options?: Partial<HeadlessOptions<I>>): HeadlessHandle<I>;
+    close(): Promise<void>;
+    [Symbol.asyncDispose](): Promise<void>;
+    readonly requests: readonly RunRequest[];
+    readonly plans: readonly Plan[];
+}
+export declare function fakeRuntime(options: {
+    readonly scripts: FakeScripts;
+}): FakeRuntime;
+
+// driver/contract.d.ts
+import type { CredentialOf } from "../core/credential.ts";
+import type { RunRequest } from "../core/run.ts";
+import type { HarnessDriver } from "./port.ts";
+export interface ContractCheck {
+    readonly name: string;
+    readonly ok: boolean;
+    readonly detail: string;
+}
+export interface ContractFixtures<I extends string> {
+    readonly credentials: readonly CredentialOf<I>[];
+    readonly request: RunRequest;
+    readonly sentinels: readonly string[];
+}
+export declare function driverContract<I extends string>(driver: HarnessDriver<I>, fixtures: ContractFixtures<I>): readonly ContractCheck[];
+
+// testing/fake-runner.d.ts
+import type { ProcessRunner, ProcessSpec } from "../driver/ports.ts";
+import { Signal } from "../driver/constants.ts";
+export interface FakeProcessScript {
+    readonly stdout?: string;
+    readonly stderr?: string;
+    readonly code?: number | null;
+    readonly signal?: string | null;
+    readonly hold?: boolean;
+    readonly ignoreTerm?: boolean;
+    readonly pipesOutliveExit?: boolean;
+}
+export interface FakeProcessRunner {
+    readonly runner: ProcessRunner;
+    readonly specs: readonly ProcessSpec[];
+    readonly signals: readonly Signal[];
+    release(index: number): void;
+}
+export declare function fakeProcessRunner(scripts: readonly FakeProcessScript[]): FakeProcessRunner;
+
+// testing/fake-fs.d.ts
+import type { RuntimeFs } from "../core/io.ts";
+export interface FakeDir {
+    readonly path: string;
+    readonly mtimeMs: number;
+}
+export interface FakeFsInit {
+    readonly dirs?: readonly (string | FakeDir)[];
+    readonly files?: Readonly<Record<string, string>>;
+    readonly executables?: readonly string[];
+    readonly createdAtMs?: number;
+}
+export type FakeFs = RuntimeFs & {
+    readonly dirs: ReadonlySet<string>;
+    readonly removed: readonly string[];
+};
+export declare function fakeFs(initial?: FakeFsInit): FakeFs;
+
+// testing/fake-clock.d.ts
+import type { Clock } from "../core/io.ts";
+export declare function fakeClock(start?: number): Clock & {
+    advance(ms: number): void;
+};
+"
+`;

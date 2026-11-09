@@ -6,15 +6,7 @@ import { fail, ok, type Result } from "../core/result.ts";
 import type { IsolationSpec } from "../core/run.ts";
 import { EnvVar } from "../env.ts";
 import { OpenCodeProviderEnv } from "./constants.ts";
-
-export const OPENCODE_CREDENTIAL_VARS: readonly string[] = [
-  EnvVar.AnthropicApiKey,
-  EnvVar.OpenAiApiKey,
-  EnvVar.AzureOpenAiApiKey,
-  EnvVar.OpenCodeApiKey,
-  EnvVar.AwsBearerTokenBedrock,
-  EnvVar.OpenCodeConfigContent,
-];
+import { OPENCODE_CREDENTIAL_VARS } from "../core/credential-vars.ts";
 
 const OPENCODE_MODES: readonly string[] = [CredentialMode.ApiKey, CredentialMode.LoginStore];
 
@@ -93,3 +85,5 @@ function openCodeCredentialOf(spec: CredentialSpec): Result<OpenCodeCredential, 
 export function credentialFromOpencode(spec: unknown): Result<OpenCodeCredential, RunFailure> {
   return credentialFromSpec<"opencode">(OPENCODE_MODES, openCodeCredentialOf, spec);
 }
+
+export { OPENCODE_CREDENTIAL_VARS };

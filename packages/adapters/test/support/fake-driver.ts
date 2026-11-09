@@ -6,8 +6,8 @@ import type { CredentialSpec } from "../../src/core/credential.ts";
 import { CredentialUnsupportedReason, type RunFailure, UnavailableReason } from "../../src/core/failure.ts";
 import type { Profile } from "../../src/core/profile.ts";
 import { fail, ok, type Result } from "../../src/core/result.ts";
-import { ArgvCarry } from "../../src/driver/constants.ts";
-import { budgetOf, checkArgv, modelFlag, NO_USAGE, neutralOrNative, unparsable } from "../../src/driver/kit.ts";
+import { ArgvCarry } from "../../src/core/engine-constants.ts";
+import { budgetOf, checkArgv, modelFlag, NO_USAGE, neutralOrNative, unparsable } from "../../src/core/kit.ts";
 import type { CliEngine, CredentialFacet, EngineInput, HarnessDriver, Invocation, ParsedRun, RawRun } from "../../src/driver/port.ts";
 
 export const FAKE_STRIP = "FAKE_KEY";

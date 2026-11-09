@@ -16,7 +16,7 @@ import { fail, ok, type Result } from "../../src/core/result.ts";
 import { CapabilityName, Engine, UnsupportedReason, unsupported } from "../../src/core/capability.ts";
 import { policyFailure } from "../../src/core/credential-plan.ts";
 import { DEFAULT_LIMITS, OUT_FILE_NAME } from "../../src/driver/constants.ts";
-import { unparsable } from "../../src/driver/kit.ts";
+import { unparsable } from "../../src/core/kit.ts";
 
 const VERSION: ChunkScript = { chunks: ["fake-cli 1.2.3\n"] };
 const TEXT: ChunkScript = { chunks: ["text:hel", "lo\ntext:", " world\n"] };
