@@ -18,4 +18,17 @@ export const OpenCodeHook = {
 
 export type OpenCodeHookName = (typeof OpenCodeHook)[keyof typeof OpenCodeHook];
 
-export const OpenCodeTool = { Subagent: "subagent" } as const;
+export const OpenCodeTool = {
+  Edit: "edit",
+  Execute: "execute",
+  Patch: "patch",
+  Read: "read",
+  Shell: "shell",
+  Skill: "skill",
+  Subagent: "subagent",
+  WebFetch: "webfetch",
+  WebSearch: "websearch",
+  Write: "write",
+} as const;
+
+export type OpenCodeToolName = (typeof OpenCodeTool)[keyof typeof OpenCodeTool];

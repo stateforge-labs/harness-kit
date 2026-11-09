@@ -8,11 +8,12 @@ and the project uses [Semantic Versioning](https://semver.org).
 ### `@stateforge-labs/harness-hooks`
 
 - Export the zod schemas, enums, hook names and tool inputs of every harness from the index.
-- Tool name constants for Claude and OpenCode.
+- Tool name constants expanded for Claude, Codex and OpenCode, with the names each harness and version emits.
 
 ### `@stateforge-labs/harness-adapters`
 
 - The package is public. It has one subpath per harness (`claude`, `codex`, `opencode`), the OpenCode store reader (`opencode/store`) and the TUI chrome (`tui`).
+- Tool facts per harness: `toolClass()` (shell, read, edit, web, agent, other) and `toolTarget()` (the file or pattern a tool acts on). Codex exec sources are parsed for shell, apply_patch and web uses.
 - `adapterEnv()` resolves `HOME`, `XDG_DATA_HOME` and `CODEX_HOME` with their defaults. It is the only environment reader in the package.
 
 ## 0.1.0 - 2026-11-08

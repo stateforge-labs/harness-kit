@@ -36,4 +36,25 @@ export const ClaudeHook = {
 
 export type ClaudeHookName = (typeof ClaudeHook)[keyof typeof ClaudeHook];
 
-export const ClaudeTool = { Agent: "Agent" } as const;
+export const ClaudeTool = {
+  Agent: "Agent",
+  AskUserQuestion: "AskUserQuestion",
+  Bash: "Bash",
+  Edit: "Edit",
+  Glob: "Glob",
+  Grep: "Grep",
+  LS: "LS",
+  Monitor: "Monitor",
+  MultiEdit: "MultiEdit",
+  NotebookEdit: "NotebookEdit",
+  Read: "Read",
+  SendMessage: "SendMessage",
+  Task: "Task",
+  TaskCreate: "TaskCreate",
+  ToolSearch: "ToolSearch",
+  WebFetch: "WebFetch",
+  WebSearch: "WebSearch",
+  Write: "Write",
+} as const;
+
+export type ClaudeToolName = (typeof ClaudeTool)[keyof typeof ClaudeTool];

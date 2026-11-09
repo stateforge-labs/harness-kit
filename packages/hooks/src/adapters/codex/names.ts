@@ -17,4 +17,13 @@ export const CodexHook = {
 
 export type CodexHookName = (typeof CodexHook)[keyof typeof CodexHook];
 
-export const CodexTool = { SpawnAgent: "collaborationspawn_agent" } as const;
+export const CodexTool = {
+  ApplyPatch: "apply_patch",
+  Bash: "Bash",
+  Exec: "exec",
+  SpawnAgent: "collaborationspawn_agent",
+  Wait: "wait",
+  WaitAgent: "collaborationwait_agent",
+} as const;
+
+export type CodexToolName = (typeof CodexTool)[keyof typeof CodexTool];
