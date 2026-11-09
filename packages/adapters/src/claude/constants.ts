@@ -133,3 +133,25 @@ export const ClaudeScan = {
   ChunkBytes: 1_048_576,
   BoundaryWord: "compact_boundary",
 } as const;
+
+export const ClaudeModel = {
+  Synthetic: "<synthetic>",
+} as const;
+
+export const ClaudeWindow = {
+  Default: 200_000,
+  Long: 1_000_000,
+  Sizes: [200_000, 1_000_000],
+  LongSuffix: "[1m]",
+  Family: /(?:opus|sonnet)-(\d+)(?:[-.](\d{1,2})(?!\d))?/,
+  LongMajor: 4,
+  LongMinor: 6,
+} as const;
+
+export const ClaudeWindowBasis = {
+  Suffix: "suffix",
+  Family: "family",
+  Default: "default",
+} as const;
+
+export type ClaudeWindowBasis = (typeof ClaudeWindowBasis)[keyof typeof ClaudeWindowBasis];

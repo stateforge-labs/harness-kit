@@ -1,5 +1,6 @@
 export const Dir = {
   LocalShare: [".local", "share"],
+  Cache: ".cache",
   Codex: ".codex",
   Claude: ".claude",
 } as const;

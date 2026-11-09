@@ -65,7 +65,7 @@ describe("the Node build", () => {
   });
 
   test("the environment helper resolves defaults under Node", () => {
-    expect(env).toEqual({ home: "/h/u", xdgDataHome: "/h/u/.local/share", codexHome: "/h/u/.codex" });
+    expect(env).toEqual({ home: "/h/u", xdgDataHome: "/h/u/.local/share", xdgCacheHome: "/h/u/.cache", codexHome: "/h/u/.codex" });
   });
 
   test("the tarball carries dist, src, the README and the license, and nothing else", () => {

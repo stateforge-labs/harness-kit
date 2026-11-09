@@ -1,6 +1,8 @@
 export const OpenCodeDir = {
   Data: "opencode",
   Database: "opencode.db",
+  Cache: "opencode",
+  Models: "models.json",
 } as const;
 
 export const OpenCodeRecord = {
@@ -31,6 +33,14 @@ export const OpenCodeField = {
   TimeUpdated: "time_updated",
   Title: "title",
   Data: "data",
+  Tokens: "tokens",
+  Models: "models",
+  Limit: "limit",
+  Context: "context",
+  Output: "output",
+  Cache: "cache",
+  Read: "read",
+  Write: "write",
 } as const;
 
 export const OpenCodePartType = {

@@ -32,7 +32,7 @@ afterAll(() => {
 
 describe("claude home and projects root", () => {
   test("the home is the dot claude folder under the env home", () => {
-    const env: AdapterEnv = { home: "/h", xdgDataHome: "/h/.local/share", codexHome: "/h/.codex" };
+    const env: AdapterEnv = { home: "/h", xdgDataHome: "/h/.local/share", xdgCacheHome: "/h/.cache", codexHome: "/h/.codex" };
     expect(claudeHome(env)).toBe("/h/.claude");
     expect(claudeProjectsRoot(env)).toBe("/h/.claude/projects");
   });

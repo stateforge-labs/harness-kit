@@ -20,3 +20,6 @@ export {
   type ClaudeToolUse,
 } from "./records.ts";
 export { ClaudeAttachmentKind, ClaudeCompactTrigger, ClaudeContentKind, ClaudeOriginKind, ClaudeQueueKind, ClaudeRecordKind, ClaudeSystemSubtype, ClaudeTaskState } from "./enums.ts";
+export { claudeContextUse, type ClaudeContextUse } from "./usage.ts";
+export { claudeContextWindow, stripClaudeContextSuffix, type ClaudeContextWindow } from "./windows.ts";
+export { ClaudeModel, ClaudeWindow, ClaudeWindowBasis } from "./constants.ts";
