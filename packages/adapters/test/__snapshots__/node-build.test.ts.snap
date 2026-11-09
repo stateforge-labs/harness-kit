@@ -82,7 +82,7 @@ import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
 import type { EngineImpl } from "./engine.ts";
-export type { AfterContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "./engine.ts";
+export type { AfterContext, CleanupContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "./engine.ts";
 export type { ProcessExit, ResolvedOptions } from "../core/raw-run.ts";
 export interface EngineInput<I extends string> {
     readonly options: ResolvedOptions;
@@ -676,7 +676,7 @@ export type { CredentialFacet, Drivers, HarnessDriver, Invocation, RunFacet } fr
 export type { Clock, ProcessRunner, ProcessSpec, RunningProcess, RuntimeConfig, RuntimeFs } from "../driver/ports.ts";
 export type { Availability, ProbeIo } from "../driver/create-runtime.ts";
 export type { Profile } from "../core/profile.ts";
-export type { AfterContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "../driver/engine.ts";
+export type { AfterContext, CleanupContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "../driver/engine.ts";
 "
 `;
 
@@ -686,7 +686,7 @@ export type { CredentialFacet, Drivers, HarnessDriver, Invocation, RunFacet } fr
 export type { Clock, ProcessRunner, ProcessSpec, RunningProcess, RuntimeConfig, RuntimeFs } from "../driver/ports.ts";
 export type { Availability, ProbeIo } from "../driver/create-runtime.ts";
 export type { Profile } from "../core/profile.ts";
-export type { AfterContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "../driver/engine.ts";
+export type { AfterContext, CleanupContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "../driver/engine.ts";
 
 // driver/port.d.ts
 import type { HarnessId } from "@stateforge-labs/harness-hooks";
@@ -702,7 +702,7 @@ import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
 import type { EngineImpl } from "./engine.ts";
-export type { AfterContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "./engine.ts";
+export type { AfterContext, CleanupContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "./engine.ts";
 export type { ProcessExit, ResolvedOptions } from "../core/raw-run.ts";
 export interface EngineInput<I extends string> {
     readonly options: ResolvedOptions;
@@ -939,10 +939,16 @@ export interface AfterContext {
     readonly outFileText: string | null;
     readonly io: EngineIo;
 }
+export interface CleanupContext {
+    readonly input: EngineRunInput;
+    readonly io: EngineIo;
+    readonly stdoutTail: string;
+}
 export interface CliEngineParts<I extends string> {
     invocation(input: EngineInput<I>): Result<Invocation, RunFailure>;
     parseLine(line: string): readonly EngineEvent[];
     after?(ctx: AfterContext): Promise<readonly EngineEvent[]>;
+    cleanup?(ctx: CleanupContext): Promise<void>;
     helpArgs?: readonly string[] | null;
     checkHelp?(help: string): Result<null, RunFailure>;
 }

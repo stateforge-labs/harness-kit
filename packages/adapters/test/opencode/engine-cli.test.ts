@@ -39,9 +39,9 @@ function raw(out: string, code: number | null = 0): InterpretRaw {
 }
 
 describe("opencodeCli invocation", () => {
-  test("default argv runs standalone in json format with a fixed title", () => {
+  test("default argv runs standalone in json format with a title unique to the run", () => {
     const result = opencodeCli.invocation(input());
-    expect(result.ok && result.value.args).toEqual(["run", "--standalone", "--format", "json", "--title", "headless"]);
+    expect(result.ok && result.value.args).toEqual(["run", "--standalone", "--format", "json", "--title", "headless-run-1"]);
   });
 
   test("model adds the model flag", () => {
@@ -63,7 +63,7 @@ describe("opencodeCli invocation", () => {
   test("matches the 0.1.0 builder once the standalone flag is removed", () => {
     const result = opencodeCli.invocation(withOptions({ model: "m" }));
     const args = result.ok ? result.value.args.filter((token) => token !== "--standalone") : [];
-    expect(args).toEqual(opencodeArgs({ model: "m", title: "headless" }));
+    expect(args).toEqual(opencodeArgs({ model: "m", title: "headless-run-1" }));
   });
 
   test("an effort is unsupported", () => {
@@ -141,5 +141,14 @@ describe("opencodeCli interpret", () => {
     expect(opencodeCli.checkHelp(help).ok).toBe(true);
     const missing = opencodeCli.checkHelp("usage: opencode run --format json");
     expect(!missing.ok && missing.failure.kind).toBe("unsupported");
+  });
+});
+
+describe("opencodeCli run title", () => {
+  test("the title carries the run id so two runs never share one", () => {
+    const first = opencodeCli.invocation(input({ runId: "a-1" }));
+    const second = opencodeCli.invocation(input({ runId: "a-2" }));
+    const titles = [first, second].map((result) => (result.ok ? result.value.args[result.value.args.indexOf("--title") + 1] : null));
+    expect(titles).toEqual(["headless-a-1", "headless-a-2"]);
   });
 });

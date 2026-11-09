@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { ok } from "../../src/core/result.ts";
-import type { AfterContext } from "../../src/driver/port.ts";
+import type { CleanupContext } from "../../src/driver/port.ts";
 import type { ProcessRunner, ProcessSpec } from "../../src/driver/ports.ts";
 import { opencodeCli } from "../../src/opencode/engines/cli.ts";
 import { removeResidue } from "../../src/opencode/engines/cleanup.ts";
@@ -15,7 +15,7 @@ const SECRET = "sk-LEAK-CHECK";
 interface Rig {
   readonly specs: ProcessSpec[];
   readonly sleeps: number[];
-  readonly ctx: AfterContext;
+  readonly ctx: CleanupContext;
 }
 
 function rig(lists: readonly (readonly unknown[])[], env: Record<string, string> = { HOME: "/h", KEY: SECRET }): Rig {
@@ -42,21 +42,20 @@ function rig(lists: readonly (readonly unknown[])[], env: Record<string, string>
     },
   };
   const input = runInput({ env, redact: (text) => text.replaceAll(SECRET, "[redacted]") });
-  const end = { exit: { code: 0, signal: null }, stderrTail: "" };
-  return { specs, sleeps, ctx: { input, end, stdoutTail: "", outFileText: null, io } };
+  return { specs, sleeps, ctx: { input, stdoutTail: "", io } };
 }
 
 describe("opencode residue cleanup", () => {
   test("a known session is deleted directly and nothing waits", async () => {
     const r = rig([]);
-    await removeResidue(r.ctx, "ses_1");
+    await removeResidue(r.ctx, "headless", "ses_1");
     expect(r.specs.map((spec) => spec.args)).toEqual([["session", "delete", "ses_1"]]);
     expect(r.sleeps).toEqual([]);
   });
 
   test("without a session it lists, deletes the titled match, waits 3 s, lists again and deletes again", async () => {
     const r = rig([[TITLED("ses_a", "headless"), TITLED("ses_other", "mine")], [TITLED("ses_b", "headless")]]);
-    await removeResidue(r.ctx, null);
+    await removeResidue(r.ctx, "headless", null);
     expect(r.specs.map((spec) => spec.args.slice(0, 3).join(" "))).toEqual([
       "session list --format",
       "session delete ses_a",
@@ -68,15 +67,15 @@ describe("opencode residue cleanup", () => {
 
   test("a failing list ends that pass without throwing and the settle wait still happens", async () => {
     const r = rig([]);
-    const failing: AfterContext = { ...r.ctx, io: { ...r.ctx.io, runner: () => Promise.resolve({ ok: false, failure: { code: "spawn-failed", message: "x" } }) } };
-    await removeResidue(failing, null);
+    const failing: CleanupContext = { ...r.ctx, io: { ...r.ctx.io, runner: () => Promise.resolve({ ok: false, failure: { code: "spawn-failed", message: "x" } }) } };
+    await removeResidue(failing, "headless", null);
     expect(r.specs).toEqual([]);
     expect(r.sleeps).toEqual([3000]);
   });
 
   test("the cleanup commands never carry a secret in their environment", async () => {
     const r = rig([], { HOME: "/h", KEY: SECRET, PLAIN: "value" });
-    await removeResidue(r.ctx, "ses_1");
+    await removeResidue(r.ctx, "headless", "ses_1");
     expect(r.specs[0]?.env).toEqual({ HOME: "/h", PLAIN: "value" });
   });
 

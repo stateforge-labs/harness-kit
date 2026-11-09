@@ -1,7 +1,7 @@
 import { fail, ok, type Result } from "../core/result.ts";
 import type { RunFailure } from "../core/failure.ts";
 import { HandleLabel } from "../driver/constants.ts";
-import type { AfterContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput } from "../driver/engine.ts";
+import type { AfterContext, CleanupContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput } from "../driver/engine.ts";
 import { execute, guardSync, settle } from "../driver/execute.ts";
 import { abortedFailure } from "../driver/finish.ts";
 import { lineAssembler } from "../driver/lines.ts";
@@ -21,6 +21,20 @@ interface Parsed {
 function parsed(parts: { parseLine(line: string): readonly EngineEvent[] }, line: string): Parsed {
   const outcome = guardSync(HandleLabel.Stream, () => ok(parts.parseLine(line)));
   return outcome.ok ? { events: outcome.value, threw: false } : { events: [{ kind: "failure", failure: outcome.failure }], threw: true };
+}
+
+function spawned(failure: RunFailure): boolean {
+  return failure.kind !== "unavailable" && failure.kind !== "too-large";
+}
+
+async function tidy<I extends string>(parts: CliEngineParts<I>, ctx: CleanupContext): Promise<void> {
+  const cleanup = parts.cleanup;
+  if (cleanup !== undefined) {
+    await execute(HandleLabel.Stream, async () => {
+      await cleanup(ctx);
+      return ok(null);
+    });
+  }
 }
 
 async function readOutFile(input: EngineRunInput, io: EngineIo): Promise<string | null> {
@@ -81,6 +95,9 @@ function cliRun<I extends string>(parts: CliEngineParts<I>, input: EngineRunInpu
         finished = true;
         if (!step.value.ok) {
           outcome = fail(step.value.failure);
+          if (spawned(step.value.failure)) {
+            await tidy(parts, { input, io, stdoutTail: "" });
+          }
           break;
         }
         const end: EngineEnd = { exit: step.value.value.exit, stderrTail: step.value.value.stderrTail };
@@ -92,6 +109,7 @@ function cliRun<I extends string>(parts: CliEngineParts<I>, input: EngineRunInpu
           yield* ran.ok ? ran.value : [{ kind: "failure" as const, failure: ran.failure }];
         }
         outcome = ok(end);
+        await tidy(parts, { input, io, stdoutTail });
         break;
       }
     } finally {

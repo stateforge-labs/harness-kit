@@ -65,10 +65,17 @@ export interface AfterContext {
   readonly io: EngineIo;
 }
 
+export interface CleanupContext {
+  readonly input: EngineRunInput;
+  readonly io: EngineIo;
+  readonly stdoutTail: string;
+}
+
 export interface CliEngineParts<I extends string> {
   invocation(input: EngineInput<I>): Result<Invocation, RunFailure>;
   parseLine(line: string): readonly EngineEvent[];
   after?(ctx: AfterContext): Promise<readonly EngineEvent[]>;
+  cleanup?(ctx: CleanupContext): Promise<void>;
   helpArgs?: readonly string[] | null;
   checkHelp?(help: string): Result<null, RunFailure>;
 }

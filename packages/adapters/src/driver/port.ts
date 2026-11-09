@@ -12,7 +12,7 @@ import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
 import type { EngineImpl } from "./engine.ts";
 
-export type { AfterContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "./engine.ts";
+export type { AfterContext, CleanupContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "./engine.ts";
 
 export type { ProcessExit, ResolvedOptions } from "../core/raw-run.ts";
 

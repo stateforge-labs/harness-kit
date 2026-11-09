@@ -6,27 +6,27 @@ import type { Cost } from "../../core/run.ts";
 import { ArgvCarry, CostBasis, EngineCapability, EngineMessage, EngineReason, PromptText } from "../../core/engine-constants.ts";
 import { budgetOf, checkArgv, exitFailure, gatesFor, modelFlag, NO_USAGE, unparsable } from "../../core/kit.ts";
 import { cliEngine } from "../../engine/cli.ts";
-import type { AfterContext, EngineEvent, EngineInput, Invocation } from "../../driver/port.ts";
+import type { CleanupContext, EngineInput, Invocation } from "../../driver/port.ts";
 import { OPENCODE_CAPABILITIES } from "../capabilities.ts";
 import { OpenCodeCli } from "../constants.ts";
 import { OPENCODE_BINARY } from "../launch.ts";
 import { OPENCODE_PROFILE } from "../profile.ts";
-import { removeResidue } from "./cleanup.ts";
+import { removeResidue, runTitle } from "./cleanup.ts";
 import { opencodeLineEvents } from "./read-run.ts";
 
-function opencodeArgs(model: string | null): string[] {
+function opencodeArgs(model: string | null, runId: string): string[] {
   return [
     OpenCodeCli.Run,
     OpenCodeCli.Standalone,
     OpenCodeCli.Format,
     OpenCodeCli.FormatJson,
     OpenCodeCli.Title,
-    OpenCodeCli.StaticTitle,
+    `${OpenCodeCli.StaticTitle}${OpenCodeCli.TitleSeparator}${runId}`,
     ...modelFlag(OpenCodeCli.Model, model),
   ];
 }
 
-function observedSession(ctx: AfterContext): string | null {
+function observedSession(ctx: CleanupContext): string | null {
   let session: string | null = null;
   for (const line of ctx.stdoutTail.split(PromptText.Line)) {
     for (const event of opencodeLineEvents(line)) {
@@ -42,7 +42,7 @@ export const opencodeCli = cliEngine<"opencode">({
     if (gate !== null) {
       return fail(gate);
     }
-    const args = opencodeArgs(input.options.model);
+    const args = opencodeArgs(input.options.model, input.runId);
     const over = checkArgv(args, budgetOf(input.options, OPENCODE_PROFILE));
     if (over !== null) {
       return fail(over);
@@ -59,9 +59,8 @@ export const opencodeCli = cliEngine<"opencode">({
 
   parseLine: opencodeLineEvents,
 
-  async after(ctx): Promise<readonly EngineEvent[]> {
-    await removeResidue(ctx, observedSession(ctx));
-    return [];
+  async cleanup(ctx): Promise<void> {
+    await removeResidue(ctx, runTitle(ctx.input.invocation.args), observedSession(ctx));
   },
 
   helpArgs: [OpenCodeCli.Run, OpenCodeCli.Help],

@@ -109,6 +109,7 @@ export const OpenCodeCli = {
   Delete: "delete",
   Standalone: "--standalone",
   StaticTitle: "headless",
+  TitleSeparator: "-",
   Version: "--version",
   Help: "--help",
 } as const;
