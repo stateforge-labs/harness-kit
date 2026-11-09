@@ -29,6 +29,6 @@ describe("adapterEnv", () => {
   });
 
   test("the variable names are the documented ones", () => {
-    expect(EnvVar).toEqual({ Home: "HOME", XdgDataHome: "XDG_DATA_HOME", XdgCacheHome: "XDG_CACHE_HOME", CodexHome: "CODEX_HOME" });
+    expect(EnvVar).toEqual({ Home: "HOME", XdgDataHome: "XDG_DATA_HOME", XdgCacheHome: "XDG_CACHE_HOME", CodexHome: "CODEX_HOME", ClaudeCode: "CLAUDECODE", ClaudeCodeEntrypoint: "CLAUDE_CODE_ENTRYPOINT", OpenCodeConfigContent: "OPENCODE_CONFIG_CONTENT" });
   });
 });

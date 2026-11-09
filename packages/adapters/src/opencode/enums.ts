@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { OpenCodeModeName, OpenCodePartType, OpenCodeRoleName, OpenCodeStatus } from "./constants.ts";
+import { OpenCodeModeName, OpenCodePartType, OpenCodeRoleName, OpenCodeStatus, OpenCodeStreamType } from "./constants.ts";
 
 export const OpenCodePartTypeName = z.enum([
   OpenCodePartType.Text,
@@ -18,3 +18,6 @@ export type OpenCodeRole = z.infer<typeof OpenCodeRole>;
 
 export const OpenCodeMessageMode = z.enum([OpenCodeModeName.Build]);
 export type OpenCodeMessageMode = z.infer<typeof OpenCodeMessageMode>;
+
+export const OpenCodeStreamEventType = z.enum([OpenCodeStreamType.StepStart, OpenCodeStreamType.StepFinish, OpenCodeStreamType.Text, OpenCodeStreamType.Error]);
+export type OpenCodeStreamEventType = z.infer<typeof OpenCodeStreamEventType>;

@@ -86,3 +86,35 @@ export const OpenCodeSql = {
   RecentParts:
     "SELECT p.data FROM part AS p JOIN (SELECT id FROM message WHERE session_id = ? ORDER BY time_created DESC LIMIT ?) AS newest ON newest.id = p.message_id ORDER BY p.time_created ASC",
 } as const;
+
+export const OpenCodeCli = {
+  Binary: "opencode",
+  Run: "run",
+  Format: "--format",
+  FormatJson: "json",
+  Title: "--title",
+  Model: "-m",
+  Session: "session",
+  List: "list",
+  Delete: "delete",
+} as const;
+
+export const OpenCodeStreamField = {
+  Type: "type",
+  SessionId: "sessionID",
+  Part: "part",
+  Text: "text",
+  Cost: "cost",
+} as const;
+
+export const OpenCodeStreamType = {
+  StepStart: "step_start",
+  StepFinish: "step_finish",
+  Text: "text",
+  Error: "error",
+} as const;
+
+export const OpenCodeToollessConfig = {
+  tools: { "*": false },
+  permission: { "*": "deny" },
+} as const;

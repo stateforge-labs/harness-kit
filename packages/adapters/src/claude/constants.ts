@@ -155,3 +155,22 @@ export const ClaudeWindowBasis = {
 } as const;
 
 export type ClaudeWindowBasis = (typeof ClaudeWindowBasis)[keyof typeof ClaudeWindowBasis];
+
+export const ClaudeCli = {
+  Binary: "claude",
+  Print: "-p",
+  Model: "--model",
+  NoSessionPersistence: "--no-session-persistence",
+  Tools: "--tools",
+  SettingSources: "--setting-sources",
+  StrictMcpConfig: "--strict-mcp-config",
+  OutputFormat: "--output-format",
+  OutputJson: "json",
+  SystemPrompt: "--system-prompt",
+  Effort: "--effort",
+} as const;
+
+export const ClaudeResultField = {
+  Result: "result",
+  TotalCostUsd: "total_cost_usd",
+} as const;

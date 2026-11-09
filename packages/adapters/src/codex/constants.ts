@@ -90,3 +90,32 @@ export const CodexInjected = {
     "<model_switch>",
   ],
 } as const;
+
+export const CodexCli = {
+  Binary: "codex",
+  Exec: "exec",
+  Ephemeral: "--ephemeral",
+  SkipGitRepoCheck: "--skip-git-repo-check",
+  IgnoreUserConfig: "--ignore-user-config",
+  Sandbox: "-s",
+  ReadOnly: "read-only",
+  Color: "--color",
+  ColorNever: "never",
+  Model: "-m",
+  Config: "-c",
+  ReasoningEffortKey: "model_reasoning_effort",
+  Disable: "--disable",
+  Output: "-o",
+  Stdin: "-",
+  Version: "--version",
+} as const;
+
+export const CodexFeatureName = {
+  MultiAgent: "multi_agent",
+  Plugins: "plugins",
+  BrowserUse: "browser_use",
+  ComputerUse: "computer_use",
+  SkillSearch: "skill_search",
+  ToolSuggest: "tool_suggest",
+  Hooks: "hooks",
+} as const;

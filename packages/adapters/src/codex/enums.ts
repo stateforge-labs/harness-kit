@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CodexEvent, CodexItem, CodexRoleName, CodexType } from "./constants.ts";
+import { CodexEvent, CodexFeatureName, CodexItem, CodexRoleName, CodexType } from "./constants.ts";
 
 export const CodexRowType = z.enum([
   CodexType.SessionMeta,
@@ -38,3 +38,14 @@ export type CodexItemType = z.infer<typeof CodexItemType>;
 
 export const CodexRole = z.enum([CodexRoleName.User, CodexRoleName.Assistant, CodexRoleName.Developer]);
 export type CodexRole = z.infer<typeof CodexRole>;
+
+export const CodexFeature = z.enum([
+  CodexFeatureName.MultiAgent,
+  CodexFeatureName.Plugins,
+  CodexFeatureName.BrowserUse,
+  CodexFeatureName.ComputerUse,
+  CodexFeatureName.SkillSearch,
+  CodexFeatureName.ToolSuggest,
+  CodexFeatureName.Hooks,
+]);
+export type CodexFeature = z.infer<typeof CodexFeature>;

@@ -23,3 +23,5 @@ export { ClaudeAttachmentKind, ClaudeCompactTrigger, ClaudeContentKind, ClaudeOr
 export { claudeContextUse, type ClaudeContextUse } from "./usage.ts";
 export { claudeContextWindow, stripClaudeContextSuffix, type ClaudeContextWindow } from "./windows.ts";
 export { ClaudeModel, ClaudeWindow, ClaudeWindowBasis } from "./constants.ts";
+export { CLAUDE_BINARY, CLAUDE_NESTED_ENV, claudeHeadlessArgs, parseClaudeResult, type ClaudeHeadlessOptions, type ClaudeHeadlessResult } from "./launch.ts";
+export { ClaudeCli, ClaudeResultField } from "./constants.ts";

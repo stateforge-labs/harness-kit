@@ -20,3 +20,5 @@ export {
 export { openWork, type OpenWork } from "./work.ts";
 export { contextUsage, tokenCounts, type ContextUsage, type TokenCount } from "./usage.ts";
 export { CodexEventType, CodexItemType, CodexRole, CodexRowType } from "./enums.ts";
+export { CODEX_BINARY, CODEX_UNUSED_FEATURES, codexExec, codexVersionArgs, parseCodexVersion, readLastMessage, type CodexExecOptions, type CodexInvocation } from "./exec.ts";
+export { CodexFeature } from "./enums.ts";

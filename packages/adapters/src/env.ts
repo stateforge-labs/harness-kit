@@ -9,6 +9,9 @@ export const EnvVar = {
   XdgDataHome: "XDG_DATA_HOME",
   XdgCacheHome: "XDG_CACHE_HOME",
   CodexHome: "CODEX_HOME",
+  ClaudeCode: "CLAUDECODE",
+  ClaudeCodeEntrypoint: "CLAUDE_CODE_ENTRYPOINT",
+  OpenCodeConfigContent: "OPENCODE_CONFIG_CONTENT",
 } as const;
 
 export interface AdapterEnv {

@@ -21,7 +21,7 @@ console.log(JSON.stringify(out));
 let consumer: string;
 let resolved: Record<string, string>;
 let loaded: Record<string, boolean>;
-let env: { home: string; xdgDataHome: string; codexHome: string };
+let env: { home: string; xdgDataHome: string; xdgCacheHome: string; codexHome: string };
 let packedFiles: string[];
 
 beforeAll(async () => {

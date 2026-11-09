@@ -41,3 +41,24 @@ export const CodexUse = {
 } as const;
 
 export type CodexUseKind = (typeof CodexUse)[keyof typeof CodexUse];
+
+export const SlashCommand = {
+  Compact: "/compact",
+} as const;
+
+export const LocatorKey = {
+  Session: "session",
+  Cwd: "cwd",
+} as const;
+
+export type LocatorKey = (typeof LocatorKey)[keyof typeof LocatorKey];
+
+export const TranscriptPath = {
+  ClaudeProjects: "/.claude/projects/",
+  CodexHomeMarker: "/.codex/",
+  CodexSessionsDir: "/sessions/",
+  CodexRolloutPrefix: "rollout-",
+  Jsonl: ".jsonl",
+  OpenCodeDb: "opencode.db",
+  OpenCodeSeparator: "#",
+} as const;
