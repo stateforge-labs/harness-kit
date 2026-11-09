@@ -5,6 +5,8 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ## Unreleased
 
+## harness-hooks 0.2.0, harness-adapters 0.1.0 - 2026-11-09
+
 ### `@stateforge-labs/harness-hooks`
 
 - **Breaking:** the package ships only the build: `dist/`, `schemas/`, `README.md` and `LICENSE`. Bun now runs `dist/` too; the `bun` export condition is gone (inside the repository the `stateforge-source` condition points at `src/`).
