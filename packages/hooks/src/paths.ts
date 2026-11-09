@@ -7,5 +7,4 @@ const at = (relative: string): string => fileURLToPath(new URL(relative, import.
 
 export const shimPath = at(`../clients/shim/hook-shim${ext}`);
 export const opencodePluginPath = at(`../clients/opencode/plugin${ext}`);
-export const fixturesDir = at(`${packageRoot}fixtures`);
 export const schemasDir = at(`${packageRoot}schemas`);

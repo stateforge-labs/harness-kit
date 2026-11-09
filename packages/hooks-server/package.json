@@ -32,8 +32,8 @@
     "README.md"
   ],
   "scripts": {
-    "start": "bun src/server.ts",
-    "install-clients": "bun scripts/install.ts"
+    "start": "BUN_OPTIONS=--conditions=stateforge-source bun src/server.ts",
+    "install-clients": "BUN_OPTIONS=--conditions=stateforge-source bun scripts/install.ts"
   },
   "dependencies": {
     "@stateforge-labs/harness-hooks": "workspace:*",

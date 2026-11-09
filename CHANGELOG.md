@@ -7,12 +7,15 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ### `@stateforge-labs/harness-hooks`
 
+- **Breaking:** the package ships only the build: `dist/`, `schemas/`, `README.md` and `LICENSE`. Bun now runs `dist/` too; the `bun` export condition is gone (inside the repository the `stateforge-source` condition points at `src/`).
+- **Breaking:** `fixturesDir` and the `./fixtures/*` subpath are removed. The fixtures stay in the repository under `packages/hooks/fixtures/`.
 - Export the zod schemas, enums, hook names and tool inputs of every harness from the index.
 - The Claude tool-input table is exported as `claudeToolInputs`, with `anyToolInput` (any tool input record) and `checkToolInput` (the refinement for a tool input). These three names have no harness prefix in the index, unlike the other exports of their kind.
 - Tool name constants expanded for Claude, Codex and OpenCode, with the names each harness and version emits.
 
 ### `@stateforge-labs/harness-adapters`
 
+- The package ships only the build: `dist/`, `README.md` and `LICENSE`.
 - The package is public. It has one subpath per harness (`claude`, `codex`, `opencode`), the OpenCode store reader (`opencode/store`) and the TUI chrome (`tui`).
 - Claude records: `readClaudeRecords()`, `parseClaudeRecord()`, the record and block types, the Claude enums, `humanPrompt()`, `toolUses()`, compaction helpers (`compactBoundary()`, `compactSummary()`, `compactionFailed()`, `transcriptHasCompactBoundary()`), `isNoise()`, `awaySummary()` and `unwrapPastedContent()`.
 - Claude background tasks and sessions: `scanClaudeBackground()` and `claudeSessionIdOfPid()`.

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { ClaudeTool, CodexTool, OpenCodeTool } from "../src/index.ts";
-import { fixturesDir } from "../src/paths.ts";
+import { fixturesDir } from "./fixtures-dir.ts";
 
 function hookFixtures(harness: string): Record<string, unknown>[] {
   const walk = (dir: string): string[] =>

@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { adapters, fixturesDir } from "../src/index.ts";
+import { adapters } from "../src/index.ts";
+import { fixturesDir } from "./fixtures-dir.ts";
 
 const RESERVED = ["ts", "harness", "event", "keys", "known", "missing", "wrong_type"];
 const COMMON = ["session_id", "agent_id", "agent_type", "tool_name"] as const;

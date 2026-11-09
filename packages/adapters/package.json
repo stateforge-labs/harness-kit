@@ -27,32 +27,32 @@
   },
   "exports": {
     ".": {
-      "bun": "./src/index.ts",
+      "stateforge-source": "./src/index.ts",
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
     },
     "./claude": {
-      "bun": "./src/claude/index.ts",
+      "stateforge-source": "./src/claude/index.ts",
       "types": "./dist/src/claude/index.d.ts",
       "default": "./dist/src/claude/index.js"
     },
     "./codex": {
-      "bun": "./src/codex/index.ts",
+      "stateforge-source": "./src/codex/index.ts",
       "types": "./dist/src/codex/index.d.ts",
       "default": "./dist/src/codex/index.js"
     },
     "./opencode": {
-      "bun": "./src/opencode/index.ts",
+      "stateforge-source": "./src/opencode/index.ts",
       "types": "./dist/src/opencode/index.d.ts",
       "default": "./dist/src/opencode/index.js"
     },
     "./opencode/store": {
-      "bun": "./src/opencode/store.ts",
+      "stateforge-source": "./src/opencode/store.ts",
       "types": "./dist/src/opencode/store.d.ts",
       "default": "./dist/src/opencode/store.js"
     },
     "./tui": {
-      "bun": "./src/tui/index.ts",
+      "stateforge-source": "./src/tui/index.ts",
       "types": "./dist/src/tui/index.d.ts",
       "default": "./dist/src/tui/index.js"
     }
@@ -77,7 +77,6 @@
     "typescript": "7.0.2"
   },
   "files": [
-    "src",
     "dist",
     "README.md",
     "LICENSE"

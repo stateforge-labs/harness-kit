@@ -1,13 +1,12 @@
 # @stateforge-labs/harness-hooks
 
 Turns a hook payload from Claude Code, Codex or OpenCode into a neutral event, runs it through a middleware pipeline, and turns the
-neutral reply back into that harness's own response. It has no HTTP server and no Bun API in its shipped code, so it runs under Node
-(from `dist/`) and under Bun (from `src/`).
+neutral reply back into that harness's own response. It has no HTTP server and no Bun API in its shipped code, so the same built
+`dist/` runs under Node and under Bun.
 
 ## Requirements
 
-- Node 22 or later for the built package in `dist/`.
-- Bun 1.4.4 for the sources (`src/` and `clients/` through the `bun` export condition).
+- Node 22 or later, or Bun 1.4.4. Both run the built package in `dist/`; the package ships no TypeScript sources.
 - Depends on [zod](https://zod.dev) 4 (`zod` 4.6.7 is pinned in `package.json`); npm and Bun install it with the package.
 
 ## Install
@@ -25,11 +24,18 @@ bun add @stateforge-labs/harness-hooks
 ## Usage
 
 ```ts
-import { adapters, defaultPipeline, fixturesDir, handle } from "@stateforge-labs/harness-hooks";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { adapters, defaultPipeline, handle } from "@stateforge-labs/harness-hooks";
 
-const payload = JSON.parse(readFileSync(join(fixturesDir, "claude/PreToolUse/02-bash.json"), "utf8"));
+const payload = {
+  session_id: "fx-PreToolUse-2",
+  transcript_path: "/home/user/.claude/projects/p/fx-PreToolUse-2.jsonl",
+  cwd: "/tmp/work",
+  permission_mode: "auto",
+  hook_event_name: "PreToolUse",
+  tool_name: "Bash",
+  tool_input: { command: "ls", description: "list files" },
+  tool_use_id: "toolu_01",
+};
 const { body } = await handle(adapters.get("claude")!, payload, defaultPipeline());
 console.log(JSON.stringify(body));
 ```
@@ -48,14 +54,14 @@ the middleware section of the [architecture page](https://github.com/stateforge-
 
 | Import | What |
 | --- | --- |
-| `@stateforge-labs/harness-hooks` | `adapters` (registry by harness id), `handle(adapter, raw, pipeline)`, `Pipeline` (per-layer `{ timeoutMs, onFault }`), `defaultPipeline`, `policyLayer`, `worktreeLayer`, `onKinds`, `mergeReplies`, `toolAllowlist`, `denyText`, `continueText`, `policy`, the neutral types (`NeutralEvent`, `NeutralReply`, `HarnessAdapter`, ...), and the on-disk paths `shimPath`, `opencodePluginPath`, `fixturesDir` and `schemasDir` |
+| `@stateforge-labs/harness-hooks` | `adapters` (registry by harness id), `handle(adapter, raw, pipeline)`, `Pipeline` (per-layer `{ timeoutMs, onFault }`), `defaultPipeline`, `policyLayer`, `worktreeLayer`, `onKinds`, `mergeReplies`, `toolAllowlist`, `denyText`, `continueText`, `policy`, the neutral types (`NeutralEvent`, `NeutralReply`, `HarnessAdapter`, ...), and the on-disk paths `shimPath`, `opencodePluginPath` and `schemasDir` |
 | `@stateforge-labs/harness-hooks` (per harness) | `claudeSchemas`, `codexSchemas`, `opencodeSchemas` (hook name to zod schema), `claudeEnums`, `codexEnums`, `opencodeEnums` (closed value sets as zod enums), `claudeToolInputs`, `anyToolInput` and `checkToolInput` (Claude tool input schemas) |
 | `@stateforge-labs/harness-hooks/shim` | The command shim. It reads a hook payload from stdin and posts it to `POST /hook/<harness>`. It fails open to `{}`; with `HOOK_SHIM_FAIL=closed` it refuses PreToolUse and PermissionRequest instead |
 | `@stateforge-labs/harness-hooks/opencode-plugin` | The OpenCode plugin. It adds the rules to each model request and throws on a deny. It fails open, or closed with `HOOK_PLUGIN_FAIL=closed` |
-| `@stateforge-labs/harness-hooks/fixtures/*` | Captured and synthetic payloads, each with `.expected.json` and `.log.json` snapshots |
 | `@stateforge-labs/harness-hooks/schemas/*` | JSON Schema per harness event, generated from the zod schemas (documentation only) |
 
-Anything not listed is internal. The `bun` export condition points at `src/` and `clients/`. Every other runtime gets `dist/`.
+Anything not listed is internal. The package ships only `dist/` and `schemas/`. The captured and synthetic payloads, with their `.expected.json`
+and `.log.json` snapshots, live in the repository under [`packages/hooks/fixtures/`](https://github.com/stateforge-labs/harness-kit/tree/main/packages/hooks/fixtures).
 
 ## Supported harness events
 

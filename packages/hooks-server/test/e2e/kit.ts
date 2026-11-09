@@ -1,7 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll } from "bun:test";
-import { fixturesDir } from "@stateforge-labs/harness-hooks";
 import { eventually, startServer, type RunningServer } from "./harness.ts";
 
 export type Payload = Record<string, unknown> & { hook_event_name: string; session_id: string };
@@ -15,7 +14,7 @@ export interface Fixture {
   log: Record<string, unknown>;
 }
 
-const FIXTURES = fixturesDir;
+const FIXTURES = join(import.meta.dir, "..", "..", "..", "hooks", "fixtures");
 
 function provenanceOf(harness: string): (event: string, name: string) => string {
   const file = join(FIXTURES, harness, "provenance.json");

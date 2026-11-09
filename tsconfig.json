@@ -8,8 +8,8 @@
     "jsx": "react-jsx",
     "allowJs": true,
     "types": ["bun"],
-    // Resolve workspace packages to their sources (the "bun" export condition), not to a built dist/.
-    "customConditions": ["bun"],
+    // Resolve workspace packages to their sources (the "stateforge-source" export condition), not to a built dist/.
+    "customConditions": ["stateforge-source"],
 
     // Bundler mode
     "moduleResolution": "bundler",

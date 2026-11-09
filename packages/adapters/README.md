@@ -62,7 +62,7 @@ isChromeLine(Harness.Codex, "  ⏵⏵ auto mode on (shift+tab to cycle)"); // fa
 The patterns carry no `g` or `y` flag, so `test()` is stateless. The Claude list is the tab-recap screen reader's list, with the empty prompt widened to accept a no-break space after the chevron (the captured idle screen has one). The Codex
 and OpenCode lists were built from their idle screens (`fixtures/codex/screens/idle.txt`, `fixtures/opencode/screens/idle.txt`).
 
-Anything not listed is internal. The `bun` export condition points at `src/`. Every other runtime gets `dist/`.
+Anything not listed is internal. The package ships only `dist/`; the fixtures stay in the repository.
 
 ## License
 

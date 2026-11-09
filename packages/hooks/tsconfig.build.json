@@ -1,7 +1,7 @@
 {
   // Node build of the library: `bun run build` writes dist/src/** and dist/clients/** as ESM .js plus .d.ts.
   // Sources keep their `.ts` import specifiers; rewriteRelativeImportExtensions turns them into `.js` on emit.
-  // Bun reads src/ directly through the "bun" export condition; everything else gets dist/.
+  // Inside this repository Bun reads src/ through the "stateforge-source" export condition; everything else gets dist/.
   "compilerOptions": {
     "target": "ES2023",
     "lib": ["ES2023"],

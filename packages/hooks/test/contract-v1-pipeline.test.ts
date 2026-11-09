@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fixturesDir } from "./fixtures-dir.ts";
 import {
   Pipeline,
   adapters,
-  fixturesDir,
   handle,
   mergeReplies,
   policyLayer,

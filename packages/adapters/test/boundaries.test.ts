@@ -4,21 +4,21 @@ import { join } from "node:path";
 
 const pkg = join(import.meta.dir, "..");
 const manifest = JSON.parse(readFileSync(join(pkg, "package.json"), "utf8")) as {
-  exports: Record<string, { bun: string; types: string; default: string }>;
+  exports: Record<string, { "stateforge-source": string; types: string; default: string }>;
 };
 
 describe("the exports map", () => {
   const entries = Object.entries(manifest.exports);
 
-  test("every subpath has a source file for the bun condition", () => {
+  test("every subpath has a source file for the stateforge-source condition", () => {
     expect(entries.length).toBeGreaterThan(0);
-    for (const [, target] of entries) expect(existsSync(join(pkg, target.bun))).toBe(true);
+    for (const [, target] of entries) expect(existsSync(join(pkg, target["stateforge-source"]))).toBe(true);
   });
 
   test("the default condition points into dist/ and mirrors the source file", () => {
     for (const [, target] of entries) {
       expect(target.default.startsWith("./dist/")).toBe(true);
-      expect(target.default).toBe(target.bun.replace("./src/", "./dist/src/").replace(/\.ts$/, ".js"));
+      expect(target.default).toBe(target["stateforge-source"].replace("./src/", "./dist/src/").replace(/\.ts$/, ".js"));
     }
   });
 

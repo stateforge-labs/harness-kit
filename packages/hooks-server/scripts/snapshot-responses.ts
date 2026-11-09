@@ -1,9 +1,8 @@
 import { readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { fixturesDir } from "@stateforge-labs/harness-hooks";
 import { eventually, startServer } from "../test/e2e/harness.ts";
 
-const root = fixturesDir;
+const root = join(import.meta.dir, "..", "..", "hooks", "fixtures");
 const harnesses = process.argv.slice(2).length ? process.argv.slice(2) : readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort();
 const srv = await startServer();
 let n = 0;

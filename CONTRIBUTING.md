@@ -32,8 +32,8 @@ Run these from the repository root before you open a pull request.
 
 | Command | What it does |
 | --- | --- |
-| `bun run test` | `tools/check-boundaries.ts`, then `bun test` for every package |
-| `bun run typecheck` | `tsc --noEmit` over `packages/` and `tools/`, using the `bun` export condition |
+| `bun run test` | `tools/check-boundaries.ts`, then `bun test` for every package, with `BUN_OPTIONS=--conditions=stateforge-source` so workspace imports resolve to `src/` |
+| `bun run typecheck` | `tsc --noEmit` over `packages/` and `tools/`, using the `stateforge-source` export condition |
 | `bun run gen:check` | fails if a generated file is stale (the handler index, `schemas.ts` and the JSON Schemas) |
 | `bun run build` | builds `dist/` for `@stateforge-labs/harness-hooks` and `@stateforge-labs/harness-adapters` (ESM and `.d.ts`, for Node) |
 

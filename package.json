@@ -7,8 +7,8 @@
     "typecheck": "tsc --noEmit",
     "gen": "bun --filter @stateforge-labs/harness-hooks gen",
     "gen:check": "bun --filter @stateforge-labs/harness-hooks gen:check",
-    "start": "bun --filter @stateforge-labs/harness-hooks-server start",
-    "test": "bun tools/check-boundaries.ts && bun test",
+    "start": "BUN_OPTIONS=--conditions=stateforge-source bun --filter @stateforge-labs/harness-hooks-server start",
+    "test": "BUN_OPTIONS=--conditions=stateforge-source bun tools/check-boundaries.ts && BUN_OPTIONS=--conditions=stateforge-source bun test",
     "build": "bun --filter @stateforge-labs/harness-hooks build && bun --filter @stateforge-labs/harness-adapters build"
   },
   "devDependencies": {

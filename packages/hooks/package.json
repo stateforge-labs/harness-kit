@@ -28,21 +28,20 @@
   },
   "exports": {
     ".": {
-      "bun": "./src/index.ts",
+      "stateforge-source": "./src/index.ts",
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
     },
     "./shim": {
-      "bun": "./clients/shim/hook-shim.ts",
+      "stateforge-source": "./clients/shim/hook-shim.ts",
       "types": "./dist/clients/shim/hook-shim.d.ts",
       "default": "./dist/clients/shim/hook-shim.js"
     },
     "./opencode-plugin": {
-      "bun": "./clients/opencode/plugin.ts",
+      "stateforge-source": "./clients/opencode/plugin.ts",
       "types": "./dist/clients/opencode/plugin.d.ts",
       "default": "./dist/clients/opencode/plugin.js"
     },
-    "./fixtures/*": "./fixtures/*",
     "./schemas/*": "./schemas/*"
   },
   "main": "./dist/src/index.js",
@@ -66,10 +65,7 @@
     "typescript": "7.0.2"
   },
   "files": [
-    "src",
-    "clients",
     "dist",
-    "fixtures",
     "schemas",
     "README.md",
     "LICENSE"
