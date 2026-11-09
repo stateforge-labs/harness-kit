@@ -45,7 +45,7 @@ describe("claude credential plan, per home", () => {
       expect(child.injected).toEqual([EnvVar.ClaudeCodeOauthToken]);
       expect(child.secrets).toEqual([SENTINEL]);
       expect(plan.billing).toBe("unverified");
-      expect(plan.acknowledgement).toEqual({ noticeRetrievedAt: "" });
+      expect(plan.acknowledgement).toEqual({ noticeRetrievedAt: "2026-11-09" });
     });
 
     test(`login-store injects nothing and strips every credential variable under HOME=${home}`, () => {
@@ -57,7 +57,7 @@ describe("claude credential plan, per home", () => {
       expect(child.secrets).toEqual([]);
       expect(child.scrubbed).toEqual(CLAUDE_CREDENTIAL_VARS);
       expect(plan.billing).toBe("unverified");
-      expect(plan.acknowledgement).toEqual({ noticeRetrievedAt: "" });
+      expect(plan.acknowledgement).toEqual({ noticeRetrievedAt: "2026-11-09" });
     });
 
     for (const [selector, name] of [

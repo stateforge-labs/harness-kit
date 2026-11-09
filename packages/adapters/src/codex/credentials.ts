@@ -1,11 +1,14 @@
-import type { CredentialSpec } from "../core/credential.ts";
-import { CredentialField, CredentialMode, finish, homeFailure, isPrivateHome, NO_INJECTION, secretInjection, unsupportedFailure, type CredentialPlan, type CredentialPlanInput, type Injection } from "../core/credential-plan.ts";
+import type { CodexCredential, CredentialSpec } from "../core/credential.ts";
+import { CredentialField, CredentialMode, finish, homeFailure, isPrivateHome, NO_INJECTION, secretInjection, secretOf, unsupportedFailure, type CredentialPlan, type CredentialPlanInput, type Injection } from "../core/credential-plan.ts";
+import { credentialFromSpec } from "../core/credential-from.ts";
 import { CredentialUnsupportedReason, type RunFailure } from "../core/failure.ts";
 import { fail, ok, type Result } from "../core/result.ts";
 import type { IsolationSpec } from "../core/run.ts";
 import { EnvVar } from "../env.ts";
 
 export const CODEX_CREDENTIAL_VARS: readonly string[] = [EnvVar.OpenAiApiKey, EnvVar.CodexApiKey];
+
+const CODEX_MODES: readonly string[] = [CredentialMode.ApiKey, CredentialMode.LoginStore];
 
 function codexInjection(spec: CredentialSpec, isolation: IsolationSpec): Result<Injection, RunFailure> {
   switch (spec.mode) {
@@ -25,4 +28,21 @@ export function codexCredentialPlan(input: CredentialPlanInput<"codex">): Result
   }
   const spec: CredentialSpec = input.credential;
   return finish(spec.mode, CODEX_CREDENTIAL_VARS, codexInjection(spec, input.isolation), null);
+}
+
+function codexCredentialOf(spec: CredentialSpec): Result<CodexCredential, RunFailure> {
+  switch (spec.mode) {
+    case CredentialMode.ApiKey: {
+      const key = secretOf(spec.key, CredentialField.Key);
+      return key.ok ? ok({ mode: CredentialMode.ApiKey, key: key.value }) : fail(key.failure);
+    }
+    case CredentialMode.LoginStore:
+      return ok({ mode: CredentialMode.LoginStore });
+    default:
+      return fail(unsupportedFailure(spec.mode, CredentialUnsupportedReason.UnknownMode));
+  }
+}
+
+export function credentialFromCodex(spec: unknown): Result<CodexCredential, RunFailure> {
+  return credentialFromSpec<"codex">(CODEX_MODES, codexCredentialOf, spec);
 }

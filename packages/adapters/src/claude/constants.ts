@@ -193,3 +193,41 @@ export const ClaudeResultField = {
   Result: "result",
   TotalCostUsd: "total_cost_usd",
 } as const;
+
+export const ClaudePolicy = {
+  RetrievedAt: "2026-11-09",
+  Quotes: [
+    {
+      text: "Unless previously approved, Anthropic does not allow third party developers to offer claude.ai login or rate limits for their products, including agents built on the Claude Agent SDK. Use the API key authentication methods described in the Quickstart instead.",
+      source: "https://code.claude.com/docs/en/agent-sdk/overview",
+    },
+    {
+      text: "OAuth authentication is intended exclusively for purchasers of Claude Free, Pro, Max, Ultra, Team, and Enterprise subscription plans and is designed to support ordinary use of Claude Code and other native Anthropic applications.",
+      source: "https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use",
+    },
+    {
+      text: "Developers building products or services that interact with Claude's capabilities, including those using the Agent SDK, should use API key authentication through Claude Console or a supported cloud provider. Anthropic does not permit third-party developers to offer Claude.ai login into their own applications, or to route requests through Free, Pro, Max, or Ultra plan credentials on behalf of their users. Moreover, developers may not collect, store, or intermediate Claude.ai credentials or session tokens — sign-in to a Claude account must complete through Anthropic's own flow.",
+      source: "https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use",
+    },
+    {
+      text: "This does not restrict how customers provision and manage their own API keys or third-party inference provider credentials — for example, configuring an API key in a development environment, secrets manager, or machine image for use by the customer's own authorized users — provided the resulting usage is billed to the key owner under their agreement with Anthropic (or the applicable provider) and is not resold or intermediated as described above.",
+      source: "https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use",
+    },
+    {
+      text: "Nor does it prevent an end user from signing in to the unmodified Claude Code binary with their own Claude subscription, including where a platform hosts Claude Code as described under Can customers offer Claude Code in their products? above.",
+      source: "https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use",
+    },
+    {
+      text: "Anthropic reserves the right to take measures to enforce these restrictions and may do so without prior notice.",
+      source: "https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use",
+    },
+    {
+      text: "Advertised usage limits for Pro, Max, and Ultra plans assume ordinary, individual usage of Claude Code and the Agent SDK.",
+      source: "https://code.claude.com/docs/en/legal-and-compliance#acceptable-use",
+    },
+  ],
+} as const;
+
+export const ClaudeAuthFile = {
+  Credentials: ".credentials.json",
+} as const;

@@ -119,3 +119,12 @@ export const CodexFeatureName = {
   ToolSuggest: "tool_suggest",
   Hooks: "hooks",
 } as const;
+
+export const CodexAuthFile = {
+  Auth: "auth.json",
+  Config: "config.toml",
+} as const;
+
+export const CodexKeyringSetting = {
+  Pattern: /cli_auth_credentials_store\s*=\s*"keyring"/,
+} as const;

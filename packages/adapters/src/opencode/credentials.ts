@@ -1,5 +1,6 @@
-import type { CredentialSpec } from "../core/credential.ts";
+import type { CredentialSpec, OpenCodeCredential } from "../core/credential.ts";
 import { CredentialField, CredentialMode, credentialFailure, finish, homeFailure, isPrivateHome, NO_INJECTION, secretOf, unsupportedFailure, type CredentialPlan, type CredentialPlanInput, type Injection } from "../core/credential-plan.ts";
+import { credentialFromSpec } from "../core/credential-from.ts";
 import { CredentialReason, CredentialUnsupportedReason, type RunFailure } from "../core/failure.ts";
 import { fail, ok, type Result } from "../core/result.ts";
 import type { IsolationSpec } from "../core/run.ts";
@@ -14,6 +15,8 @@ export const OPENCODE_CREDENTIAL_VARS: readonly string[] = [
   EnvVar.AwsBearerTokenBedrock,
   EnvVar.OpenCodeConfigContent,
 ];
+
+const OPENCODE_MODES: readonly string[] = [CredentialMode.ApiKey, CredentialMode.LoginStore];
 
 function providerVar(provider: string | undefined): Result<string, RunFailure> {
   if (provider === undefined || provider === "") {
@@ -53,4 +56,36 @@ export function openCodeCredentialPlan(input: CredentialPlanInput<"opencode">): 
   }
   const spec: CredentialSpec = input.credential;
   return finish(spec.mode, OPENCODE_CREDENTIAL_VARS, openCodeInjection(spec, input.isolation), null);
+}
+
+function requiredProvider(provider: unknown): Result<string, RunFailure> {
+  if (typeof provider !== "string" || provider === "") {
+    return fail(credentialFailure(CredentialReason.MissingField, CredentialField.Provider));
+  }
+  return ok(provider);
+}
+
+function openCodeCredentialOf(spec: CredentialSpec): Result<OpenCodeCredential, RunFailure> {
+  switch (spec.mode) {
+    case CredentialMode.ApiKey: {
+      const key = secretOf(spec.key, CredentialField.Key);
+      if (!key.ok) {
+        return fail(key.failure);
+      }
+      const provider = requiredProvider(spec.provider);
+      return provider.ok ? ok({ mode: CredentialMode.ApiKey, key: key.value, provider: provider.value }) : fail(provider.failure);
+    }
+    case CredentialMode.LoginStore:
+      if (spec.provider === undefined) {
+        return ok({ mode: CredentialMode.LoginStore });
+      }
+      const provider = requiredProvider(spec.provider);
+      return provider.ok ? ok({ mode: CredentialMode.LoginStore, provider: provider.value }) : fail(provider.failure);
+    default:
+      return fail(unsupportedFailure(spec.mode, CredentialUnsupportedReason.UnknownMode));
+  }
+}
+
+export function credentialFromOpencode(spec: unknown): Result<OpenCodeCredential, RunFailure> {
+  return credentialFromSpec<"opencode">(OPENCODE_MODES, openCodeCredentialOf, spec);
 }

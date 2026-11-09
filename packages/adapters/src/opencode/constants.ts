@@ -130,3 +130,7 @@ export const OpenCodeToollessConfig = {
   tools: { "*": false },
   permission: { "*": "deny" },
 } as const;
+
+export const OpenCodeAuthFile = {
+  Auth: "auth.json",
+} as const;
