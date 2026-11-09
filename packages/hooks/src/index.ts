@@ -43,3 +43,10 @@ export {
   type PluginEnv,
   type ShimEnv,
 } from "./env.ts";
+export { schemas as claudeSchemas } from "./adapters/claude/schemas.ts";
+export { schemas as codexSchemas } from "./adapters/codex/schemas.ts";
+export { schemas as opencodeSchemas } from "./adapters/opencode/schemas.ts";
+export * as claudeEnums from "./adapters/claude/enums.ts";
+export * as codexEnums from "./adapters/codex/enums.ts";
+export * as opencodeEnums from "./adapters/opencode/enums.ts";
+export { toolInputs as claudeToolInputs, anyToolInput, checkToolInput } from "./adapters/claude/tool-input.ts";

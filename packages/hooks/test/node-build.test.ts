@@ -9,10 +9,10 @@ const NAME = "@stateforge-labs/harness-hooks";
 const SCRIPT = `
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { adapters, defaultPipeline, handle, fixturesDir, schemasDir, shimPath, opencodePluginPath } from "${NAME}";
+import { adapters, defaultPipeline, handle, fixturesDir, schemasDir, shimPath, opencodePluginPath, claudeSchemas, codexSchemas, opencodeSchemas, claudeEnums, codexEnums, opencodeEnums, claudeToolInputs, anyToolInput, checkToolInput } from "${NAME}";
 
 const read = (f) => JSON.parse(readFileSync(f, "utf8"));
-const out = { resolved: import.meta.resolve("${NAME}"), paths: {}, checked: 0, mismatches: [] };
+const out = { resolved: import.meta.resolve("${NAME}"), paths: {}, checked: 0, mismatches: [], exports: { claudeSchemas: claudeSchemas.size, codexSchemas: codexSchemas.size, opencodeSchemas: opencodeSchemas.size, claudePermissionModes: claudeEnums.PermissionMode.options.length, codexPermissionModes: codexEnums.PermissionMode.options.length, opencodeToolStatus: opencodeEnums.ToolStatus.options.length, claudeToolInputs: Object.keys(claudeToolInputs).length, anyToolInput: typeof anyToolInput.safeParse, checkToolInput: typeof checkToolInput } };
 for (const [k, p] of Object.entries({ fixturesDir, schemasDir, shimPath, opencodePluginPath })) out.paths[k] = { p, exists: existsSync(p) };
 for (const harness of readdirSync(fixturesDir)) {
   const adapter = adapters.get(harness);
@@ -30,7 +30,7 @@ for (const harness of readdirSync(fixturesDir)) {
 console.log(JSON.stringify(out));
 `;
 
-let result: { resolved: string; paths: Record<string, { p: string; exists: boolean }>; checked: number; mismatches: string[] };
+let result: { resolved: string; paths: Record<string, { p: string; exists: boolean }>; checked: number; mismatches: string[]; exports: Record<string, number | string> };
 
 beforeAll(async () => {
   const build = Bun.spawn(["bun", "run", "build"], { cwd: pkg, stdout: "pipe", stderr: "pipe" });
@@ -65,6 +65,20 @@ describe("the Node build", () => {
     const stdout = await new Response(proc.stdout).text();
     expect(await proc.exited).toBe(0);
     expect(stdout.trim()).toBe("{}");
+  });
+
+  test("the schemas, enums and tool inputs resolve under Node", () => {
+    expect(result.exports).toEqual({
+      claudeSchemas: 33,
+      codexSchemas: 14,
+      opencodeSchemas: 15,
+      claudePermissionModes: 6,
+      codexPermissionModes: 5,
+      opencodeToolStatus: 1,
+      claudeToolInputs: 10,
+      anyToolInput: "function",
+      checkToolInput: "function",
+    });
   });
 
   test("every fixture answers its snapshot under Node", () => {
