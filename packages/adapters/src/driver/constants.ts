@@ -229,3 +229,17 @@ export const HandleLabel = {
   Stream: "stream",
   Run: "run",
 } as const;
+
+export const AvailabilityReason = {
+  BinaryMissing: "binary-missing",
+  UnknownHarness: "unknown-harness",
+} as const;
+export type AvailabilityReason = (typeof AvailabilityReason)[keyof typeof AvailabilityReason];
+
+export const RuntimeLabel = {
+  Available: "available",
+  Credential: "credentialFrom",
+  Policy: "policyNotice",
+  Inspect: "inspectCredentials",
+  Sweep: "sweep",
+} as const;

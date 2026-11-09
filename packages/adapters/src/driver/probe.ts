@@ -22,10 +22,11 @@ async function runProbe(
   args: readonly string[],
   purpose: SpawnPurpose,
   maxBytes: number,
+  timeoutMs: number,
 ): Promise<ProbeResult> {
   const startedAt = ctx.clock.now();
   emit(ctx, { kind: "spawn", harness: scope.harness, engine: scope.engine, purpose, argc: args.length });
-  const io: VersionIo = { spawn: ctx.runner, env: scope.env, cwd: scope.cwd, clock: ctx.clock, timeoutMs: VERSION_PROBE_MS };
+  const io: VersionIo = { spawn: ctx.runner, env: scope.env, cwd: scope.cwd, clock: ctx.clock, timeoutMs };
   const settled = await settle(() => probeOutput(path, args, io, maxBytes));
   const probe = settled.ok ? settled.value : UNAVAILABLE;
   emit(ctx, {
@@ -54,16 +55,22 @@ function cached(
   return pending;
 }
 
-export function versionOf(ctx: RuntimeContext, scope: ProbeScope, path: string, args: readonly string[]): Promise<string | null> {
+export function versionOf(
+  ctx: RuntimeContext,
+  scope: ProbeScope,
+  path: string,
+  args: readonly string[],
+  timeoutMs: number = VERSION_PROBE_MS,
+): Promise<string | null> {
   return cached(ctx.state.versions, path, async () => {
-    const probe = await runProbe(ctx, scope, path, args, SpawnPurpose.Version, VERSION_OUTPUT_BYTES);
+    const probe = await runProbe(ctx, scope, path, args, SpawnPurpose.Version, VERSION_OUTPUT_BYTES, timeoutMs);
     return probe.outcome === ProbeOutcome.Ok ? parseVersion(probe.text) : null;
   });
 }
 
 export function helpOf(ctx: RuntimeContext, scope: ProbeScope, path: string, args: readonly string[]): Promise<string | null> {
   return cached(ctx.state.helps, path, async () => {
-    const probe = await runProbe(ctx, scope, path, args, SpawnPurpose.Help, HELP_OUTPUT_BYTES);
+    const probe = await runProbe(ctx, scope, path, args, SpawnPurpose.Help, HELP_OUTPUT_BYTES, VERSION_PROBE_MS);
     return probe.outcome === ProbeOutcome.Ok ? probe.text : null;
   });
 }
