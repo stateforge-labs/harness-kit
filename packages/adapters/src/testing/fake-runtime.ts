@@ -12,22 +12,26 @@ import { measuredValue } from "../core/evidence.ts";
 import type { Drivers } from "../driver/port.ts";
 import { OPENCODE_DRIVER } from "../opencode/driver.ts";
 
+/** Scripted outputs or failures per harness id, consumed in order. */
 export interface FakeScripts {
   readonly [id: string]: readonly (RunOutput | RunFailure)[] | undefined;
 }
 
+/** One recorded headless run: harness, options and request. */
 export interface FakeCall {
   readonly id: HarnessId;
   readonly options: Partial<HeadlessOptions<HarnessId>>;
   readonly request: RunRequest;
 }
 
+/** Scripts, and optional prompt limits and capabilities, for a fake runtime. */
 export interface FakeRuntimeOptions {
   readonly scripts: FakeScripts;
   readonly promptLimits?: Partial<Record<HarnessId, number | null>>;
   readonly capabilities?: Partial<Record<HarnessId, Capabilities>>;
 }
 
+/** The test runtime: headless handles, recorded calls and requests, and the same close as a real runtime. */
 export interface FakeRuntime {
   headless<I extends HarnessId>(id: I, options?: Partial<HeadlessOptions<I>>): HeadlessHandle<I>;
   close(): Promise<void>;
@@ -115,6 +119,7 @@ function planFor(id: string): Plan {
   return plan as CliPlan;
 }
 
+/** A runtime for tests that answers each run from a script and records the calls; it never spawns a process. */
 export function fakeRuntime(config: FakeRuntimeOptions): FakeRuntime {
   const cursors = new Map<string, number>();
   const requests: RunRequest[] = [];

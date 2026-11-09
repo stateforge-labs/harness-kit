@@ -15,11 +15,13 @@ import { defaultCwd, defaultPlatform, nodeClock, nodeFs, nodeRunner } from "./no
 import { available, capabilitiesOf, credentialFrom, inspectCredentials, lookupDriver, makeClose, policyNotice, promptLimitOf, sweep } from "./runtime-ops.ts";
 import { type EnvSource, processEnv } from "../env.ts";
 
+/** The time and cancellation budget of an availability probe. */
 export interface ProbeIo {
   readonly timeoutMs: number;
   readonly signal?: AbortSignal;
 }
 
+/** Whether one harness binary is installed, with its path and version. */
 export interface Availability {
   readonly id: string;
   readonly installed: { readonly path: string; readonly version: string | null } | null;

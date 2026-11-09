@@ -54,6 +54,7 @@ export interface RunRequest extends CommonOptions {
   readonly input: string;
 }
 
+/** The result of a successful headless run: text, usage, cost, session, engine, binary and the credential and confinement evidence. */
 export interface RunOutput {
   readonly text: string;
   readonly usage: TokenUsage;
@@ -107,6 +108,7 @@ interface PlanBase {
   readonly notes: readonly string[];
 }
 
+/** The plan of a run on the CLI engine: binary, arguments, stdin size and which inputs travel in the arguments. */
 export interface CliPlan extends PlanBase {
   readonly engine: "cli";
   readonly binary: string;
@@ -115,9 +117,11 @@ export interface CliPlan extends PlanBase {
   readonly argvCarries: readonly ("instructions" | "input")[];
 }
 
+/** The plan of a run on the SDK engine. */
 export interface SdkPlan extends PlanBase {
   readonly engine: "sdk";
   readonly entry: string;
 }
 
+/** What a run would execute, for review before spawning: a CLI invocation or an SDK entry. */
 export type Plan = CliPlan | SdkPlan;

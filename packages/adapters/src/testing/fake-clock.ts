@@ -6,6 +6,7 @@ interface Timer {
   cancelled: boolean;
 }
 
+/** A Clock for tests whose time moves only when `advance` is called. */
 export function fakeClock(start = 0): Clock & { advance(ms: number): void } {
   let current = start;
   const timers: Timer[] = [];

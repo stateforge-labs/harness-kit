@@ -19,7 +19,9 @@ and the project uses [Semantic Versioning](https://semver.org).
 - **Breaking:** a run with no `tools` option now resolves to `TOOLS_OFF` (no built-in tools, no MCP servers, no user settings). Pass `TOOLS_DEFAULT` to keep the harness defaults.
 - **Breaking:** `Hermetic`, `Isolation`, `IsolationSpec`, the `hermetic`, `isolation` and `acceptVersions` options, `Plan.layers`, `Plan.isolation`, `RunOutput.hermetic` and `RunOutput.isolationDir`, `CredentialEvidence.observed` and `verified`, the `isolation-created` and `isolation-removed` library events, the private-home credential reasons and the `version-not-accepted` and `script-exhausted` reasons are removed. Use `tools`, `cwd: { private }` and `env` instead.
 - **Breaking:** `opencodeHermeticEnv` is renamed `opencodeToollessEnv`.
-- OpenCode: tools-off, MCP-none, settings-sources and ephemeral are now emulated with named leftovers, measured on OpenCode 2.2.6.
+- OpenCode: tools-off, settings-sources and ephemeral are now emulated with named leftovers, measured on OpenCode 2.2.6. MCP-none stays unmeasured.
+- **Breaking:** the value of `OPENCODE_TOOLLESS_CONFIG` changes from `{"tools":{"*":false},"permission":{"*":"deny"}}` to a `{"permissions":[...]}` list of deny rules built by the new `opencodeDenyConfig()`. Anything that passes the constant to OpenCode now sends the new shape.
+- `opencodeSessionListArgs()` and `opencodeSessionDeleteArgs()` now include `--standalone` in the arguments they return.
 
 ## harness-hooks 0.2.0, harness-adapters 0.1.0 - 2026-11-09
 

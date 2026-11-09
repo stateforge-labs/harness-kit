@@ -223,6 +223,7 @@ function cliRun<I extends string>(parts: CliEngineParts<I>, original: EngineRunI
   };
 }
 
+/** Builds a CLI engine from its parts: the invocation, the line parser and the optional after, cleanup and help checks. */
 export function cliEngine<I extends string>(parts: CliEngineParts<I>): CliEngine<I> {
   return {
     start: (input, io) => cliRun(parts, input, io),

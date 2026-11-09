@@ -3,6 +3,7 @@ import type { ProcessExit, ProcessRunner, ProcessSpec, RunningProcess } from "..
 import { Encoding, Signal, SpawnCode } from "../driver/constants.ts";
 import { fail, ok } from "../core/result.ts";
 
+/** What one fake process prints and how it exits. */
 export interface FakeProcessScript {
   readonly stdout?: string;
   readonly stderr?: string;
@@ -13,6 +14,7 @@ export interface FakeProcessScript {
   readonly pipesOutliveExit?: boolean;
 }
 
+/** The fake runner with the specs and signals it received. */
 export interface FakeProcessRunner {
   readonly runner: ProcessRunner;
   readonly specs: readonly ProcessSpec[];
@@ -85,6 +87,7 @@ function launch(script: FakeProcessScript, index: number, signals: Signal[]): La
   return { running, release: () => end(normal()) };
 }
 
+/** A ProcessRunner for tests that plays one script per spawn and records the specs. */
 export function fakeProcessRunner(scripts: readonly FakeProcessScript[]): FakeProcessRunner {
   const specs: ProcessSpec[] = [];
   const signals: Signal[] = [];

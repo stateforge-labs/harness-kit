@@ -10,6 +10,7 @@ import type { HarnessDriver } from "./port.ts";
 import { setupRun } from "./setup.ts";
 import { streamRun } from "./stream.ts";
 
+/** A headless run entry point for one harness: `plan` builds a run without spawning, `run` completes it, `stream` yields its events. */
 export interface HeadlessHandle<I extends string = HarnessId> {
   readonly id: I;
   plan(request: RunRequest): Result<Plan, RunFailure>;

@@ -5,6 +5,7 @@ const SECRET_EMPTY = Symbol.for("stateforge-labs.secret.empty");
 const Mask = { Text: "[secret]" } as const;
 const InspectCustom = Symbol.for("nodejs.util.inspect.custom");
 
+/** A credential value that never prints, serialises or interpolates; read it with the package's reveal call. */
 export interface Secret {
   readonly [SECRET_BRAND]: true;
   readonly [SECRET_REVEAL]: () => string;
@@ -52,6 +53,7 @@ export function secret(value: string): Secret {
   return Object.freeze(new SecretValue(value));
 }
 
+/** True when the value was made by `secret()`. */
 export function isSecret(value: unknown): value is Secret {
   if (typeof value !== "object" || value === null) {
     return false;

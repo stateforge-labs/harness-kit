@@ -6,12 +6,14 @@ import { capabilityProblems, profileEvidenceProblems, profileFieldProblems, sdkC
 import { credentialProblems, engineProblems, fixtureProblems, gatingProblems, supportProblems } from "./contract-probes.ts";
 import type { HarnessDriver } from "./port.ts";
 
+/** The result of one driver contract check. */
 export interface ContractCheck {
   readonly name: string;
   readonly ok: boolean;
   readonly detail: string;
 }
 
+/** The credentials, request and sentinel strings a driver contract run needs. */
 export interface ContractFixtures<I extends string> {
   readonly credentials: readonly CredentialOf<I>[];
   readonly request: RunRequest;
@@ -27,6 +29,7 @@ function runCheck(name: ContractCheckName, work: () => readonly string[]): Contr
   return { name, ok: problems.length === 0, detail: problems.length === 0 ? ContractText.Pass : problems.join(ContractText.Separator) };
 }
 
+/** Runs the shared checks every harness driver must pass and returns one result per check. */
 export function driverContract<I extends string>(driver: HarnessDriver<I>, fixtures: ContractFixtures<I>): readonly ContractCheck[] {
   return [
     runCheck(ContractCheckName.ProfileEvidence, () => profileEvidenceProblems(driver.profile)),

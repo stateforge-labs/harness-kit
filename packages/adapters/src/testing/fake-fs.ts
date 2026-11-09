@@ -13,6 +13,7 @@ export interface FakeFsInit {
   readonly createdAtMs?: number;
 }
 
+/** An in-memory RuntimeFs that exposes its directories and the paths removed. */
 export type FakeFs = RuntimeFs & {
   readonly dirs: ReadonlySet<string>;
   readonly removed: readonly string[];
@@ -27,6 +28,7 @@ function isUnder(path: string, parent: string): boolean {
   return path.startsWith(`${parent}${FAKE.Separator}`);
 }
 
+/** An in-memory RuntimeFs for tests, seeded from `initial`. */
 export function fakeFs(initial: FakeFsInit = {}): FakeFs {
   const createdAt = initial.createdAtMs ?? 0;
   const dirs = new Set<string>();

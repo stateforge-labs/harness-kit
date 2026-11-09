@@ -40,10 +40,12 @@ import { type RuntimeContext } from "./context.ts";
 import { type HeadlessHandle } from "./handle.ts";
 import type { Drivers, HarnessDriver } from "./port.ts";
 import type { RuntimeConfig } from "./ports.ts";
+/** The time and cancellation budget of an availability probe. */
 export interface ProbeIo {
     readonly timeoutMs: number;
     readonly signal?: AbortSignal;
 }
+/** Whether one harness binary is installed, with its path and version. */
 export interface Availability {
     readonly id: string;
     readonly installed: {
@@ -252,7 +254,9 @@ export declare const AGENT_CELLS: readonly ["builtin-tools-off", "mcp-allowlist"
 export type AgentCell = (typeof AGENT_CELLS)[number];
 export declare function emulated(how: string): Support;
 export declare function unmeasuredSupport(question: string): Support;
+/** True when the cell is supported or emulated, so the capability can be relied on. */
 export declare function isUsable(support: Support): boolean;
+/** The reason a cell is unsupported, or the open question of an unmeasured cell. */
 export declare function supportWhy(support: Support): string;
 
 // core/policy.d.ts
@@ -364,7 +368,9 @@ export type Result<T, F> = {
     readonly ok: false;
     readonly failure: F;
 };
+/** Wraps a value as a successful Result. */
 export declare function ok<T>(value: T): Result<T, never>;
+/** Wraps a failure as a failed Result. */
 export declare function fail<F>(failure: F): Result<never, F>;
 
 // core/credential.d.ts
@@ -437,12 +443,14 @@ export interface CredentialEvidence {
 // core/secret.d.ts
 export declare const SECRET_BRAND: unique symbol;
 export declare const SECRET_REVEAL: unique symbol;
+/** A credential value that never prints, serialises or interpolates; read it with the package's reveal call. */
 export interface Secret {
     readonly [SECRET_BRAND]: true;
     readonly [SECRET_REVEAL]: () => string;
 }
 /** Wraps a credential value so it never prints, serialises or interpolates. */
 export declare function secret(value: string): Secret;
+/** True when the value was made by \`secret()\`. */
 export declare function isSecret(value: unknown): value is Secret;
 export declare function reveal(value: Secret): string;
 export declare function secretIsEmpty(value: Secret): boolean;
@@ -628,6 +636,7 @@ export interface RunRequest extends CommonOptions {
     readonly instructions: string;
     readonly input: string;
 }
+/** The result of a successful headless run: text, usage, cost, session, engine, binary and the credential and confinement evidence. */
 export interface RunOutput {
     readonly text: string;
     readonly usage: TokenUsage;
@@ -744,6 +753,7 @@ interface PlanBase {
     readonly confinement: readonly ConfinementCell[];
     readonly notes: readonly string[];
 }
+/** The plan of a run on the CLI engine: binary, arguments, stdin size and which inputs travel in the arguments. */
 export interface CliPlan extends PlanBase {
     readonly engine: "cli";
     readonly binary: string;
@@ -751,10 +761,12 @@ export interface CliPlan extends PlanBase {
     readonly stdinBytes: number;
     readonly argvCarries: readonly ("instructions" | "input")[];
 }
+/** The plan of a run on the SDK engine. */
 export interface SdkPlan extends PlanBase {
     readonly engine: "sdk";
     readonly entry: string;
 }
+/** What a run would execute, for review before spawning: a CLI invocation or an SDK entry. */
 export type Plan = CliPlan | SdkPlan;
 export {};
 
@@ -765,6 +777,7 @@ import type { RunFailure } from "../core/failure.ts";
 import { type Result } from "../core/result.ts";
 import { type RuntimeContext } from "./context.ts";
 import type { HarnessDriver } from "./port.ts";
+/** A headless run entry point for one harness: \`plan\` builds a run without spawning, \`run\` completes it, \`stream\` yields its events. */
 export interface HeadlessHandle<I extends string = HarnessId> {
     readonly id: I;
     plan(request: RunRequest): Result<Plan, RunFailure>;
@@ -786,10 +799,12 @@ import { type RuntimeContext } from "./context.ts";
 import { type HeadlessHandle } from "./handle.ts";
 import type { Drivers, HarnessDriver } from "./port.ts";
 import type { RuntimeConfig } from "./ports.ts";
+/** The time and cancellation budget of an availability probe. */
 export interface ProbeIo {
     readonly timeoutMs: number;
     readonly signal?: AbortSignal;
 }
+/** Whether one harness binary is installed, with its path and version. */
 export interface Availability {
     readonly id: string;
     readonly installed: {
@@ -960,10 +975,12 @@ import { type RuntimeContext } from "./context.ts";
 import { type HeadlessHandle } from "./handle.ts";
 import type { Drivers, HarnessDriver } from "./port.ts";
 import type { RuntimeConfig } from "./ports.ts";
+/** The time and cancellation budget of an availability probe. */
 export interface ProbeIo {
     readonly timeoutMs: number;
     readonly signal?: AbortSignal;
 }
+/** Whether one harness binary is installed, with its path and version. */
 export interface Availability {
     readonly id: string;
     readonly installed: {
@@ -1034,6 +1051,7 @@ export type { AfterContext, BinaryFacts, CleanupContext, CliEngine, CliEnginePar
 
 // engine/cli.d.ts
 import type { CliEngine, CliEngineParts } from "../driver/engine.ts";
+/** Builds a CLI engine from its parts: the invocation, the line parser and the optional after, cleanup and help checks. */
 export declare function cliEngine<I extends string>(parts: CliEngineParts<I>): CliEngine<I>;
 
 // driver/port.d.ts
@@ -1124,19 +1142,23 @@ import { type Capabilities, Engine } from "../core/capability.ts";
 import { type RunFailure } from "../core/failure.ts";
 import type { HeadlessOptions, Plan, RunOutput, RunRequest } from "../core/run.ts";
 import type { HeadlessHandle } from "../driver/handle.ts";
+/** Scripted outputs or failures per harness id, consumed in order. */
 export interface FakeScripts {
     readonly [id: string]: readonly (RunOutput | RunFailure)[] | undefined;
 }
+/** One recorded headless run: harness, options and request. */
 export interface FakeCall {
     readonly id: HarnessId;
     readonly options: Partial<HeadlessOptions<HarnessId>>;
     readonly request: RunRequest;
 }
+/** Scripts, and optional prompt limits and capabilities, for a fake runtime. */
 export interface FakeRuntimeOptions {
     readonly scripts: FakeScripts;
     readonly promptLimits?: Partial<Record<HarnessId, number | null>>;
     readonly capabilities?: Partial<Record<HarnessId, Capabilities>>;
 }
+/** The test runtime: headless handles, recorded calls and requests, and the same close as a real runtime. */
 export interface FakeRuntime {
     headless<I extends HarnessId>(id: I, options?: Partial<HeadlessOptions<I>>): HeadlessHandle<I>;
     close(): Promise<void>;
@@ -1149,27 +1171,32 @@ export interface FakeRuntime {
 }
 /** A complete RunOutput with neutral defaults; every field in \`over\` replaces its default. */
 export declare function fakeOutput(over?: Partial<RunOutput>): RunOutput;
+/** A runtime for tests that answers each run from a script and records the calls; it never spawns a process. */
 export declare function fakeRuntime(config: FakeRuntimeOptions): FakeRuntime;
 
 // driver/contract.d.ts
 import type { CredentialOf } from "../core/credential.ts";
 import type { RunRequest } from "../core/run.ts";
 import type { HarnessDriver } from "./port.ts";
+/** The result of one driver contract check. */
 export interface ContractCheck {
     readonly name: string;
     readonly ok: boolean;
     readonly detail: string;
 }
+/** The credentials, request and sentinel strings a driver contract run needs. */
 export interface ContractFixtures<I extends string> {
     readonly credentials: readonly CredentialOf<I>[];
     readonly request: RunRequest;
     readonly sentinels: readonly string[];
 }
+/** Runs the shared checks every harness driver must pass and returns one result per check. */
 export declare function driverContract<I extends string>(driver: HarnessDriver<I>, fixtures: ContractFixtures<I>): readonly ContractCheck[];
 
 // testing/fake-runner.d.ts
 import type { ProcessRunner, ProcessSpec } from "../driver/ports.ts";
 import { Signal } from "../driver/constants.ts";
+/** What one fake process prints and how it exits. */
 export interface FakeProcessScript {
     readonly stdout?: string;
     readonly stderr?: string;
@@ -1179,12 +1206,14 @@ export interface FakeProcessScript {
     readonly ignoreTerm?: boolean;
     readonly pipesOutliveExit?: boolean;
 }
+/** The fake runner with the specs and signals it received. */
 export interface FakeProcessRunner {
     readonly runner: ProcessRunner;
     readonly specs: readonly ProcessSpec[];
     readonly signals: readonly Signal[];
     release(index: number): void;
 }
+/** A ProcessRunner for tests that plays one script per spawn and records the specs. */
 export declare function fakeProcessRunner(scripts: readonly FakeProcessScript[]): FakeProcessRunner;
 
 // testing/fake-fs.d.ts
@@ -1199,14 +1228,17 @@ export interface FakeFsInit {
     readonly executables?: readonly string[];
     readonly createdAtMs?: number;
 }
+/** An in-memory RuntimeFs that exposes its directories and the paths removed. */
 export type FakeFs = RuntimeFs & {
     readonly dirs: ReadonlySet<string>;
     readonly removed: readonly string[];
 };
+/** An in-memory RuntimeFs for tests, seeded from \`initial\`. */
 export declare function fakeFs(initial?: FakeFsInit): FakeFs;
 
 // testing/fake-clock.d.ts
 import type { Clock } from "../core/io.ts";
+/** A Clock for tests whose time moves only when \`advance\` is called. */
 export declare function fakeClock(start?: number): Clock & {
     advance(ms: number): void;
 };

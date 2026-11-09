@@ -144,7 +144,7 @@ not recognise.
 | `aborted` | the caller's signal aborted the run; treat as a cancellation from the caller | CLI engine |
 | `exit` | the harness exited with a non-zero code or signal; read `stderrTail` for the reason | CLI engine |
 | `unparsable` | the harness output could not be read; report the version and `reason` | CLI engine |
-| `unavailable` | the binary is missing, failed to spawn, is an unaccepted version, or the runtime is closed; check `reason` | CLI engine |
+| `unavailable` | the binary is missing, failed to spawn, the scratch directory could not be made, the runtime is closed, or an internal error occurred; check `reason` | CLI engine |
 | `too-large` | an input (`instructions`, `input` or `environment`) is over its limit; shorten it and compare `limitBytes` with `actualBytes` | CLI engine |
 | `output-too-large` | the output is over the stdout limit; ask for a shorter answer | CLI engine |
 | `unsupported` | the chosen engine cannot enforce a capability the call requires (see `capability`, `why`); change the policy or the engine | CLI engine, runtime |
@@ -171,7 +171,8 @@ older than the given age.
 
 - **Stable within 0.x**: the root, `claude`, `codex`, `opencode`, `opencode/store`, `tui`, `runtime` and `testing` subpaths. A minor release may
   add exports and failure kinds; a consumer's `switch` on `kind` keeps a default branch for that reason.
-- **Experimental**: the `engine` subpath. Its types may change in a minor release.
+- **Experimental**: the `engine` subpath, and the driver-authoring and port types that `runtime` re-exports (`Drivers`, `HarnessDriver`, `CredentialFacet`,
+  `RunFacet`, `Clock`, `ProcessRunner`, `ProcessSpec`, `RunningProcess`, `RuntimeFs`, `ProbeIo`, `Availability`, `Profile`). Their shapes may change in a minor release.
 - **Internal**: anything not exported from a subpath. The package ships only `dist/`.
 
 Until 1.0 a minor release may change a type in a breaking way; the CHANGELOG marks every such change.

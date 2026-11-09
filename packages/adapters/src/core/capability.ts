@@ -86,10 +86,12 @@ export function unmeasuredSupport(question: string): Support {
   return { state: SupportState.Unmeasured, question };
 }
 
+/** True when the cell is supported or emulated, so the capability can be relied on. */
 export function isUsable(support: Support): boolean {
   return support.state === SupportState.Supported || support.state === SupportState.Emulated;
 }
 
+/** The reason a cell is unsupported, or the open question of an unmeasured cell. */
 export function supportWhy(support: Support): string {
   if (support.state === SupportState.Unsupported) {
     return support.reason;
