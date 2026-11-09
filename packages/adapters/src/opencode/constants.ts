@@ -108,7 +108,9 @@ export const OpenCodeCli = {
   List: "list",
   Delete: "delete",
   Standalone: "--standalone",
+  StaticTitle: "headless",
   Version: "--version",
+  Help: "--help",
 } as const;
 
 export const OpenCodeStreamField = {
@@ -117,6 +119,7 @@ export const OpenCodeStreamField = {
   Part: "part",
   Text: "text",
   Cost: "cost",
+  Error: "error",
 } as const;
 
 export const OpenCodeStreamType = {
@@ -133,4 +136,8 @@ export const OpenCodeToollessConfig = {
 
 export const OpenCodeAuthFile = {
   Auth: "auth.json",
+} as const;
+
+export const OpenCodeErrorField = {
+  Message: "message",
 } as const;

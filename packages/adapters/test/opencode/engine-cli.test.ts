@@ -1,0 +1,144 @@
+import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { opencodeCli } from "../../src/opencode/engines/cli.ts";
+import { opencodeArgs } from "../../src/opencode/launch.ts";
+import type { OpenCodeCredential } from "../../src/core/credential.ts";
+import { secret } from "../../src/core/secret.ts";
+import { Hermetic } from "../../src/core/run.ts";
+import type { EngineInput, RawRun, ResolvedOptions } from "../../src/driver/port.ts";
+import { adaptersFixtures } from "../support/fixtures.ts";
+
+const headless = join(adaptersFixtures, "opencode", "headless");
+const synthetic = join(adaptersFixtures, "opencode", "synthetic");
+const stream = readFileSync(join(synthetic, "stream.jsonl"), "utf8");
+const errored = readFileSync(join(headless, "opencode-stream.jsonl"), "utf8");
+const help = readFileSync(join(headless, "help.txt"), "utf8");
+const credential: OpenCodeCredential = { mode: "api-key", key: secret("sk-test"), provider: "anthropic" };
+const base: ResolvedOptions = {
+  model: null,
+  effort: null,
+  hermetic: Hermetic.None,
+  persist: true,
+  maxArgvBytes: null,
+  cwd: "/work",
+  isolation: { kind: "none" },
+};
+
+function input(overrides: Partial<EngineInput<"opencode">> = {}): EngineInput<"opencode"> {
+  return { options: base, credential, instructions: "SYS", input: "hello", outFile: "/work/unused.md", ...overrides };
+}
+
+function withOptions(overrides: Partial<ResolvedOptions>): EngineInput<"opencode"> {
+  return input({ options: { ...base, ...overrides } });
+}
+
+function raw(out: string, code: number | null = 0): RawRun {
+  return { stdout: out, stderrTail: "", exit: { code, signal: null }, outFileText: null, requestedModel: null };
+}
+
+describe("opencodeCli invocation", () => {
+  test("default argv runs standalone in json format with a fixed title", () => {
+    const result = opencodeCli.invocation(input());
+    expect(result.ok && result.value.args).toEqual(["run", "--standalone", "--format", "json", "--title", "headless"]);
+  });
+
+  test("model adds the model flag", () => {
+    const result = opencodeCli.invocation(withOptions({ model: "anthropic/claude-haiku-5-5" }));
+    expect(result.ok && result.value.args.slice(-2)).toEqual(["-m", "anthropic/claude-haiku-5-5"]);
+  });
+
+  test("stdin is instructions, a blank line, then the input, with no outFile", () => {
+    const result = opencodeCli.invocation(input());
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
+    expect(result.value.stdin).toBe("SYS\n\nhello");
+    expect(result.value.outFile).toBeNull();
+    expect(result.value.argvCarries).toEqual(["instructions"]);
+    expect(result.value.program).toBe("opencode");
+  });
+
+  test("matches the 0.1.0 builder once the standalone flag is removed", () => {
+    const result = opencodeCli.invocation(withOptions({ model: "m" }));
+    const args = result.ok ? result.value.args.filter((token) => token !== "--standalone") : [];
+    expect(args).toEqual(opencodeArgs({ model: "m", title: "headless" }));
+  });
+
+  test("an effort is unsupported", () => {
+    const result = opencodeCli.invocation(withOptions({ effort: "low" }));
+    expect(!result.ok && result.failure.kind).toBe("unsupported");
+  });
+
+  test("non-persistence is unsupported", () => {
+    const result = opencodeCli.invocation(withOptions({ persist: false }));
+    expect(!result.ok && result.failure.kind).toBe("unsupported");
+  });
+
+  test("full hermetic isolation is unsupported", () => {
+    const result = opencodeCli.invocation(withOptions({ hermetic: Hermetic.Full }));
+    expect(!result.ok && result.failure.kind).toBe("unsupported");
+  });
+
+  test("too-large when the argv exceeds maxArgvBytes", () => {
+    const result = opencodeCli.invocation(withOptions({ maxArgvBytes: 10 }));
+    expect(!result.ok && result.failure.kind).toBe("too-large");
+  });
+});
+
+describe("opencodeCli interpret", () => {
+  test("reads the synthetic stream", () => {
+    const result = opencodeCli.interpret(raw(stream));
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
+    expect(result.value.text).toBe("ok");
+    expect(result.value.cost).toEqual({ usd: 0.0012, basis: "list" });
+    expect(result.value.sessionId as string | null).toBe("ses_00000000000000000000000002");
+    expect(result.value.model).toBeNull();
+    expect(result.value.usage.totalTokens).toBeNull();
+    expect(result.value.unrecognised).toEqual([]);
+  });
+
+  test("an error row is an exit failure without asserting the masked message", () => {
+    const result = opencodeCli.interpret(raw(errored));
+    expect(!result.ok && result.failure.kind).toBe("exit");
+  });
+
+  test("a non-zero exit is an exit failure", () => {
+    const result = opencodeCli.interpret(raw(stream, 1));
+    expect(!result.ok && result.failure.kind).toBe("exit");
+  });
+
+  test("a stream with no text is unparsable", () => {
+    const result = opencodeCli.interpret(raw('{"type":"step_start","sessionID":"ses_1"}\n'));
+    expect(!result.ok && result.failure.kind).toBe("unparsable");
+  });
+
+  test("unknown event types are reported as unrecognised", () => {
+    const result = opencodeCli.interpret(raw(`${stream}\n{"type":"mystery"}\n`));
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
+    expect(result.value.unrecognised).toEqual([{ type: "mystery" }]);
+  });
+
+  test("never throws on hostile stdout", () => {
+    for (const out of ["", "{", "\u0000", "x".repeat(1_000_000)]) {
+      const result = opencodeCli.interpret(raw(out));
+      expect(result.ok).toBe(false);
+    }
+  });
+
+  test("text rows are read by textOf", () => {
+    expect(opencodeCli.textOf('{"type":"text","part":{"text":"ok"}}')).toBe("ok");
+    expect(opencodeCli.textOf("not json")).toBeNull();
+  });
+
+  test("help probe requires the standalone flag", () => {
+    expect(opencodeCli.helpArgs).toEqual(["run", "--help"]);
+    expect(opencodeCli.checkHelp(help).ok).toBe(true);
+    const missing = opencodeCli.checkHelp("usage: opencode run --format json");
+    expect(!missing.ok && missing.failure.kind).toBe("unsupported");
+  });
+});

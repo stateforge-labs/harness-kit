@@ -192,6 +192,10 @@ export const ClaudeSettingSources = {
 export const ClaudeResultField = {
   Result: "result",
   TotalCostUsd: "total_cost_usd",
+  IsError: "is_error",
+  SessionId: "session_id",
+  Usage: "usage",
+  ModelUsage: "modelUsage",
 } as const;
 
 export const ClaudePolicy = {
@@ -231,3 +235,21 @@ export const ClaudePolicy = {
 export const ClaudeAuthFile = {
   Credentials: ".credentials.json",
 } as const;
+
+export const ClaudeArg = {
+  Empty: "",
+} as const;
+
+export const ClaudeUsageField = {
+  Input: "input_tokens",
+  Output: "output_tokens",
+  CacheRead: "cache_read_input_tokens",
+  CacheWrite: "cache_creation_input_tokens",
+  Details: "output_tokens_details",
+  Thinking: "thinking_tokens",
+} as const;
+
+export const ClaudeModelUsageField = {
+  CostBasis: "costBasis",
+} as const;
+

@@ -53,3 +53,16 @@ export function unmeasuredSupport(question: string): Support {
 export function isUsable(support: Support): boolean {
   return support.state === SupportState.Supported || support.state === SupportState.Emulated;
 }
+
+export function supportWhy(support: Support): string {
+  if (support.state === SupportState.Unsupported) {
+    return support.reason;
+  }
+  if (support.state === SupportState.Unmeasured) {
+    return support.question;
+  }
+  if (support.state === SupportState.Emulated) {
+    return support.how;
+  }
+  return "";
+}

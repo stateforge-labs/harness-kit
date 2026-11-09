@@ -28,3 +28,8 @@ export function envBytes(env: Readonly<Record<string, string>>): number {
     0,
   );
 }
+
+export function tailBytes(text: string, limit: number): string {
+  const bytes = Buffer.from(text, "utf8");
+  return bytes.byteLength <= limit ? text : bytes.subarray(bytes.byteLength - limit).toString("utf8");
+}

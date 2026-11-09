@@ -25,3 +25,7 @@ export function measured<T>(value: T, evidence: EvidenceRef): Measured<T> {
 export function unmeasured(question: string): Measured<never> {
   return { state: MeasuredState.Unmeasured, question };
 }
+
+export function measuredValue<T>(fact: Measured<T>): T | null {
+  return fact.state === MeasuredState.Measured ? fact.value : null;
+}

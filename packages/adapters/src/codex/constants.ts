@@ -128,3 +128,10 @@ export const CodexAuthFile = {
 export const CodexKeyringSetting = {
   Pattern: /cli_auth_credentials_store\s*=\s*"keyring"/,
 } as const;
+
+export const CodexStdout = {
+  Session: /^session id: (\S+)/m,
+  Model: /^model: (\S+)/m,
+  Tokens: /tokens used\s*\n\s*([\d,]+)/,
+  Grouping: /,/g,
+} as const;
