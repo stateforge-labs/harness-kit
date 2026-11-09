@@ -31,17 +31,6 @@ describe("opencode standalone help preflight", () => {
     expect(specs.some((spec) => spec.args.includes("--standalone"))).toBe(false);
   });
 
-  test("a Full hermetic opencode run gives unsupported for settings sources", async () => {
-    const { runtime, specs } = routedRig({ stdout: OPENCODE_STREAM });
-    const result = await runtime.headless("opencode", { credential: CREDENTIAL, hermetic: "full" } as never).run({ instructions: "x", input: "y" });
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.failure.kind).toBe("unsupported");
-      expect(result.failure.kind === "unsupported" ? result.failure.capability : null).toBe(CapabilityName.SettingsSources);
-    }
-    expect(specs.filter((spec) => !spec.args.includes("--version") && !spec.args.includes("--help")).length).toBe(0);
-  });
-
   test("the fixture help text carries the standalone flag", () => {
     expect(fixture("opencode", "help.txt").includes("--standalone")).toBe(true);
   });

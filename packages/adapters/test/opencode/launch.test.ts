@@ -54,15 +54,18 @@ describe("opencodeHermeticEnv", () => {
     const env = opencodeHermeticEnv();
     expect(Object.keys(env)).toEqual([EnvVar.OpenCodeConfigContent]);
     const config = env[EnvVar.OpenCodeConfigContent];
-    expect(JSON.parse(config ?? "null")).toEqual({ tools: { "*": false }, permission: { "*": "deny" } });
+    const parsed = JSON.parse(config ?? "null") as { permissions: { action: string; resource: string; effect: string }[] };
+    expect(parsed.permissions.length).toBeGreaterThan(0);
+    expect(parsed.permissions.every((rule) => rule.resource === "*" && rule.effect === "deny")).toBe(true);
+    expect(Object.keys(parsed)).toEqual(["permissions"]);
     expect(config).toBe(OPENCODE_TOOLLESS_CONFIG);
   });
 });
 
 describe("session argv", () => {
   test("list and delete argv", () => {
-    expect(opencodeSessionListArgs()).toEqual(["session", "list", "--format", "json"]);
-    expect(opencodeSessionDeleteArgs("ses_1")).toEqual(["session", "delete", "ses_1"]);
+    expect(opencodeSessionListArgs()).toEqual(["session", "list", "--standalone", "--format", "json"]);
+    expect(opencodeSessionDeleteArgs("ses_1")).toEqual(["session", "delete", "--standalone", "ses_1"]);
   });
 
   test("every emitted session flag appears in the captured session help", () => {
