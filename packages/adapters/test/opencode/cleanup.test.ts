@@ -81,7 +81,7 @@ describe("opencode residue cleanup", () => {
 
   test("the engine deletes the session it saw in the stream after the run", async () => {
     const specs: ProcessSpec[] = [];
-    const scripted = chunkedRunner([{ chunks: ['{"type":"text","sessionID":"ses_seen","part":{"text":"ok"}}\n'] }, { chunks: [] }]);
+    const scripted = chunkedRunner([{ chunks: ['{"type":"text","sessionID":"ses_seen","part":{"text":"ok"}}\n'] }, { chunks: [] }, { chunks: [] }]);
     const runner: ProcessRunner = (spec) => {
       specs.push(spec);
       return scripted.runner(spec);
@@ -91,7 +91,8 @@ describe("opencode residue cleanup", () => {
       void event;
     }
     expect((await run.done).ok).toBe(true);
-    expect(specs).toHaveLength(2);
-    expect(specs[1]?.args).toEqual(["session", "delete", "--standalone", "ses_seen"]);
+    expect(specs).toHaveLength(3);
+    expect(specs[1]?.args).toEqual(["session", "export", "--standalone", "ses_seen"]);
+    expect(specs[2]?.args).toEqual(["session", "delete", "--standalone", "ses_seen"]);
   });
 });

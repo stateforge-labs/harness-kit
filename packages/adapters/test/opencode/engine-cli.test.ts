@@ -81,7 +81,7 @@ describe("opencodeCli interpret", () => {
       throw new Error("expected ok");
     }
     expect(result.value.text).toBe("ok");
-    expect(result.value.cost).toEqual({ usd: 0.0012, basis: "list" });
+    expect(result.value.cost).toEqual({ usd: 0.0012, basis: "unreported" });
     expect(result.value.sessionId as string | null).toBe("ses_00000000000000000000000002");
     expect(result.value.model).toBeNull();
     expect(result.value.usage.totalTokens).toBeNull();

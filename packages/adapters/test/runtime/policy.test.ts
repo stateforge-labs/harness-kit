@@ -198,12 +198,12 @@ describe("credential gates", () => {
 });
 
 describe("cost basis", () => {
-  test("a list cost under api-key is billed and under login-store stays list", async () => {
+  test("a cost the harness gives without a basis stays unreported under api-key and login-store", async () => {
     const keyed = { mode: "api-key", key: secret(SENTINEL), provider: "openai" } as never;
     const billed = await routedRig({ stdout: OPENCODE_STREAM }).runtime.headless("opencode", { credential: keyed } as never).run(REQUEST);
     const listed = await routedRig({ stdout: OPENCODE_STREAM }).runtime.headless("opencode", { credential: { mode: "login-store" } } as never).run(REQUEST);
-    expect(billed.ok && billed.value.cost.basis).toBe("billed");
-    expect(listed.ok && listed.value.cost.basis).toBe("list");
+    expect(billed.ok && billed.value.cost.basis).toBe("unreported");
+    expect(listed.ok && listed.value.cost.basis).toBe("unreported");
     expect(billed.ok && billed.value.cost.usd).toBe(listed.ok ? listed.value.cost.usd : null);
   });
 

@@ -1,0 +1,78 @@
+{
+ "info": {
+  "id": "ses_00000000000000000000000001",
+  "projectID": "REDACTED",
+  "cost": 0.0891462,
+  "tokens": {
+   "input": 4,
+   "output": 8,
+   "reasoning": 0,
+   "cache": {
+    "read": 5971,
+    "write": 8760
+   }
+  },
+  "outcome": "succeeded",
+  "time": {
+   "created": 1793491200000,
+   "updated": 1793491204262,
+   "busy": 1793491200597,
+   "idle": 1793491204264
+  },
+  "title": "headless-probe-1",
+  "location": {
+   "directory": "/home/user/.cache/tmp/eiusmod/elit-in"
+  }
+ },
+ "messages": [
+  {
+   "id": "msg_00000000000000000000000003",
+   "time": {
+    "created": 1793491200605
+   },
+   "text": "aliqua elit adipiscing elit dolore\n\ndo do\nmagn",
+   "files": [],
+   "type": "user"
+  },
+  {
+   "id": "msg_00000000000000000000000001",
+   "time": {
+    "created": 1793491200933,
+    "streamed": 1793491204260,
+    "completed": 1793491204262
+   },
+   "type": "assistant",
+   "agent": "build",
+   "model": {
+    "id": "claude-fable-5-2",
+    "providerID": "opencode"
+   },
+   "content": [
+    {
+     "type": "text",
+     "text": "magn\ndo do"
+    }
+   ],
+   "finish": "stop",
+   "rawFinish": "end_turn",
+   "cost": 0.0891462,
+   "tokens": {
+    "input": 4,
+    "output": 8,
+    "reasoning": 0,
+    "cache": {
+     "read": 5971,
+     "write": 8760
+    }
+   }
+  },
+  {
+   "id": "msg_00000000000000000000000004",
+   "time": {
+    "created": 1793491204264
+   },
+   "type": "idle",
+   "outcome": "succeeded"
+  }
+ ]
+}

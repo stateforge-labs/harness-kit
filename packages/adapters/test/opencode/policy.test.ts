@@ -90,7 +90,7 @@ describe("opencodeCli start under TOOLS_OFF", () => {
 
   test("the config directory placeholder is replaced by the scratch directory", async () => {
     const specs: ProcessSpec[] = [];
-    const scripted = chunkedRunner([{ chunks: ['{"type":"text","sessionID":"ses_1","part":{"text":"ok"}}\n'] }, { chunks: [] }]);
+    const scripted = chunkedRunner([{ chunks: ['{"type":"text","sessionID":"ses_1","part":{"text":"ok"}}\n'] }, { chunks: [] }, { chunks: [] }]);
     const runner: ProcessRunner = (spec) => {
       specs.push(spec);
       return scripted.runner(spec);
@@ -103,8 +103,9 @@ describe("opencodeCli start under TOOLS_OFF", () => {
     expect(specs[0]?.env["OPENCODE_DISABLE_PROJECT_CONFIG"]).toBe("1");
     expect(specs[0]?.env[EnvVar.OpenCodeConfigContent]).toBe(OPENCODE_TOOLLESS_CONFIG);
     expect(specs[0]?.args).toContain("--standalone");
-    expect(specs[1]?.args).toEqual(["session", "delete", "--standalone", "ses_1"]);
-    expect(specs[1]?.env["OPENCODE_CONFIG_DIR"]).toBe("/scratch/empty");
+    expect(specs[1]?.args).toEqual(["session", "export", "--standalone", "ses_1"]);
+    expect(specs[2]?.args).toEqual(["session", "delete", "--standalone", "ses_1"]);
+    expect(specs[2]?.env["OPENCODE_CONFIG_DIR"]).toBe("/scratch/empty");
   });
 
   test("a scratch directory that cannot be made fails without a spawn", async () => {

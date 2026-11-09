@@ -107,6 +107,7 @@ export const OpenCodeCli = {
   Session: "session",
   List: "list",
   Delete: "delete",
+  Export: "export",
   Standalone: "--standalone",
   StaticTitle: "headless",
   TitleSeparator: "-",
@@ -119,6 +120,11 @@ export const OpenCodeCleanup = {
   CommandTimeoutMs: 30_000,
 } as const;
 
+export const OpenCodeExport = {
+  CommandTimeoutMs: 30_000,
+  ModelSeparator: "/",
+} as const;
+
 export const OpenCodeStreamField = {
   Type: "type",
   SessionId: "sessionID",
@@ -126,6 +132,21 @@ export const OpenCodeStreamField = {
   Text: "text",
   Cost: "cost",
   Error: "error",
+  Tokens: "tokens",
+  Input: "input",
+  Output: "output",
+  Reasoning: "reasoning",
+  Cache: "cache",
+  Read: "read",
+  Write: "write",
+} as const;
+
+export const OpenCodeExportField = {
+  Messages: "messages",
+  Type: "type",
+  Model: "model",
+  Id: "id",
+  ProviderId: "providerID",
 } as const;
 
 export const OpenCodeStreamType = {

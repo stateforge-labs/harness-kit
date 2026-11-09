@@ -93,7 +93,7 @@ async function settleWith<T>(work: Promise<T>, clock: { advance(ms: number): voi
 function verbs(specs: readonly ProcessSpec[]): string[] {
   return specs
     .filter((spec) => spec.args[0] === "session" || spec.args.includes("--title"))
-    .map((spec) => (spec.args[0] !== "session" ? "run" : spec.args[1] === "delete" ? `delete ${spec.args.at(-1)}` : "list"));
+    .map((spec) => (spec.args[0] !== "session" ? "run" : spec.args[1] === "delete" ? `delete ${spec.args.at(-1)}` : spec.args[1] === "export" ? "export" : "list"));
 }
 
 const REQUEST = { instructions: "x", input: "y" };
@@ -103,7 +103,7 @@ describe("opencode residue cleanup through the runtime", () => {
     const r = rigFor({ runOut: WITH_SESSION });
     const result = await r.handle.run(REQUEST);
     expect(result.ok).toBe(true);
-    expect(verbs(r.specs)).toEqual(["run", "delete ses_known"]);
+    expect(verbs(r.specs)).toEqual(["run", "export", "delete ses_known"]);
     expect(r.waits.includes(SETTLE_MS)).toBe(false);
   });
 

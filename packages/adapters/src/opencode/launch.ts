@@ -1,7 +1,7 @@
-import { obj, num, parseRow, str, type Row } from "../core/rows.ts";
+import { arr, obj, num, parseRow, str, type Row } from "../core/rows.ts";
 import { tallyUnknown, type Parsed, type Unknowns } from "../core/issues.ts";
 import { EnvVar } from "../env.ts";
-import { OpenCodeBuiltinActions, OpenCodeCli, OpenCodeMcpActions, OpenCodePermissionField, OpenCodeStreamField, OpenCodeStreamType } from "./constants.ts";
+import { OpenCodeBuiltinActions, OpenCodeCli, OpenCodeExport, OpenCodeExportField, OpenCodeMcpActions, OpenCodePermissionField, OpenCodeRoleName, OpenCodeStreamField, OpenCodeStreamType } from "./constants.ts";
 import { OpenCodeStreamEventType } from "./enums.ts";
 
 export const OPENCODE_BINARY = OpenCodeCli.Binary;
@@ -122,4 +122,26 @@ export function opencodeSessionListArgs(): string[] {
 
 export function opencodeSessionDeleteArgs(id: string): string[] {
   return [OpenCodeCli.Session, OpenCodeCli.Delete, OpenCodeCli.Standalone, id];
+}
+
+export function opencodeSessionExportArgs(id: string): string[] {
+  return [OpenCodeCli.Session, OpenCodeCli.Export, OpenCodeCli.Standalone, id];
+}
+
+export function parseSessionModel(json: string): string | null {
+  const row = parseRow(json);
+  if (row === null) {
+    return null;
+  }
+  let model: string | null = null;
+  for (const message of arr(row[OpenCodeExportField.Messages])) {
+    if (message[OpenCodeExportField.Type] !== OpenCodeRoleName.Assistant) {
+      continue;
+    }
+    const used = obj(message[OpenCodeExportField.Model]);
+    const id = str(used[OpenCodeExportField.Id]);
+    const provider = str(used[OpenCodeExportField.ProviderId]);
+    model = id === null ? model : provider === null ? id : `${provider}${OpenCodeExport.ModelSeparator}${id}`;
+  }
+  return model;
 }

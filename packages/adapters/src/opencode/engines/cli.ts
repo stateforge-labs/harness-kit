@@ -14,7 +14,7 @@ import { OPENCODE_BINARY } from "../launch.ts";
 import { opencodePolicy } from "../policy.ts";
 import { OPENCODE_PROFILE } from "../profile.ts";
 import { removeResidue, runTitle } from "./cleanup.ts";
-import { opencodeLineEvents } from "./read-run.ts";
+import { opencodeAfterEvents, opencodeLineEvents } from "./read-run.ts";
 
 function opencodeArgs(model: string | null, runId: string): string[] {
   return [
@@ -75,6 +75,8 @@ function opencodeParts(configDir: string | null): CliEngineParts<"opencode"> {
     },
 
     parseLine: opencodeLineEvents,
+
+    after: opencodeAfterEvents,
 
     async cleanup(ctx: CleanupContext): Promise<void> {
       await removeResidue(ctx, runTitle(ctx.input.invocation.args), observedSession(ctx));

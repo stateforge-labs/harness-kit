@@ -11,6 +11,24 @@
   "capturedAt": "2026-11-08",
   "maskedBy": "tools/mask-captures.ts@6f68cda"
  },
+ "headless/run-tools-default.jsonl": {
+  "source": "headless-run",
+  "harnessVersion": "2.2.6",
+  "capturedAt": "2026-11-09",
+  "maskedBy": "tools/mask-captures.ts@8e462df"
+ },
+ "headless/run-tools-off.jsonl": {
+  "source": "headless-run",
+  "harnessVersion": "2.2.6",
+  "capturedAt": "2026-11-09",
+  "maskedBy": "tools/mask-captures.ts@8e462df"
+ },
+ "headless/session-export.json": {
+  "source": "headless-run",
+  "harnessVersion": "2.2.6",
+  "capturedAt": "2026-11-09",
+  "maskedBy": "tools/mask-captures.ts@8e462df"
+ },
  "headless/session-list.json": {
   "source": "headless-run",
   "harnessVersion": "2.2.6",
