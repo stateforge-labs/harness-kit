@@ -8,6 +8,7 @@ import type { Profile } from "../../src/core/profile.ts";
 import { fail, ok, type Result } from "../../src/core/result.ts";
 import { ArgvCarry } from "../../src/core/engine-constants.ts";
 import { gatesFor, unparsable } from "../../src/core/kit.ts";
+import { cliEngine } from "../../src/engine/cli.ts";
 import type { CredentialFacet, EngineInput, HarnessDriver, Invocation } from "../../src/driver/port.ts";
 import { FAKE_CAPABILITIES, FAKE_INJECT, FAKE_PROFILE, FAKE_STRIP } from "./fake-driver.ts";
 
@@ -70,13 +71,11 @@ export function gatedDriver(): HarnessDriver<typeof GATED_ID> {
     credentials: GATED_CREDENTIALS,
     run: {
       engines: [Engine.Cli],
-      cli: {
+      cli: cliEngine<typeof GATED_ID>({
         invocation: gatedInvocation,
-        interpret: () => fail(unparsable("gated engine does not interpret output")),
-        textOf: () => null,
-        helpArgs: null,
-        checkHelp: () => ok(null),
-      },
+        parseLine: () => [],
+        after: () => Promise.resolve([{ kind: "failure", failure: unparsable("gated engine does not interpret output") }]),
+      }),
     },
   };
 }

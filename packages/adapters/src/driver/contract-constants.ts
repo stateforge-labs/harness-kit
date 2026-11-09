@@ -47,6 +47,7 @@ export const CONTRACT_OUT_FILE = "contract-out.txt";
 export const CONTRACT_INSTRUCTIONS = "contract instructions";
 export const CONTRACT_INPUT = "contract input";
 export const CONTRACT_EFFORT = "low";
+export const CONTRACT_RUN_ID = "contract-run";
 export const CONTRACT_EXIT_CODE = 0;
 export const CONTRACT_PLAIN_KEY = "plain";
 export const CONTRACT_PLAIN_MODE = CredentialMode.ApiKey;

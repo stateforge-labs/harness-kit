@@ -6,8 +6,9 @@ import { opencodeArgs } from "../../src/opencode/launch.ts";
 import type { OpenCodeCredential } from "../../src/core/credential.ts";
 import { secret } from "../../src/core/secret.ts";
 import { Hermetic } from "../../src/core/run.ts";
-import type { EngineInput, RawRun, ResolvedOptions } from "../../src/driver/port.ts";
+import type { EngineInput, ResolvedOptions } from "../../src/driver/port.ts";
 import { adaptersFixtures } from "../support/fixtures.ts";
+import { type InterpretRaw, interpretRaw } from "../support/interpret.ts";
 
 const headless = join(adaptersFixtures, "opencode", "headless");
 const synthetic = join(adaptersFixtures, "opencode", "synthetic");
@@ -26,14 +27,14 @@ const base: ResolvedOptions = {
 };
 
 function input(overrides: Partial<EngineInput<"opencode">> = {}): EngineInput<"opencode"> {
-  return { options: base, credential, instructions: "SYS", input: "hello", outFile: "/work/unused.md", ...overrides };
+  return { options: base, credential, instructions: "SYS", input: "hello", outFile: "/work/unused.md", runId: "run-1", ...overrides };
 }
 
 function withOptions(overrides: Partial<ResolvedOptions>): EngineInput<"opencode"> {
   return input({ options: { ...base, ...overrides } });
 }
 
-function raw(out: string, code: number | null = 0): RawRun {
+function raw(out: string, code: number | null = 0): InterpretRaw {
   return { stdout: out, stderrTail: "", exit: { code, signal: null }, outFileText: null, requestedModel: null };
 }
 
@@ -87,8 +88,8 @@ describe("opencodeCli invocation", () => {
 });
 
 describe("opencodeCli interpret", () => {
-  test("reads the synthetic stream", () => {
-    const result = opencodeCli.interpret(raw(stream));
+  test("reads the synthetic stream", async () => {
+    const result = await interpretRaw(opencodeCli, raw(stream));
     if (!result.ok) {
       throw new Error("expected ok");
     }
@@ -100,39 +101,39 @@ describe("opencodeCli interpret", () => {
     expect(result.value.unrecognised).toEqual([]);
   });
 
-  test("an error row is an exit failure without asserting the masked message", () => {
-    const result = opencodeCli.interpret(raw(errored));
+  test("an error row is an exit failure without asserting the masked message", async () => {
+    const result = await interpretRaw(opencodeCli, raw(errored));
     expect(!result.ok && result.failure.kind).toBe("exit");
   });
 
-  test("a non-zero exit is an exit failure", () => {
-    const result = opencodeCli.interpret(raw(stream, 1));
+  test("a non-zero exit is an exit failure", async () => {
+    const result = await interpretRaw(opencodeCli, raw(stream, 1));
     expect(!result.ok && result.failure.kind).toBe("exit");
   });
 
-  test("a stream with no text is unparsable", () => {
-    const result = opencodeCli.interpret(raw('{"type":"step_start","sessionID":"ses_1"}\n'));
+  test("a stream with no text is unparsable", async () => {
+    const result = await interpretRaw(opencodeCli, raw('{"type":"step_start","sessionID":"ses_1"}\n'));
     expect(!result.ok && result.failure.kind).toBe("unparsable");
   });
 
-  test("unknown event types are reported as unrecognised", () => {
-    const result = opencodeCli.interpret(raw(`${stream}\n{"type":"mystery"}\n`));
+  test("unknown event types are reported as unrecognised", async () => {
+    const result = await interpretRaw(opencodeCli, raw(`${stream}\n{"type":"mystery"}\n`));
     if (!result.ok) {
       throw new Error("expected ok");
     }
     expect(result.value.unrecognised).toEqual([{ type: "mystery" }]);
   });
 
-  test("never throws on hostile stdout", () => {
+  test("never throws on hostile stdout", async () => {
     for (const out of ["", "{", "\u0000", "x".repeat(1_000_000)]) {
-      const result = opencodeCli.interpret(raw(out));
+      const result = await interpretRaw(opencodeCli, raw(out));
       expect(result.ok).toBe(false);
     }
   });
 
-  test("text rows are read by textOf", () => {
-    expect(opencodeCli.textOf('{"type":"text","part":{"text":"ok"}}')).toBe("ok");
-    expect(opencodeCli.textOf("not json")).toBeNull();
+  test("text rows are read by parseLine", () => {
+    expect(opencodeCli.parseLine('{"type":"text","part":{"text":"ok"}}')).toEqual([{ kind: "text", text: "ok" }]);
+    expect(opencodeCli.parseLine("not json")).toEqual([]);
   });
 
   test("help probe requires the standalone flag", () => {

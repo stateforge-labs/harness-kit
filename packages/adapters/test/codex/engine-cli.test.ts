@@ -6,8 +6,9 @@ import { codexExec } from "../../src/codex/exec.ts";
 import type { CodexCredential } from "../../src/core/credential.ts";
 import { secret } from "../../src/core/secret.ts";
 import { Hermetic } from "../../src/core/run.ts";
-import type { EngineInput, RawRun, ResolvedOptions } from "../../src/driver/port.ts";
+import type { EngineInput, ResolvedOptions } from "../../src/driver/port.ts";
 import { adaptersFixtures } from "../support/fixtures.ts";
+import { type InterpretRaw, interpretRaw } from "../support/interpret.ts";
 
 const headless = join(adaptersFixtures, "codex", "headless");
 const stdout = readFileSync(join(headless, "codex-exec-stdout.txt"), "utf8");
@@ -24,14 +25,14 @@ const base: ResolvedOptions = {
 };
 
 function input(overrides: Partial<EngineInput<"codex">> = {}): EngineInput<"codex"> {
-  return { options: base, credential, instructions: "SYS", input: "hello", outFile: "/work/last.md", ...overrides };
+  return { options: base, credential, instructions: "SYS", input: "hello", outFile: "/work/last.md", runId: "run-1", ...overrides };
 }
 
 function withOptions(overrides: Partial<ResolvedOptions>): EngineInput<"codex"> {
   return input({ options: { ...base, ...overrides } });
 }
 
-function raw(out: string, code: number | null = 0, outFileText: string | null = last): RawRun {
+function raw(out: string, code: number | null = 0, outFileText: string | null = last): InterpretRaw {
   return { stdout: out, stderrTail: "", exit: { code, signal: null }, outFileText, requestedModel: null };
 }
 
@@ -81,8 +82,8 @@ describe("codexCli invocation", () => {
 });
 
 describe("codexCli interpret", () => {
-  test("reads the masked exec stdout and last message fixtures", () => {
-    const result = codexCli.interpret(raw(stdout));
+  test("reads the masked exec stdout and last message fixtures", async () => {
+    const result = await interpretRaw(codexCli, raw(stdout));
     if (!result.ok) {
       throw new Error("expected ok");
     }
@@ -94,30 +95,30 @@ describe("codexCli interpret", () => {
     expect(result.value.unrecognised).toEqual([]);
   });
 
-  test("a non-zero exit is an exit failure", () => {
-    const result = codexCli.interpret(raw(stdout, 1));
+  test("a non-zero exit is an exit failure", async () => {
+    const result = await interpretRaw(codexCli, raw(stdout, 1));
     expect(!result.ok && result.failure.kind).toBe("exit");
   });
 
-  test("an empty last message is unparsable", () => {
-    const result = codexCli.interpret(raw(stdout, 0, "  \n"));
+  test("an empty last message is unparsable", async () => {
+    const result = await interpretRaw(codexCli, raw(stdout, 0, "  \n"));
     expect(!result.ok && result.failure.kind).toBe("unparsable");
   });
 
-  test("a missing last message file is unparsable", () => {
-    const result = codexCli.interpret(raw(stdout, 0, null));
+  test("a missing last message file is unparsable", async () => {
+    const result = await interpretRaw(codexCli, raw(stdout, 0, null));
     expect(!result.ok && result.failure.kind).toBe("unparsable");
   });
 
-  test("never throws on hostile stdout", () => {
+  test("never throws on hostile stdout", async () => {
     for (const out of ["", "{", "\u0000", "x".repeat(1_000_000)]) {
-      const result = codexCli.interpret(raw(out));
+      const result = await interpretRaw(codexCli, raw(out));
       expect(result.ok).toBe(true);
     }
   });
 
-  test("has no text reader and no help probe", () => {
-    expect(codexCli.textOf("anything")).toBeNull();
+  test("has no line reader and no help probe", () => {
+    expect(codexCli.parseLine("anything")).toEqual([]);
     expect(codexCli.helpArgs).toBeNull();
   });
 });

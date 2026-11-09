@@ -14,11 +14,3 @@ export interface ProcessExit {
   readonly code: number | null;
   readonly signal: string | null;
 }
-
-export interface RawRun {
-  readonly stdout: string;
-  readonly stderrTail: string;
-  readonly exit: ProcessExit;
-  readonly outFileText: string | null;
-  readonly requestedModel: string | null;
-}

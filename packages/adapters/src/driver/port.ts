@@ -9,9 +9,12 @@ import type { Result } from "../core/result.ts";
 import type { Cost, TokenUsage } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
-import type { RawRun, ResolvedOptions } from "../core/raw-run.ts";
+import type { ResolvedOptions } from "../core/raw-run.ts";
+import type { EngineImpl } from "./engine.ts";
 
-export type { ProcessExit, RawRun, ResolvedOptions } from "../core/raw-run.ts";
+export type { AfterContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "./engine.ts";
+
+export type { ProcessExit, ResolvedOptions } from "../core/raw-run.ts";
 
 export interface EngineInput<I extends string> {
   readonly options: ResolvedOptions;
@@ -19,6 +22,7 @@ export interface EngineInput<I extends string> {
   readonly instructions: string;
   readonly input: string;
   readonly outFile: string;
+  readonly runId: string;
 }
 
 export interface Invocation {
@@ -38,19 +42,11 @@ export interface ParsedRun {
   readonly unrecognised: readonly unknown[];
 }
 
-export interface CliEngine<I extends string> {
-  invocation(input: EngineInput<I>): Result<Invocation, RunFailure>;
-  interpret(raw: RawRun): Result<ParsedRun, RunFailure>;
-  textOf(line: string): string | null;
-  readonly helpArgs: readonly string[] | null;
-  checkHelp(help: string): Result<null, RunFailure>;
-}
-
 export type Drivers<H extends string> = { readonly [K in H]: HarnessDriver<K> };
 
 export interface RunFacet<I extends string> {
   readonly engines: readonly Engine[];
-  readonly cli: CliEngine<I>;
+  readonly cli: EngineImpl<I>;
 }
 
 export interface CredentialFacet<I extends string> {

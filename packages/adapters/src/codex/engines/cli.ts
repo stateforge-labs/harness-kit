@@ -5,7 +5,8 @@ import { asSessionId } from "../../core/session.ts";
 import { fail, ok, type Result } from "../../core/result.ts";
 import { CostBasis, EngineReason, PromptText } from "../../core/engine-constants.ts";
 import { budgetOf, checkArgv, exitFailure, gatesFor, modelFlag, neutralOrNative, NO_USAGE, unparsable } from "../../core/kit.ts";
-import type { CliEngine, EngineInput, Invocation, ParsedRun, RawRun } from "../../driver/port.ts";
+import { cliEngine } from "../../engine/cli.ts";
+import type { AfterContext, EngineEvent, EngineInput, Invocation } from "../../driver/port.ts";
 import { CODEX_CAPABILITIES } from "../capabilities.ts";
 import { CODEX_BINARY, CODEX_UNUSED_FEATURES } from "../exec.ts";
 import { CodexCli, CodexStdout } from "../constants.ts";
@@ -29,7 +30,27 @@ function codexArgs(input: EngineInput<"codex">, effort: string | null): string[]
   ];
 }
 
-export const codexCli: CliEngine<"codex"> = {
+function codexEvents(ctx: AfterContext): readonly EngineEvent[] {
+  if (ctx.end.exit.code !== 0) {
+    return [];
+  }
+  const text = ctx.outFileText === null ? PromptText.Empty : ctx.outFileText.trim();
+  if (text === PromptText.Empty) {
+    return [{ kind: "failure", failure: unparsable(EngineReason.EmptyLastMessage) }];
+  }
+  const session = asSessionId(ctx.stdoutTail.match(CodexStdout.Session)?.[1] ?? PromptText.Empty);
+  const model = ctx.stdoutTail.match(CodexStdout.Model)?.[1];
+  const tokens = ctx.stdoutTail.match(CodexStdout.Tokens)?.[1];
+  return [
+    { kind: "final", text },
+    { kind: "usage", usage: { ...NO_USAGE, totalTokens: tokens === undefined ? null : Number(tokens.replace(CodexStdout.Grouping, PromptText.Empty)) } },
+    { kind: "cost", cost: { usd: null, basis: CostBasis.Unavailable } },
+    ...(model === undefined ? [] : [{ kind: "model" as const, model }]),
+    ...(session === null ? [] : [{ kind: "session" as const, id: session }]),
+  ];
+}
+
+export const codexCli = cliEngine<"codex">({
   invocation(input): Result<Invocation, RunFailure> {
     const gate = gatesFor(CODEX_CAPABILITIES, input.options);
     if (gate !== null) {
@@ -54,34 +75,7 @@ export const codexCli: CliEngine<"codex"> = {
     return ok(invocation);
   },
 
-  interpret(raw: RawRun): Result<ParsedRun, RunFailure> {
-    if (raw.exit.code !== 0) {
-      return fail(exitFailure(raw, raw.stderrTail));
-    }
-    const text = raw.outFileText === null ? PromptText.Empty : raw.outFileText.trim();
-    if (text === PromptText.Empty) {
-      return fail(unparsable(EngineReason.EmptyLastMessage));
-    }
-    const session = raw.stdout.match(CodexStdout.Session)?.[1];
-    const model = raw.stdout.match(CodexStdout.Model)?.[1];
-    const tokens = raw.stdout.match(CodexStdout.Tokens)?.[1];
-    const parsed: ParsedRun = {
-      text,
-      usage: {
-        ...NO_USAGE,
-        totalTokens: tokens === undefined ? null : Number(tokens.replace(CodexStdout.Grouping, PromptText.Empty)),
-      },
-      cost: { usd: null, basis: CostBasis.Unavailable },
-      model: model ?? null,
-      sessionId: asSessionId(session ?? PromptText.Empty),
-      unrecognised: [],
-    };
-    return ok(parsed);
-  },
+  parseLine: () => [],
 
-  textOf: () => null,
-
-  helpArgs: null,
-
-  checkHelp: () => ok(null),
-};
+  after: (ctx) => Promise.resolve(codexEvents(ctx)),
+});

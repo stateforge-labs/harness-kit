@@ -476,19 +476,19 @@ describe("out file", () => {
     expect(fs.removed).toContain(SCRATCH_FIRST);
   });
 
-  test("the scratch dir is removed when interpret returns a failure", async () => {
+  test("the scratch dir is removed when the engine reports a failure event", async () => {
     const chunked = chunkedRunner([VERSION, TEXT]);
-    const driver = driverWith({ cli: { interpret: () => fail(unparsable("bad output")) } });
+    const driver = driverWith({ cli: { parseLine: () => [{ kind: "failure", failure: unparsable("bad output") }] } });
     const { ctx, fs } = runtimeCtx({ runner: chunked.runner });
     expect(failureOf(await makeHandle(ctx, driver, "fake", options()).run(request())).kind).toBe("unparsable");
     expect(fs.removed).toContain(SCRATCH_FIRST);
   });
 
-  test("the scratch dir is removed when interpret throws, and the throw is an internal-error", async () => {
+  test("the scratch dir is removed when parseLine throws, and the throw is an internal-error", async () => {
     const chunked = chunkedRunner([VERSION, TEXT]);
     const driver = driverWith({
       cli: {
-        interpret: () => {
+        parseLine: () => {
           throw new Error("boom");
         },
       },

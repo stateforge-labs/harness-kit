@@ -7,7 +7,8 @@ import { fail, ok, type Result } from "../../core/result.ts";
 import { Hermetic } from "../../core/run.ts";
 import { ArgvCarry, CostBasis, EngineReason, PromptText } from "../../core/engine-constants.ts";
 import { budgetOf, checkArgv, exitFailure, gatesFor, modelFlag, neutralOrNative, unparsable } from "../../core/kit.ts";
-import type { CliEngine, EngineInput, Invocation, ParsedRun, RawRun } from "../../driver/port.ts";
+import { cliEngine } from "../../engine/cli.ts";
+import type { AfterContext, EngineEvent, EngineInput, Invocation } from "../../driver/port.ts";
 import { CLAUDE_CAPABILITIES } from "../capabilities.ts";
 import { ClaudeArg, ClaudeCli, ClaudeModelUsageField, ClaudeResultField, ClaudeSettingSources, ClaudeUsageField } from "../constants.ts";
 import { CLAUDE_BINARY } from "../launch.ts";
@@ -30,7 +31,44 @@ function claudeArgs(input: EngineInput<"claude">, effort: string | null): string
   ];
 }
 
-export const claudeCli: CliEngine<"claude"> = {
+function claudeEvents(ctx: AfterContext): readonly EngineEvent[] {
+  const row = parseRow(ctx.stdoutTail);
+  if (row === null) {
+    return [{ kind: "failure", failure: unparsable(EngineReason.NotJson) }];
+  }
+  if (ctx.end.exit.code !== 0 || row[ClaudeResultField.IsError] === true) {
+    return [{ kind: "failure", failure: exitFailure(ctx.end.exit, ctx.end.stderrTail) }];
+  }
+  const text = str(row[ClaudeResultField.Result]);
+  if (text === null) {
+    return [{ kind: "failure", failure: unparsable(EngineReason.NoResult) }];
+  }
+  const modelUsage = obj(row[ClaudeResultField.ModelUsage]);
+  const [firstModel] = Object.keys(modelUsage);
+  const basis = firstModel === undefined ? null : obj(modelUsage[firstModel])[ClaudeModelUsageField.CostBasis];
+  const usage = obj(row[ClaudeResultField.Usage]);
+  const details = obj(usage[ClaudeUsageField.Details]);
+  const session = asSessionId(str(row[ClaudeResultField.SessionId]) ?? PromptText.Empty);
+  return [
+    { kind: "final", text },
+    {
+      kind: "usage",
+      usage: {
+        inputTokens: num(usage[ClaudeUsageField.Input]),
+        outputTokens: num(usage[ClaudeUsageField.Output]),
+        cacheReadTokens: num(usage[ClaudeUsageField.CacheRead]),
+        cacheWriteTokens: num(usage[ClaudeUsageField.CacheWrite]),
+        reasoningTokens: num(details[ClaudeUsageField.Thinking]),
+        totalTokens: null,
+      },
+    },
+    { kind: "cost", cost: { usd: num(row[ClaudeResultField.TotalCostUsd]), basis: basis === CostBasis.List ? CostBasis.List : CostBasis.Unreported } },
+    ...(firstModel === undefined ? [] : [{ kind: "model" as const, model: firstModel }]),
+    ...(session === null ? [] : [{ kind: "session" as const, id: session }]),
+  ];
+}
+
+export const claudeCli = cliEngine<"claude">({
   invocation(input): Result<Invocation, RunFailure> {
     const gate = gatesFor(CLAUDE_CAPABILITIES, input.options);
     if (gate !== null) {
@@ -55,47 +93,7 @@ export const claudeCli: CliEngine<"claude"> = {
     return ok(invocation);
   },
 
-  interpret(raw: RawRun): Result<ParsedRun, RunFailure> {
-    const row = parseRow(raw.stdout);
-    if (row === null) {
-      return fail(unparsable(EngineReason.NotJson));
-    }
-    if (raw.exit.code !== 0 || row[ClaudeResultField.IsError] === true) {
-      return fail(exitFailure(raw, raw.stderrTail));
-    }
-    const text = str(row[ClaudeResultField.Result]);
-    if (text === null) {
-      return fail(unparsable(EngineReason.NoResult));
-    }
-    const modelUsage = obj(row[ClaudeResultField.ModelUsage]);
-    const [firstModel] = Object.keys(modelUsage);
-    const basis = firstModel === undefined ? null : obj(modelUsage[firstModel])[ClaudeModelUsageField.CostBasis];
-    const usage = obj(row[ClaudeResultField.Usage]);
-    const details = obj(usage[ClaudeUsageField.Details]);
-    const parsed: ParsedRun = {
-      text,
-      usage: {
-        inputTokens: num(usage[ClaudeUsageField.Input]),
-        outputTokens: num(usage[ClaudeUsageField.Output]),
-        cacheReadTokens: num(usage[ClaudeUsageField.CacheRead]),
-        cacheWriteTokens: num(usage[ClaudeUsageField.CacheWrite]),
-        reasoningTokens: num(details[ClaudeUsageField.Thinking]),
-        totalTokens: null,
-      },
-      cost: {
-        usd: num(row[ClaudeResultField.TotalCostUsd]),
-        basis: basis === CostBasis.List ? CostBasis.List : CostBasis.Unreported,
-      },
-      model: firstModel ?? raw.requestedModel,
-      sessionId: asSessionId(str(row[ClaudeResultField.SessionId]) ?? PromptText.Empty),
-      unrecognised: [],
-    };
-    return ok(parsed);
-  },
+  parseLine: () => [],
 
-  textOf: () => null,
-
-  helpArgs: null,
-
-  checkHelp: () => ok(null),
-};
+  after: (ctx) => Promise.resolve(claudeEvents(ctx)),
+});

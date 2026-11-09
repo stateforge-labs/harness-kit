@@ -6,7 +6,7 @@ import type { Profile } from "./profile.ts";
 import { fail, ok, type Result } from "./result.ts";
 import { type Effort, Hermetic, type TokenUsage } from "./run.ts";
 import { ArgvField, EffortName, EngineMessage, FAILURE_TAIL_BYTES, PromptText } from "./engine-constants.ts";
-import type { RawRun, ResolvedOptions } from "./raw-run.ts";
+import type { ProcessExit, ResolvedOptions } from "./raw-run.ts";
 
 export const NO_USAGE: TokenUsage = {
   inputTokens: null,
@@ -90,12 +90,12 @@ export function checkArgv(args: readonly string[], budget: ArgvBudget): RunFailu
   return null;
 }
 
-export function exitFailure(raw: RawRun, stderrTail: string): RunFailure {
+export function exitFailure(exit: ProcessExit, stderrTail: string): RunFailure {
   return {
     kind: "exit",
     message: EngineMessage.Exit,
-    code: raw.exit.code,
-    signal: raw.exit.signal,
+    code: exit.code,
+    signal: exit.signal,
     stderrTail: tailBytes(stderrTail, FAILURE_TAIL_BYTES),
   };
 }

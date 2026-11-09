@@ -7,8 +7,9 @@ import type { ClaudeCredential } from "../../src/core/credential.ts";
 import { secret } from "../../src/core/secret.ts";
 import { Hermetic } from "../../src/core/run.ts";
 import { ArgvCarry } from "../../src/core/engine-constants.ts";
-import type { EngineInput, RawRun, ResolvedOptions } from "../../src/driver/port.ts";
+import type { EngineInput, ResolvedOptions } from "../../src/driver/port.ts";
 import { adaptersFixtures } from "../support/fixtures.ts";
+import { type InterpretRaw, interpretRaw } from "../support/interpret.ts";
 
 const headless = join(adaptersFixtures, "claude", "headless");
 const fixture = readFileSync(join(headless, "claude-result.json"), "utf8");
@@ -24,14 +25,14 @@ const base: ResolvedOptions = {
 };
 
 function input(overrides: Partial<EngineInput<"claude">> = {}): EngineInput<"claude"> {
-  return { options: base, credential: apiKey, instructions: "SYS", input: "hello", outFile: "/work/out.txt", ...overrides };
+  return { options: base, credential: apiKey, instructions: "SYS", input: "hello", outFile: "/work/out.txt", runId: "run-1", ...overrides };
 }
 
 function withOptions(overrides: Partial<ResolvedOptions>): EngineInput<"claude"> {
   return input({ options: { ...base, ...overrides } });
 }
 
-function raw(stdout: string, code: number | null = 0): RawRun {
+function raw(stdout: string, code: number | null = 0): InterpretRaw {
   return { stdout, stderrTail: "", exit: { code, signal: null }, outFileText: null, requestedModel: "haiku" };
 }
 
@@ -139,8 +140,8 @@ describe("claudeCli invocation", () => {
 });
 
 describe("claudeCli interpret", () => {
-  test("reads the masked headless result fixture", () => {
-    const result = claudeCli.interpret(raw(fixture));
+  test("reads the masked headless result fixture", async () => {
+    const result = await interpretRaw(claudeCli, raw(fixture));
     expect(result.ok).toBe(true);
     if (!result.ok) {
       throw new Error("expected ok");
@@ -160,31 +161,31 @@ describe("claudeCli interpret", () => {
     expect(result.value.unrecognised).toEqual([]);
   });
 
-  test("a non-zero exit is an exit failure", () => {
-    const result = claudeCli.interpret(raw(fixture, 2));
+  test("a non-zero exit is an exit failure", async () => {
+    const result = await interpretRaw(claudeCli, raw(fixture, 2));
     expect(!result.ok && result.failure.kind).toBe("exit");
   });
 
-  test("is_error true is an exit failure", () => {
+  test("is_error true is an exit failure", async () => {
     const failing = fixture.replace('"is_error": false', '"is_error": true');
-    const result = claudeCli.interpret(raw(failing));
+    const result = await interpretRaw(claudeCli, raw(failing));
     expect(!result.ok && result.failure.kind).toBe("exit");
   });
 
-  test("a result without a text field is unparsable", () => {
-    const result = claudeCli.interpret(raw('{"type":"result"}'));
+  test("a result without a text field is unparsable", async () => {
+    const result = await interpretRaw(claudeCli, raw('{"type":"result"}'));
     expect(!result.ok && result.failure.kind).toBe("unparsable");
   });
 
-  test("never throws on hostile stdout", () => {
+  test("never throws on hostile stdout", async () => {
     for (const stdout of ["", "{", "\u0000", "x".repeat(1_000_000)]) {
-      const result = claudeCli.interpret(raw(stdout));
+      const result = await interpretRaw(claudeCli, raw(stdout));
       expect(result.ok).toBe(false);
     }
   });
 
-  test("has no text reader and no help probe", () => {
-    expect(claudeCli.textOf("anything")).toBeNull();
+  test("has no line reader and no help probe", () => {
+    expect(claudeCli.parseLine("anything")).toEqual([]);
     expect(claudeCli.helpArgs).toBeNull();
     expect(claudeCli.checkHelp("")).toEqual({ ok: true, value: null });
   });

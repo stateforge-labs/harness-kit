@@ -113,6 +113,11 @@ export const OpenCodeCli = {
   Help: "--help",
 } as const;
 
+export const OpenCodeCleanup = {
+  SettleMs: 3_000,
+  CommandTimeoutMs: 30_000,
+} as const;
+
 export const OpenCodeStreamField = {
   Type: "type",
   SessionId: "sessionID",

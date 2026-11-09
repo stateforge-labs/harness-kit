@@ -80,14 +80,17 @@ import type { Result } from "../core/result.ts";
 import type { Cost, TokenUsage } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
-import type { RawRun, ResolvedOptions } from "../core/raw-run.ts";
-export type { ProcessExit, RawRun, ResolvedOptions } from "../core/raw-run.ts";
+import type { ResolvedOptions } from "../core/raw-run.ts";
+import type { EngineImpl } from "./engine.ts";
+export type { AfterContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "./engine.ts";
+export type { ProcessExit, ResolvedOptions } from "../core/raw-run.ts";
 export interface EngineInput<I extends string> {
     readonly options: ResolvedOptions;
     readonly credential: CredentialOf<I>;
     readonly instructions: string;
     readonly input: string;
     readonly outFile: string;
+    readonly runId: string;
 }
 export interface Invocation {
     readonly program: string;
@@ -104,19 +107,12 @@ export interface ParsedRun {
     readonly sessionId: SessionId | null;
     readonly unrecognised: readonly unknown[];
 }
-export interface CliEngine<I extends string> {
-    invocation(input: EngineInput<I>): Result<Invocation, RunFailure>;
-    interpret(raw: RawRun): Result<ParsedRun, RunFailure>;
-    textOf(line: string): string | null;
-    readonly helpArgs: readonly string[] | null;
-    checkHelp(help: string): Result<null, RunFailure>;
-}
 export type Drivers<H extends string> = {
     readonly [K in H]: HarnessDriver<K>;
 };
 export interface RunFacet<I extends string> {
     readonly engines: readonly Engine[];
-    readonly cli: CliEngine<I>;
+    readonly cli: EngineImpl<I>;
 }
 export interface CredentialFacet<I extends string> {
     readonly modes: readonly string[];
@@ -676,19 +672,21 @@ export declare function contextOf<H extends string>(config: RuntimeConfig<H>): R
 export declare function buildRuntime<H extends string>(drivers: Drivers<H>, config: RuntimeConfig<H>): Runtime<H>;
 
 // runtime/experimental.d.ts
-export type { CliEngine, CredentialFacet, Drivers, HarnessDriver, Invocation, RunFacet } from "../driver/port.ts";
+export type { CredentialFacet, Drivers, HarnessDriver, Invocation, RunFacet } from "../driver/port.ts";
 export type { Clock, ProcessRunner, ProcessSpec, RunningProcess, RuntimeConfig, RuntimeFs } from "../driver/ports.ts";
 export type { Availability, ProbeIo } from "../driver/create-runtime.ts";
 export type { Profile } from "../core/profile.ts";
+export type { AfterContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "../driver/engine.ts";
 "
 `;
 
 exports[`Step 11c: the built package the experimental declaration surface matches its snapshot 1`] = `
 "// runtime/experimental.d.ts
-export type { CliEngine, CredentialFacet, Drivers, HarnessDriver, Invocation, RunFacet } from "../driver/port.ts";
+export type { CredentialFacet, Drivers, HarnessDriver, Invocation, RunFacet } from "../driver/port.ts";
 export type { Clock, ProcessRunner, ProcessSpec, RunningProcess, RuntimeConfig, RuntimeFs } from "../driver/ports.ts";
 export type { Availability, ProbeIo } from "../driver/create-runtime.ts";
 export type { Profile } from "../core/profile.ts";
+export type { AfterContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "../driver/engine.ts";
 
 // driver/port.d.ts
 import type { HarnessId } from "@stateforge-labs/harness-hooks";
@@ -702,14 +700,17 @@ import type { Result } from "../core/result.ts";
 import type { Cost, TokenUsage } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
-import type { RawRun, ResolvedOptions } from "../core/raw-run.ts";
-export type { ProcessExit, RawRun, ResolvedOptions } from "../core/raw-run.ts";
+import type { ResolvedOptions } from "../core/raw-run.ts";
+import type { EngineImpl } from "./engine.ts";
+export type { AfterContext, CliEngineParts, EngineEnd, EngineEvent, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper } from "./engine.ts";
+export type { ProcessExit, ResolvedOptions } from "../core/raw-run.ts";
 export interface EngineInput<I extends string> {
     readonly options: ResolvedOptions;
     readonly credential: CredentialOf<I>;
     readonly instructions: string;
     readonly input: string;
     readonly outFile: string;
+    readonly runId: string;
 }
 export interface Invocation {
     readonly program: string;
@@ -726,19 +727,12 @@ export interface ParsedRun {
     readonly sessionId: SessionId | null;
     readonly unrecognised: readonly unknown[];
 }
-export interface CliEngine<I extends string> {
-    invocation(input: EngineInput<I>): Result<Invocation, RunFailure>;
-    interpret(raw: RawRun): Result<ParsedRun, RunFailure>;
-    textOf(line: string): string | null;
-    readonly helpArgs: readonly string[] | null;
-    checkHelp(help: string): Result<null, RunFailure>;
-}
 export type Drivers<H extends string> = {
     readonly [K in H]: HarnessDriver<K>;
 };
 export interface RunFacet<I extends string> {
     readonly engines: readonly Engine[];
-    readonly cli: CliEngine<I>;
+    readonly cli: EngineImpl<I>;
 }
 export interface CredentialFacet<I extends string> {
     readonly modes: readonly string[];
@@ -869,6 +863,89 @@ export interface Profile {
     };
 }
 export declare function deepFreeze<T>(value: T): T;
+
+// driver/engine.d.ts
+import type { RunFailure } from "../core/failure.ts";
+import type { Clock, RuntimeFs } from "../core/io.ts";
+import type { Result } from "../core/result.ts";
+import type { Cost, Limits, TokenUsage } from "../core/run.ts";
+import type { SessionId } from "../core/session.ts";
+import type { EngineInput, Invocation, ProcessExit } from "./port.ts";
+import type { ProcessRunner } from "./ports.ts";
+export type EngineEvent = {
+    readonly kind: "text";
+    readonly text: string;
+} | {
+    readonly kind: "unrecognised";
+    readonly payload: unknown;
+} | {
+    readonly kind: "final";
+    readonly text: string;
+} | {
+    readonly kind: "usage";
+    readonly usage: TokenUsage;
+} | {
+    readonly kind: "cost";
+    readonly cost: Cost;
+} | {
+    readonly kind: "model";
+    readonly model: string;
+} | {
+    readonly kind: "session";
+    readonly id: SessionId;
+} | {
+    readonly kind: "failure";
+    readonly failure: RunFailure;
+};
+export type Sleeper = (ms: number) => Promise<void>;
+export interface EngineIo {
+    readonly runner: ProcessRunner;
+    readonly clock: Clock;
+    readonly fs: RuntimeFs;
+    readonly sleep: Sleeper;
+}
+export interface EngineRunInput {
+    readonly program: string;
+    readonly invocation: Invocation;
+    readonly env: Readonly<Record<string, string>>;
+    readonly cwd: string;
+    readonly signal: AbortSignal | undefined;
+    readonly timeoutMs: number | undefined;
+    readonly limits: Limits;
+    readonly redact: (text: string) => string;
+    readonly requestedModel: string | null;
+    readonly outFile: string | null;
+}
+export interface EngineEnd {
+    readonly exit: ProcessExit;
+    readonly stderrTail: string;
+}
+export interface EngineRun {
+    readonly events: AsyncIterable<EngineEvent>;
+    cancel(): void;
+    readonly done: Promise<Result<EngineEnd, RunFailure>>;
+}
+export interface EngineImpl<I extends string> {
+    invocation(input: EngineInput<I>): Result<Invocation, RunFailure>;
+    start(input: EngineRunInput, io: EngineIo): EngineRun;
+    parseLine(line: string): readonly EngineEvent[];
+    readonly helpArgs: readonly string[] | null;
+    checkHelp(help: string): Result<null, RunFailure>;
+}
+export interface AfterContext {
+    readonly input: EngineRunInput;
+    readonly end: EngineEnd;
+    readonly stdoutTail: string;
+    readonly outFileText: string | null;
+    readonly io: EngineIo;
+}
+export interface CliEngineParts<I extends string> {
+    invocation(input: EngineInput<I>): Result<Invocation, RunFailure>;
+    parseLine(line: string): readonly EngineEvent[];
+    after?(ctx: AfterContext): Promise<readonly EngineEvent[]>;
+    helpArgs?: readonly string[] | null;
+    checkHelp?(help: string): Result<null, RunFailure>;
+}
 "
 `;
 

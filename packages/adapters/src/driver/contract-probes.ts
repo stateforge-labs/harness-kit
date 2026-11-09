@@ -1,15 +1,17 @@
 import type { CredentialOf, CredentialSpec } from "../core/credential.ts";
 import type { RunFailure } from "../core/failure.ts";
-import { type Result } from "../core/result.ts";
+import { ok, type Result } from "../core/result.ts";
 import { CapabilityName, isUsable } from "../core/capability.ts";
 import { Hermetic, Isolation, type RunRequest } from "../core/run.ts";
 import { EnvVar, type EnvSource } from "../env.ts";
 import { PromptText } from "../core/engine-constants.ts";
-import { CONTRACT_CWD, CONTRACT_EFFORT, CONTRACT_EXIT_CODE, CONTRACT_GARBAGE_SPECS, CONTRACT_GARBAGE_TEXT, CONTRACT_HOME, CONTRACT_OUT_FILE, CONTRACT_PLAIN_SPEC, ContractText, FailureKind } from "./contract-constants.ts";
+import { CONTRACT_CWD, CONTRACT_EFFORT, CONTRACT_EXIT_CODE, CONTRACT_GARBAGE_SPECS, CONTRACT_GARBAGE_TEXT, CONTRACT_HOME, CONTRACT_OUT_FILE, CONTRACT_PLAIN_SPEC, CONTRACT_RUN_ID, ContractText, FailureKind } from "./contract-constants.ts";
 import { captureThrow } from "./execute.ts";
 import type { ContractFixtures } from "./contract.ts";
 import { cellOf } from "./contract-checks.ts";
-import type { HarnessDriver, RawRun, ResolvedOptions } from "./port.ts";
+import type { EngineEvent } from "./engine.ts";
+import { foldEnd, foldStart, foldStep } from "./fold.ts";
+import type { HarnessDriver, ResolvedOptions } from "./port.ts";
 
 function threw(captured: { readonly errorName: string }): string {
   return `${ContractText.Threw}${captured.errorName}`;
@@ -54,7 +56,7 @@ export function supportProblems<I extends string>(driver: HarnessDriver<I>, fixt
   ];
   return cases.flatMap(({ capability, options }) => {
     const outcome = captureThrow(() =>
-      driver.run.cli.invocation({ options, credential, instructions: request.instructions, input: request.input, outFile: CONTRACT_OUT_FILE }),
+      driver.run.cli.invocation({ options, credential, instructions: request.instructions, input: request.input, outFile: CONTRACT_OUT_FILE, runId: CONTRACT_RUN_ID }),
     );
     if (!outcome.ok) {
       return [`${capability}: ${threw(outcome)}`];
@@ -87,21 +89,23 @@ export function credentialProblems<I extends string>(driver: HarnessDriver<I>): 
   return CONTRACT_GARBAGE_SPECS.flatMap((spec) => credentialProblemsFor(driver, spec));
 }
 
+function foldedGarbage<I extends string>(driver: HarnessDriver<I>, stdout: string): Result<boolean, RunFailure> {
+  let fold = foldStart();
+  for (const line of stdout.split(PromptText.Line)) {
+    const events: readonly EngineEvent[] = driver.run.cli.parseLine(line);
+    fold = events.reduce(foldStep, fold);
+  }
+  const end = { exit: { code: CONTRACT_EXIT_CODE, signal: null }, stderrTail: PromptText.Empty };
+  return ok(foldEnd(fold, end, null).ok);
+}
+
 export function engineProblems<I extends string>(driver: HarnessDriver<I>): string[] {
   return CONTRACT_GARBAGE_TEXT.flatMap((stdout) => {
-    const raw: RawRun = { stdout, stderrTail: PromptText.Empty, exit: { code: CONTRACT_EXIT_CODE, signal: null }, outFileText: null, requestedModel: null };
-    const interpreted = captureThrow(() => driver.run.cli.interpret(raw));
-    const text = captureThrow(() => driver.run.cli.textOf(stdout));
-    const problems: string[] = [];
-    if (!interpreted.ok) {
-      problems.push(threw(interpreted));
-    } else if (interpreted.value.ok) {
-      problems.push(ContractText.NotAFailure);
+    const folded = captureThrow(() => foldedGarbage(driver, stdout));
+    if (!folded.ok) {
+      return [threw(folded)];
     }
-    if (!text.ok) {
-      problems.push(threw(text));
-    }
-    return problems;
+    return folded.value.ok && folded.value.value ? [ContractText.NotAFailure] : [];
   });
 }
 

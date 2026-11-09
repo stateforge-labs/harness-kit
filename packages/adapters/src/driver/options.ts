@@ -2,7 +2,7 @@ import { Harness } from "@stateforge-labs/harness-hooks";
 import { Engine } from "../core/capability.ts";
 import { presentNames, type CredentialPlan } from "../core/credential-plan.ts";
 import { EngineMessage } from "../core/engine-constants.ts";
-import { EnvField, NO_HOME_VAR, PLACEHOLDER_OUT_FILE, PlanNote } from "./constants.ts";
+import { EnvField, NO_HOME_VAR, PLACEHOLDER_OUT_FILE, PLACEHOLDER_RUN_ID, PlanNote } from "./constants.ts";
 import { type ChildEnv, buildChildEnv } from "./env-plan.ts";
 import type { EnvSource } from "../env.ts";
 import { fail, ok, type Result } from "../core/result.ts";
@@ -13,7 +13,8 @@ import { type HeadlessOptions, type IsolationSpec, type Limits, Isolation, Herme
 import { CredentialMode } from "../core/credential-plan.ts";
 import { budgetOf, gatesFor } from "../core/kit.ts";
 import { mergeOptions } from "./options-merge.ts";
-import type { CliEngine, HarnessDriver, Invocation, ResolvedOptions } from "./port.ts";
+import type { EngineImpl } from "./engine.ts";
+import type { HarnessDriver, Invocation, ResolvedOptions } from "./port.ts";
 
 export interface BuildPaths {
   readonly outFile: string;
@@ -36,10 +37,10 @@ export interface Prepared<I extends string> {
   readonly plan: Plan;
   readonly resolved: ResolvedOptions;
   readonly credentialPlan: CredentialPlan;
-  readonly engine: CliEngine<I>;
+  readonly engine: EngineImpl<I>;
   readonly request: RunRequest;
   readonly controls: RunControls;
-  build(paths: BuildPaths): Result<BuiltRun, RunFailure>;
+  build(paths: BuildPaths, runId?: string): Result<BuiltRun, RunFailure>;
 }
 
 export interface PrepareDeps<I extends string> {
@@ -102,7 +103,7 @@ export function prepare<I extends string>(deps: PrepareDeps<I>): Result<Prepared
   }
   const engine = deps.driver.run.cli;
   const request = deps.request;
-  const planned = engine.invocation({ options: resolved, credential, instructions: request.instructions, input: request.input, outFile: PLACEHOLDER_OUT_FILE });
+  const planned = engine.invocation({ options: resolved, credential, instructions: request.instructions, input: request.input, outFile: PLACEHOLDER_OUT_FILE, runId: PLACEHOLDER_RUN_ID });
   if (!planned.ok) {
     return fail(planned.failure);
   }
@@ -123,8 +124,8 @@ export function prepare<I extends string>(deps: PrepareDeps<I>): Result<Prepared
     isolation: m.isolation,
     notes: planNotes(deps.driver.id, credentialPlan.value.mode, m.hermetic, planned.value.argvCarries, m.isolation, injected),
   };
-  const build = (paths: BuildPaths): Result<BuiltRun, RunFailure> => {
-    const invocation = engine.invocation({ options: resolved, credential, instructions: request.instructions, input: request.input, outFile: paths.outFile });
+  const build = (paths: BuildPaths, runId: string = PLACEHOLDER_RUN_ID): Result<BuiltRun, RunFailure> => {
+    const invocation = engine.invocation({ options: resolved, credential, instructions: request.instructions, input: request.input, outFile: paths.outFile, runId });
     if (!invocation.ok) {
       return fail(invocation.failure);
     }

@@ -5,12 +5,14 @@ import { asSessionId } from "../../core/session.ts";
 import type { Cost } from "../../core/run.ts";
 import { ArgvCarry, CostBasis, EngineCapability, EngineMessage, EngineReason, PromptText } from "../../core/engine-constants.ts";
 import { budgetOf, checkArgv, exitFailure, gatesFor, modelFlag, NO_USAGE, unparsable } from "../../core/kit.ts";
-import type { CliEngine, EngineInput, Invocation, ParsedRun, RawRun } from "../../driver/port.ts";
+import { cliEngine } from "../../engine/cli.ts";
+import type { AfterContext, EngineEvent, EngineInput, Invocation } from "../../driver/port.ts";
 import { OPENCODE_CAPABILITIES } from "../capabilities.ts";
 import { OpenCodeCli } from "../constants.ts";
 import { OPENCODE_BINARY } from "../launch.ts";
 import { OPENCODE_PROFILE } from "../profile.ts";
-import { opencodeTextOf, readOpencodeRun } from "./read-run.ts";
+import { removeResidue } from "./cleanup.ts";
+import { opencodeLineEvents } from "./read-run.ts";
 
 function opencodeArgs(model: string | null): string[] {
   return [
@@ -24,7 +26,17 @@ function opencodeArgs(model: string | null): string[] {
   ];
 }
 
-export const opencodeCli: CliEngine<"opencode"> = {
+function observedSession(ctx: AfterContext): string | null {
+  let session: string | null = null;
+  for (const line of ctx.stdoutTail.split(PromptText.Line)) {
+    for (const event of opencodeLineEvents(line)) {
+      session = event.kind === "session" ? event.id : session;
+    }
+  }
+  return session;
+}
+
+export const opencodeCli = cliEngine<"opencode">({
   invocation(input: EngineInput<"opencode">): Result<Invocation, RunFailure> {
     const gate = gatesFor(OPENCODE_CAPABILITIES, input.options);
     if (gate !== null) {
@@ -45,27 +57,12 @@ export const opencodeCli: CliEngine<"opencode"> = {
     return ok(invocation);
   },
 
-  interpret(raw: RawRun): Result<ParsedRun, RunFailure> {
-    const reading = readOpencodeRun(raw.stdout);
-    if (raw.exit.code !== 0 || reading.error !== null) {
-      return fail(exitFailure(raw, reading.error === null ? raw.stderrTail : reading.error.message));
-    }
-    if (reading.text === PromptText.Empty) {
-      return fail(unparsable(EngineReason.EmptyText));
-    }
-    const cost: Cost = reading.cost === null ? { usd: null, basis: CostBasis.Unreported } : { usd: reading.cost, basis: CostBasis.List };
-    const parsed: ParsedRun = {
-      text: reading.text,
-      usage: NO_USAGE,
-      cost,
-      model: null,
-      sessionId: asSessionId(reading.sessionId ?? PromptText.Empty),
-      unrecognised: reading.unknownRows,
-    };
-    return ok(parsed);
-  },
+  parseLine: opencodeLineEvents,
 
-  textOf: opencodeTextOf,
+  async after(ctx): Promise<readonly EngineEvent[]> {
+    await removeResidue(ctx, observedSession(ctx));
+    return [];
+  },
 
   helpArgs: [OpenCodeCli.Run, OpenCodeCli.Help],
 
@@ -81,4 +78,4 @@ export const opencodeCli: CliEngine<"opencode"> = {
       why: EngineMessage.StandaloneMissing,
     });
   },
-};
+});
