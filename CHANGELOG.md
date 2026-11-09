@@ -5,6 +5,8 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ## Unreleased
 
+## harness-hooks 0.3.0 - 2026-11-09
+
 ### `@stateforge-labs/harness-hooks`
 
 - Added the `./endpoint` subpath: `createHookHandler` builds a web-standard `(Request) => Promise<Response>` hook handler with token or loopback admission, and `serveNode` and `serveBun` serve it on a TCP port or a unix socket. A body over `maxBodyBytes` is answered `413`, and the endpoint reads no environment and writes no log. The subpath also exports `AdmissionMode`, `createAdmission` and `isLoopbackHost`.
