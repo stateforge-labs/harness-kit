@@ -4,6 +4,7 @@ import { loadMiddleware } from "./middleware-loader.ts";
 import { AdmissionMode, createHookHandler, serveBun, type RunningEndpoint } from "@stateforge-labs/harness-hooks/endpoint";
 import { logEvent } from "./log.ts";
 import { installGracefulShutdown } from "./shutdown.ts";
+import { bindUserOnly, clearStaleSocket } from "./socket.ts";
 
 export class HookServerBuilder {
   #config: ServerConfig | undefined;
@@ -42,7 +43,10 @@ export class HookServerBuilder {
         void logEvent(config.logFile, payload, handled, config.logFullPayload, new Date().toISOString(), config.logMaxBytes);
       },
     });
-    return serveBun({ handler, listen: { port: config.port, host: config.host }, maxBodyBytes: config.maxBodyBytes });
+    if (config.socketPath === undefined) return serveBun({ handler, listen: { port: config.port, host: config.host }, maxBodyBytes: config.maxBodyBytes });
+    const socketPath = config.socketPath;
+    await clearStaleSocket(socketPath);
+    return bindUserOnly(socketPath, () => serveBun({ handler, listen: { socketPath }, maxBodyBytes: config.maxBodyBytes }));
   }
 }
 
@@ -60,5 +64,6 @@ if (import.meta.main) {
   if (config.token === "") console.warn(`${EnvVar.HookToken} is empty: auth disabled (loopback only)`);
   const server = await new HookServerBuilder().withConfig(config).withAdapters(allAdapters).use(...middleware).build();
   if ("port" in server.address) console.log(`harness-hooks listening on ${server.address.host}:${server.address.port}`);
+  else console.log(`harness-hooks listening on unix:${server.address.socketPath}`);
   installGracefulShutdown(server, config.shutdownGraceMs);
 }

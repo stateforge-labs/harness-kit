@@ -59,7 +59,8 @@ invalid setting and exits with code 2. The message never contains the token.
 | --- | --- | --- |
 | `PORT` | `8787` | Listening port. `0` asks the system for a free port |
 | `HOOK_HOST` | `127.0.0.1` | Listening address. A non-loopback address requires `HOOK_TOKEN` |
-| `HOOK_TOKEN` | empty | Bearer token for `POST /hook/<harness>`. Empty means loopback only |
+| `HOOK_SOCKET` | empty | Absolute path of a unix socket to serve on instead of `PORT`/`HOOK_HOST`. The file is created readable by its owner only, a stale one is removed on start, and a file that is not a socket, or a socket another server answers on, stops the start |
+| `HOOK_TOKEN` | empty | Bearer token for `POST /hook/<harness>`. Empty means loopback only (Host and content-type are checked on a socket too) |
 | `HOOK_LOG_FILE` | `./data/events.jsonl` | JSONL log. It rotates to `<file>.1` at `HOOK_LOG_MAX_BYTES` |
 | `HOOK_LOG_MAX_BYTES` | 100 MiB | Size at which the log rotates |
 | `HOOK_LOG_PAYLOAD` | off | `1` also logs the full payload. For debugging only; it can contain prompts and tool input |
@@ -102,6 +103,13 @@ The installer reads `XDG_CONFIG_HOME`, `XDG_STATE_HOME` and `CODEX_HOME` for the
 | `bun scripts/install.ts codex [--apply] [--codex-home <dir>]` | Codex `hooks.json`, with command hooks that run the shim |
 | `bun scripts/install.ts opencode [--apply] [--config-dir <dir>]` | Bundles the plugin into one file, `plugins/harness-hooks.js`. It removes an older `harness-hooks.ts` |
 | `bun scripts/install.ts service [--apply] [--unit-dir <dir>] [--no-systemctl]` | The systemd user unit that runs this server |
+
+`claude` and `codex` register one shim per hook event. `--shim auto|curl|ts` chooses it: the curl shim, a POSIX sh script written to `--shim-dir`
+(default `$XDG_STATE_HOME/harness-hooks/bin`) as `harness-hooks-<harness>.sh`, is the default when curl 8.3.0 or later is on PATH; the TypeScript shim
+(`bun hook-shim.ts`) is the fallback and is never changed. The script gets the event name as its argument and bakes in the URL (or `--socket <path>`),
+`HOOK_SHIM_TIMEOUT_MS`, `HOOK_SHIM_FAIL` and `HOOK_SHIM_DENY_REASON` as they are when it is installed; `HOOK_TOKEN` and `HOOK_SHIM_DEBUG` are read from
+the environment on every call, and the token reaches curl through its environment, never an argument. With the curl shim, `claude --apply` writes the script only,
+because the settings stay in your dotfiles. `service --socket <path>` makes the unit serve on that socket.
 
 `claude`, `codex` and `service` take `--url <base>` (default `http://127.0.0.1:8787`) and write it into the config. `opencode` ignores
 `--url`, because the plugin reads `HOOK_URL` from OpenCode's environment.

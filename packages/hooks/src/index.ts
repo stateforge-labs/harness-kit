@@ -22,6 +22,8 @@ export type { Common, Decoded, HarnessAdapter } from "./port.ts";
 export { handle, type HandleOptions, type Handled } from "./handle.ts";
 export { adapters } from "./adapters/index.ts";
 export { opencodePluginPath, schemasDir, shimPath } from "./paths.ts";
+export { renderCurlShim, parseCurlVersion, curlSupports, type CurlShimOptions } from "../clients/shim/curl-shim.ts";
+export { CURL_MIN_VERSION, CurlTokenSource, type CurlTokenSourceName } from "../clients/shim/curl-constants.ts";
 export { ClaudeHook, ClaudeTool, type ClaudeHookName } from "./adapters/claude/names.ts";
 export { CodexHook, CodexTool, type CodexHookName } from "./adapters/codex/names.ts";
 export { OpenCodeHook, OpenCodeTool, type OpenCodeHookName } from "./adapters/opencode/names.ts";
