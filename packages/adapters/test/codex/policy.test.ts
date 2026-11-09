@@ -20,4 +20,20 @@ describe("codexPolicy", () => {
     const result = codexPolicy(policyFor(resolveTools(TOOLS_DEFAULT, undefined)));
     expect(result).toEqual({ ok: true, value: { args: [], env: {} } });
   });
+
+  test("mcp none alone ignores the user config without the sandbox", () => {
+    const result = codexPolicy(policyFor(resolveTools({ ...TOOLS_DEFAULT, mcp: [] }, undefined)));
+    expect(result).toEqual({ ok: true, value: { args: ["--skip-git-repo-check", "--ignore-user-config"], env: {} } });
+  });
+
+  test("settings none alone ignores the user config without the sandbox", () => {
+    const result = codexPolicy(policyFor(resolveTools({ ...TOOLS_DEFAULT, settings: "none" }, undefined)));
+    expect(result).toEqual({ ok: true, value: { args: ["--skip-git-repo-check", "--ignore-user-config"], env: {} } });
+  });
+
+  test("builtins off alone applies the sandbox without ignoring the user config", () => {
+    const result = codexPolicy(policyFor(resolveTools({ ...TOOLS_DEFAULT, builtins: "off" }, undefined)));
+    const expected = ["--skip-git-repo-check", "-s", "read-only", ...CODEX_UNUSED_FEATURES.flatMap((feature) => ["--disable", feature])];
+    expect(result).toEqual({ ok: true, value: { args: expected, env: {} } });
+  });
 });

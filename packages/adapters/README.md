@@ -122,8 +122,8 @@ its cells read `unsupported: not-implemented`.
 
 ## Errors
 
-Every failure is a `RunFailure` with a `kind`, a `message` and kind-specific fields. Handle every kind; keep a default branch, because a
-later release may add one.
+Every failure is a `RunFailure` with a `kind`, a `message` and kind-specific fields. Handle every kind and keep a default branch for any kind you do
+not recognise.
 
 | Kind | Meaning and consumer action | Emitted by |
 | --- | --- | --- |
@@ -148,8 +148,8 @@ later release may add one.
 | `store-failed` | reserved for a session store failure; no producer in this release | none yet |
 | `session-not-found` | reserved for a resume of an unknown session; no producer in this release | none yet |
 
-The CLI engine emits the first sixteen kinds. The last five are part of the type so that a later release can add a producer without a
-breaking change; a consumer should handle them now.
+The CLI engine emits the first sixteen kinds. The last five are part of the type and have no producer today; a consumer should handle
+them.
 
 ## Lifecycle
 
