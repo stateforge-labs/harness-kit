@@ -63,7 +63,7 @@ After a schema change, run `bun run gen` in `packages/hooks`, then review the re
 | --- | --- |
 | [`packages/hooks`](packages/hooks/README.md) | `@stateforge-labs/harness-hooks`: the library |
 | [`packages/hooks-server`](packages/hooks-server/README.md) | `@stateforge-labs/harness-hooks-server`: the HTTP server and the installers |
-| [`packages/adapters`](packages/adapters/README.md) | `@stateforge-labs/harness-adapters`: a private workspace package; not published |
+| [`packages/adapters`](packages/adapters/README.md) | `@stateforge-labs/harness-adapters`: the public package for harness knowledge that is not a hook (transcripts, stores, CLI invocation, usage and tool facts, TUI chrome), one module per harness, built on `harness-hooks` |
 
 ### Library layout (`packages/hooks`)
 
@@ -110,6 +110,22 @@ fixture was `captured` or `synthetic`, with where it came from.
 - `check-boundaries.ts`: see Checks above.
 
 Captures carry the home path, user name and email of the machine they came from. Mask them before you commit them.
+
+## Captures and fixtures (`packages/adapters/fixtures/`)
+
+The fixtures of `harness-adapters` are masked captures of real harness output: transcripts, rollouts, store rows, headless runs and
+TUI screens, one directory per harness (`claude/`, `codex/`, `opencode/`), each with a `provenance.json` that records the source
+(`local-capture`, `headless-run`, `tmux-capture` or `synthetic`), the harness version and the masker's commit.
+
+`tools/mask-captures.ts` builds them from a raw directory that stays outside the repository:
+
+```sh
+bun tools/mask-captures.ts --in <raw dir> --out packages/adapters/fixtures --extra <private names> [--check]
+```
+
+`--extra` takes the local user name and any other private word, comma separated, so those words never appear in the repository. The
+run is deterministic. `--check` scans the fixtures for leaks (home paths, user names, host names, addresses, keys and tokens) and fails
+on a match. Never commit a raw capture, and never hand-edit a fixture to hide a leak: fix the masker and run it again.
 
 ## Releases
 

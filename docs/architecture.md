@@ -2,7 +2,7 @@
 
 This page spans the packages. Each package's own README says what it exports, its scripts and its tests:
 [`@stateforge-labs/harness-hooks`](../packages/hooks/README.md) (library), [`@stateforge-labs/harness-hooks-server`](../packages/hooks-server/README.md)
-(the HTTP service), [`@stateforge-labs/harness-adapters`](../packages/adapters/README.md) (a private workspace package). Paths below are from the repo root.
+(the HTTP service), [`@stateforge-labs/harness-adapters`](../packages/adapters/README.md) (the public package for harness knowledge that is not a hook). Paths below are from the repo root.
 
 One server receives the hook events of several coding-agent harnesses (Claude Code, Codex, OpenCode), checks what they send, logs
 metadata and answers with the harness's own response format. The core knows no harness; each harness is an adapter plugged into one port.

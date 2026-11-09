@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+### `@stateforge-labs/harness-hooks`
+
+- Export the zod schemas, enums, hook names and tool inputs of every harness from the index.
+- Tool name constants for Claude and OpenCode.
+
 ## 0.1.0 - 2026-11-08
 
 The first version. It ships the following.
