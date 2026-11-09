@@ -5,8 +5,13 @@ import { opencodePluginPath } from "@stateforge-labs/harness-hooks";
 import { join } from "node:path";
 import { ClaudeHook, WORKTREE_TIMEOUT_MS, adapters } from "@stateforge-labs/harness-hooks";
 import { CURL_MIN_VERSION, CurlTokenSource, EnvVar, processEnv } from "@stateforge-labs/harness-hooks";
+import { pathWith } from "./fake-curl.ts";
 
 const repo = join(import.meta.dir, "..", "..");
+const CURL_NEW = { version: "8.5.0" };
+const CURL_MID = { version: "7.88.1", rejectTokenFlags: true };
+const CURL_OLD = { version: "7.50.0" };
+const TOKEN = `tok-${crypto.randomUUID()}`;
 let dir: string;
 beforeAll(async () => {
   dir = await mkdtemp(join(tmpdir(), "harness-hooks-install-"));
@@ -14,10 +19,18 @@ beforeAll(async () => {
 afterAll(() => rm(dir, { recursive: true, force: true }));
 
 async function install(args: string[], env: Record<string, string> = {}) {
-  const proc = Bun.spawn([process.execPath, join(repo, "scripts/install.ts"), ...args], { cwd: repo, stdout: "pipe", stderr: "pipe", env: { ...processEnv(), [EnvVar.Home]: dir, [EnvVar.XdgConfigHome]: join(dir, "xdg"), ...env } });
+  const proc = Bun.spawn([process.execPath, join(repo, "scripts/install.ts"), ...args], { cwd: repo, stdout: "pipe", stderr: "pipe", env: { ...processEnv(), [EnvVar.Home]: dir, [EnvVar.XdgConfigHome]: join(dir, "xdg"), ...newCurl, ...env } });
   const [stdout, stderr] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text()]);
   return { code: await proc.exited, stdout, stderr };
 }
+let newCurl: Record<string, string>;
+let midCurl: Record<string, string>;
+let oldCurl: Record<string, string>;
+beforeAll(async () => {
+  newCurl = await pathWith(dir, CURL_NEW);
+  midCurl = await pathWith(dir, CURL_MID);
+  oldCurl = await pathWith(dir, CURL_OLD);
+});
 const eventsOf = (harness: string) => Object.keys(adapters.get(harness)!.jsonSchemas()).sort();
 
 describe("e2e: scripts/install.ts", () => {
@@ -123,7 +136,69 @@ describe("e2e: scripts/install.ts", () => {
     expect(noCurl.stdout).not.toContain("harness-hooks-codex.sh");
     const refused = await install(["codex", "--shim", "curl"], { [EnvVar.Path]: join(dir, "empty-path") });
     expect(refused.code).toBe(1);
-    expect(refused.stderr).toContain(CURL_MIN_VERSION[CurlTokenSource.Env]);
+    expect(refused.stderr).toContain(CURL_MIN_VERSION[CurlTokenSource.File]);
+  });
+
+  test("curl 8.5: the environment mechanism, no header file is written even with a token", async () => {
+    const shimDir = join(dir, "env-mech");
+    const r = await install(["claude", "--shim", "curl", "--shim-dir", shimDir, "--apply"], { ...newCurl, [EnvVar.HookToken]: TOKEN });
+    expect(r.code).toBe(0);
+    const text = await readFile(join(shimDir, "harness-hooks-claude.sh"), "utf8");
+    expect(text).toContain("--expand-header");
+    expect(text).not.toContain(TOKEN);
+    expect(await Bun.file(join(shimDir, "harness-hooks-claude.header")).exists()).toBe(false);
+    expect(r.stdout + r.stderr).not.toContain(TOKEN);
+  });
+
+  test("curl 7.88 with a token: the header file is written user-only next to the script, and the script has no token mechanism flag that 7.88 lacks", async () => {
+    const shimDir = join(dir, "file-mech");
+    const r = await install(["claude", "--shim", "curl", "--shim-dir", shimDir, "--apply"], { ...midCurl, [EnvVar.HookToken]: TOKEN });
+    expect(r.code).toBe(0);
+    const headerPath = join(shimDir, "harness-hooks-claude.header");
+    expect((await stat(headerPath)).mode & 0o777).toBe(0o600);
+    expect(await readFile(headerPath, "utf8")).toBe(`authorization: Bearer ${TOKEN}\n`);
+    const text = await readFile(join(shimDir, "harness-hooks-claude.sh"), "utf8");
+    expect(text).toContain(`'@${headerPath}'`);
+    expect(text).not.toContain("--variable");
+    expect(text).not.toContain("--expand-header");
+    expect(text).not.toContain(TOKEN);
+    expect(r.stdout + r.stderr).not.toContain(TOKEN);
+    const again = await install(["claude", "--shim", "curl", "--shim-dir", shimDir, "--apply"], { ...midCurl, [EnvVar.HookToken]: TOKEN });
+    expect(again.stdout).toContain("unchanged");
+  });
+
+  test("curl 7.88 without a token, on a socket: no token mechanism at all and no header file", async () => {
+    const shimDir = join(dir, "none-mech");
+    const r = await install(["claude", "--shim", "curl", "--shim-dir", shimDir, "--socket", join(dir, "h.sock"), "--apply"], { ...midCurl, [EnvVar.HookToken]: "" });
+    expect(r.code).toBe(0);
+    const text = await readFile(join(shimDir, "harness-hooks-claude.sh"), "utf8");
+    expect(text).toContain(`--unix-socket '${join(dir, "h.sock")}'`);
+    for (const flag of ["--variable", "--expand-header", "--header"]) expect(text).not.toContain(flag);
+    expect(await Bun.file(join(shimDir, "harness-hooks-claude.header")).exists()).toBe(false);
+  });
+
+  test("curl 7.88: auto picks the curl shim", async () => {
+    expect((await install(["codex"], midCurl)).stdout).toContain("harness-hooks-codex.sh");
+  });
+
+  test("curl 7.50: --shim curl and --socket refuse and name the minimum; auto picks the TypeScript shim", async () => {
+    const forced = await install(["codex", "--shim", "curl"], oldCurl);
+    expect(forced.code).toBe(1);
+    expect(forced.stderr).toContain(CURL_MIN_VERSION[CurlTokenSource.File]);
+    expect(forced.stderr).toContain("7.50.0");
+    const socket = await install(["codex", "--socket", join(dir, "h.sock")], oldCurl);
+    expect(socket.code).toBe(1);
+    expect(socket.stderr).toContain(CURL_MIN_VERSION[CurlTokenSource.File]);
+    const auto = await install(["codex"], oldCurl);
+    expect(auto.code).toBe(0);
+    expect(auto.stdout).toContain("--harness codex");
+    expect(auto.stdout).not.toContain("harness-hooks-codex.sh");
+  });
+
+  test("no curl on PATH: --shim curl names none as found", async () => {
+    const r = await install(["codex", "--shim", "curl"], { [EnvVar.Path]: join(dir, "empty-path") });
+    expect(r.code).toBe(1);
+    expect(r.stderr).toContain("found none");
   });
 
   test("--shim must be auto, curl or ts", async () => {

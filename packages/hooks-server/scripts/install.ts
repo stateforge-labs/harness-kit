@@ -1,6 +1,6 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { CURL_MIN_VERSION, CurlTokenSource, EnvDefault, Harness, curlSupports, installEnv, opencodePluginPath, parseCurlVersion, renderCurlShim, shimEnv } from "@stateforge-labs/harness-hooks";
+import { CURL_MIN_VERSION, CurlTokenSource, EnvDefault, Harness, type CurlTokenSourceName, installEnv, opencodePluginPath, parseCurlVersion, pickCurlTokenSource, renderCurlShim, renderCurlTokenFile, shimEnv } from "@stateforge-labs/harness-hooks";
 import { claudeHooks, codexHooks, systemdUnit, type RenderOptions } from "./lib/client-config.ts";
 
 const repo = resolve(import.meta.dir, "..");
@@ -27,6 +27,8 @@ const env = installEnv();
 const ShimKind = { Auto: "auto", Curl: "curl", Ts: "ts" } as const;
 const SHIM_DIR_NAME = "bin";
 const SHIM_FILE_MODE = 0o755;
+const TOKEN_FILE_MODE = 0o600;
+const TOKEN_FILE_SUFFIX = ".header";
 const STATE_DIR_NAME = "harness-hooks";
 
 function curlVersion(): string | undefined {
@@ -40,21 +42,35 @@ function curlVersion(): string | undefined {
 
 const socketPath = value("--socket");
 
-function chooseShim(): "curl" | "ts" {
+const tokenConfigured = shimEnv().token !== "";
+const tokenFloor = CURL_MIN_VERSION[CurlTokenSource.File];
+
+function chooseShim(): { kind: "curl" | "ts"; tokenSource?: CurlTokenSourceName } {
   const wanted = value("--shim") ?? ShimKind.Auto;
   if (wanted !== ShimKind.Auto && wanted !== ShimKind.Curl && wanted !== ShimKind.Ts) return fail(`--shim must be ${Object.values(ShimKind).join(", ")}: ${wanted}`);
-  if (wanted === ShimKind.Ts) return socketPath ? fail("--socket needs the curl shim, which is the only client that speaks to a socket") : ShimKind.Ts;
+  if (wanted === ShimKind.Ts) return socketPath ? fail("--socket needs the curl shim, which is the only client that speaks to a socket") : { kind: ShimKind.Ts };
   const version = curlVersion();
-  const usable = version !== undefined && curlSupports(version, CurlTokenSource.Env);
-  if (usable) return ShimKind.Curl;
-  if (wanted === ShimKind.Curl) return fail(`--shim curl needs curl ${CURL_MIN_VERSION[CurlTokenSource.Env]} or later on PATH (found ${version ?? "none"})`);
-  return socketPath ? fail(`--socket needs curl ${CURL_MIN_VERSION[CurlTokenSource.Env]} or later on PATH (found ${version ?? "none"})`) : ShimKind.Ts;
+  const tokenSource = pickCurlTokenSource(version, tokenConfigured);
+  if (tokenSource) return { kind: ShimKind.Curl, tokenSource };
+  if (wanted === ShimKind.Curl) return fail(`--shim curl needs curl ${tokenFloor} or later on PATH (found ${version ?? "none"})`);
+  return socketPath ? fail(`--socket needs curl ${tokenFloor} or later on PATH (found ${version ?? "none"})`) : { kind: ShimKind.Ts };
 }
 
-const shimKind = chooseShim();
+const chosen = chooseShim();
+const shimKind = chosen.kind;
+const tokenSource = chosen.tokenSource;
 const shimDir = value("--shim-dir") ?? join(env.stateHome, STATE_DIR_NAME, SHIM_DIR_NAME);
 const shimFile = (harness: string): string => join(shimDir, `harness-hooks-${harness}.sh`);
+const tokenFile = (harness: string): string => join(shimDir, `harness-hooks-${harness}${TOKEN_FILE_SUFFIX}`);
 const opts: RenderOptions = { url, repo, bun: process.execPath, ...(socketPath ? { socketPath } : {}), ...(shimKind === ShimKind.Curl ? { curlShimFile: shimFile } : {}) };
+
+function writeTokenFile(path: string, content: string): void {
+  if (existsSync(path) && readFileSync(path, "utf8") === content) return void chmodSync(path, TOKEN_FILE_MODE);
+  mkdirSync(shimDir, { recursive: true });
+  writeFileSync(path, content, { mode: TOKEN_FILE_MODE });
+  chmodSync(path, TOKEN_FILE_MODE);
+  console.log(`wrote: ${path}`);
+}
 
 function writeShim(harness: string): void {
   const client = shimEnv();
@@ -62,11 +78,14 @@ function writeShim(harness: string): void {
     harness,
     url,
     ...(socketPath ? { socketPath } : {}),
+    ...(tokenSource ? { tokenSource } : {}),
+    ...(tokenSource === CurlTokenSource.File ? { tokenFile: tokenFile(harness) } : {}),
     timeoutMs: client.timeoutMs,
     failClosed: client.failClosed,
     denyReason: client.denyReason,
   });
   const path = shimFile(harness);
+  if (tokenSource === CurlTokenSource.File) writeTokenFile(tokenFile(harness), renderCurlTokenFile(client.token));
   if (existsSync(path) && readFileSync(path, "utf8") === script) return void console.log(`unchanged: ${path}`);
   mkdirSync(shimDir, { recursive: true });
   writeFileSync(path, script, { mode: SHIM_FILE_MODE });

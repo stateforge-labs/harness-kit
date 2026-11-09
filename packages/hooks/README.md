@@ -61,7 +61,7 @@ the middleware section of the [architecture page](https://github.com/stateforge-
 | `@stateforge-labs/harness-hooks` | `adapters` (registry by harness id), `handle(adapter, raw, pipeline, options?)` (`HandleOptions`), `Pipeline` (per-layer `{ timeoutMs, onFault }`), `defaultPipeline`, `policyLayer`, `worktreeLayer`, `onKinds`, `mergeReplies`, `toolAllowlist`, `stopGuard`, `once`, `stripToolPrefix`, `denyText`, `continueText`, `policy`, the neutral types (`NeutralEvent`, `NeutralReply`, `HarnessAdapter`, ...), and the on-disk paths `shimPath`, `opencodePluginPath` and `schemasDir` |
 | `@stateforge-labs/harness-hooks` (per harness) | `claudeSchemas`, `codexSchemas`, `opencodeSchemas` (hook name to zod schema), `claudeEnums`, `codexEnums`, `opencodeEnums` (closed value sets as zod enums), `claudeToolInputs`, `anyToolInput` and `checkToolInput` (Claude tool input schemas) |
 | `@stateforge-labs/harness-hooks/endpoint` | The embeddable HTTP endpoint: `createHookHandler({ adapters, pipeline, admission, maxBodyBytes, onHandled? })` returns a web-standard `(req: Request) => Promise<Response>` serving `POST /hook/<harness>` and `GET /healthz`; `serveNode` (node:http) and `serveBun` bind it to a TCP port or a unix socket and return `{ address, close() }`. It reads no environment and writes no log |
-| `renderCurlShim`, `parseCurlVersion`, `curlSupports`, `CURL_MIN_VERSION` | `renderCurlShim` renders a POSIX sh shim for one harness that posts with curl, over TCP or a unix socket, and takes the hook event name as its argument. It prints the server's JSON object, or `{}` on any failure; with `failClosed` it prints the refusal for PreToolUse and PermissionRequest, pre-rendered per event. The token is read from `HOOK_TOKEN` by curl itself (curl 8.3.0 or later) or from a header file, never an argument |
+| `renderCurlShim`, `parseCurlVersion`, `curlSupports`, `CURL_MIN_VERSION` | `renderCurlShim` renders a POSIX sh shim for one harness that posts with curl, over TCP or a unix socket, and takes the hook event name as its argument. It prints the server's JSON object, or `{}` on any failure; with `failClosed` it prints the refusal for PreToolUse and PermissionRequest, pre-rendered per event. The token is read from `HOOK_TOKEN` by curl itself (curl 8.3.0 or later) or from a header file (curl 7.55.0 or later), never an argument |
 | `@stateforge-labs/harness-hooks/shim` | The command shim. It reads a hook payload from stdin and posts it to `POST /hook/<harness>`. It fails open to `{}`; with `HOOK_SHIM_FAIL=closed` it refuses PreToolUse and PermissionRequest instead |
 | `@stateforge-labs/harness-hooks/opencode-plugin` | The OpenCode plugin. It adds the rules to each model request and throws on a deny. It fails open, or closed with `HOOK_PLUGIN_FAIL=closed` |
 | `@stateforge-labs/harness-hooks/schemas/*` | JSON Schema per harness event, generated from the zod schemas (documentation only) |
@@ -114,8 +114,8 @@ A layer passes a changed context down with `next(ctx)`; `stripToolPrefix` does t
 
 ### Curl shim
 
-`renderCurlShim` returns the text of a POSIX sh script that a command hook can run instead of starting a JavaScript process. It needs curl 8.3.0 or later
-(`CURL_MIN_VERSION`; `curlSupports(parseCurlVersion(output))` checks `curl --version` output):
+`renderCurlShim` returns the text of a POSIX sh script that a command hook can run instead of starting a JavaScript process. It needs curl 7.55.0 or later
+(`CURL_MIN_VERSION`; `curlSupports(parseCurlVersion(output), source)` checks `curl --version` output, and `pickCurlTokenSource(version, tokenConfigured)` chooses the mechanism). `tokenSource` selects how the token reaches curl: `"env"` (default; curl 8.3.0 or later) reads `HOOK_TOKEN` at call time with `--variable` and `--expand-header`; `"file"` (curl 7.55.0 or later) reads a curl header file at `tokenFile` holding `authorization: Bearer <token>` (`renderCurlTokenFile(token)` renders it; write it with mode 0600); `"none"` (curl 7.55.0 or later) sends no authorization, for a loopback or user-only socket server:
 
 ```ts
 import { writeFileSync } from "node:fs";
@@ -124,7 +124,7 @@ import { renderCurlShim } from "@stateforge-labs/harness-hooks";
 writeFileSync("hook-claude.sh", renderCurlShim({ harness: "claude", socketPath: "/run/user/1000/hooks.sock", failClosed: true }), { mode: 0o755 });
 ```
 
-The hook event name is the script's only argument. The token is never written into the script; curl reads it from `HOOK_TOKEN`.
+The hook event name is the script's only argument. The token is never written into the script and is never a curl argument.
 
 Anything not listed is internal. The package ships only `dist/` and `schemas/`. The captured and synthetic payloads, with their `.expected.json`
 and `.log.json` snapshots, live in the repository under [`packages/hooks/fixtures/`](https://github.com/stateforge-labs/harness-kit/tree/main/packages/hooks/fixtures).

@@ -38,7 +38,7 @@ export interface CurlShimOptions {
   failClosed?: boolean;
   /** The refusal text when failing closed. Defaults to `EnvDefault.DenyReason`. */
   denyReason?: string;
-  /** Where the token comes from: the `HOOK_TOKEN` variable at call time (default), or a header file at `tokenFile`. */
+  /** Where the token comes from: the `HOOK_TOKEN` variable at call time (default), a header file at `tokenFile`, or none (a server that needs no token). */
   tokenSource?: CurlTokenSourceName;
   /** Path of a curl header file holding `authorization: Bearer <token>`; required for `tokenSource: "file"`. */
   tokenFile?: string;
@@ -70,6 +70,7 @@ function closedBodies(harness: string, events: readonly string[], reason: string
 
 function authLines(source: CurlTokenSourceName, tokenFile: string | undefined): string[] {
   const token = EnvVar.HookToken;
+  if (source === CurlTokenSource.None) return ["set --"];
   if (source === CurlTokenSource.File) {
     if (!tokenFile) throw new TypeError("renderCurlShim: tokenSource file needs tokenFile");
     return [`if [ -r ${quote(tokenFile)} ]; then set -- --header ${quote(`@${tokenFile}`)}; else set --; fi`];
@@ -152,6 +153,19 @@ export function renderCurlShim(options: CurlShimOptions): string {
 export function parseCurlVersion(versionOutput: string): string | undefined {
   const m = CURL_VERSION_PATTERN.exec(versionOutput);
   return m ? `${m[1]}.${m[2]}.${m[3]}` : undefined;
+}
+
+/** The token mechanism a curl of this version can use, or `undefined` when it is too old (or absent) for the shim. A header file is used when a token is configured and the environment mechanism is out of reach; with no token configured, none is needed. */
+export function pickCurlTokenSource(version: string | undefined, tokenConfigured: boolean): CurlTokenSourceName | undefined {
+  if (version === undefined) return undefined;
+  if (curlSupports(version, CurlTokenSource.Env)) return CurlTokenSource.Env;
+  if (!curlSupports(version, CurlTokenSource.File)) return undefined;
+  return tokenConfigured ? CurlTokenSource.File : CurlTokenSource.None;
+}
+
+/** The content of the header file for `tokenSource: "file"`: one curl header line carrying the bearer token. */
+export function renderCurlTokenFile(token: string): string {
+  return `${SHIM_AUTH_HEADER} ${token}\n`;
 }
 
 /** Whether a dotted version is at least the minimum curl for the token mechanism. */

@@ -8,13 +8,16 @@ import {
   EnvDefault,
   EnvVar,
   curlSupports,
+  pickCurlTokenSource,
   parseCurlVersion,
   processEnv,
   renderCurlShim,
+  renderCurlTokenFile,
   type CurlShimOptions,
   type CurlTokenSourceName,
 } from "@stateforge-labs/harness-hooks";
 import { fixture, variant } from "./kit.ts";
+import { pathWith, realCurlHas } from "./fake-curl.ts";
 import { refusesToStart, spawnWithSocket, startServer, startSocketServer, type RunningServer, type RunningSocketServer } from "./harness.ts";
 
 const mod = (name: string) => join(import.meta.dir, "middleware-modules", `${name}.ts`);
@@ -239,9 +242,8 @@ describe("e2e: the curl shim script, token", () => {
 
   const recorded = (): Promise<string> => readFile(argvLog, "utf8").catch(() => "");
 
-  test("the token, when set, authorizes the call and is in no curl argument", async () => {
-    const script = await install({ harness: "claude", url: guarded.base, tokenSource: CurlTokenSource.Env });
-    const env = { [EnvVar.Path]: `${bin}:${processEnv()[EnvVar.Path] ?? ""}`, [EnvVar.HookToken]: SECRET };
+  async function sampledRun(script: string, env: Record<string, string>): Promise<{ out: string; log: string; sampled: string }> {
+    const before = (await recorded()).length;
     const sampled: string[] = [];
     const proc = Bun.spawn([script, "PreToolUse"], { env, stdin: new TextEncoder().encode(preToolUse()), stdout: "pipe", stderr: "pipe" });
     const sampler = (async () => {
@@ -256,11 +258,31 @@ describe("e2e: the curl shim script, token", () => {
     const out = await new Response(proc.stdout).text();
     await proc.exited;
     await sampler;
-    expect(JSON.parse(out)).toEqual(denyPre(REASON));
-    const log = await recorded();
-    expect(log).toContain("--max-time");
-    expect(log).not.toContain(SECRET);
-    expect(sampled.join("")).not.toContain(SECRET);
+    return { out, log: (await recorded()).slice(before), sampled: sampled.join("") };
+  }
+
+  const loggedPath = (): string => `${bin}:${processEnv()[EnvVar.Path] ?? ""}`;
+
+  test.skipIf(!realCurlHas(CurlTokenSource.Env))("environment mechanism: the token, when set, authorizes the call and is in no curl argument", async () => {
+    const script = await install({ harness: "claude", url: guarded.base, tokenSource: CurlTokenSource.Env });
+    const r = await sampledRun(script, { [EnvVar.Path]: loggedPath(), [EnvVar.HookToken]: SECRET });
+    expect(JSON.parse(r.out)).toEqual(denyPre(REASON));
+    expect(r.log).toContain("--max-time");
+    expect(r.log).toContain("--expand-header");
+    expect(r.log).not.toContain(SECRET);
+    expect(r.sampled).not.toContain(SECRET);
+  });
+
+  test.skipIf(!realCurlHas(CurlTokenSource.File))("header-file mechanism: the token, when in the file, authorizes the call and is in no curl argument", async () => {
+    const file = join(work, "token-sampled.header");
+    await writeFile(file, renderCurlTokenFile(SECRET), { mode: 0o600 });
+    const script = await install({ harness: "claude", url: guarded.base, tokenSource: CurlTokenSource.File, tokenFile: file });
+    const r = await sampledRun(script, { [EnvVar.Path]: loggedPath() });
+    expect(JSON.parse(r.out)).toEqual(denyPre(REASON));
+    expect(r.log).toContain("--max-time");
+    expect(r.log).toContain("--header");
+    expect(r.log).not.toContain(SECRET);
+    expect(r.sampled).not.toContain(SECRET);
   });
 
   test("without the token the guarded server refuses, so the shim fails open", async () => {
@@ -269,17 +291,53 @@ describe("e2e: the curl shim script, token", () => {
     expect(answer(await run(script, "PreToolUse", preToolUse(), { [EnvVar.HookToken]: "wrong" }))).toEqual({});
   });
 
-  test("the header-file mechanism authorizes the call too, and the token is in no argument", async () => {
-    const file = join(work, "token.header");
-    await writeFile(file, `authorization: Bearer ${SECRET}\n`, { mode: 0o600 });
+  test.skipIf(!realCurlHas(CurlTokenSource.File))("curl 7.88 (rejecting --variable and --expand-header): the header file authorizes the call", async () => {
+    const file = join(work, "token-mid.header");
+    await writeFile(file, renderCurlTokenFile(SECRET), { mode: 0o600 });
     const script = await install({ harness: "claude", url: guarded.base, tokenSource: CurlTokenSource.File, tokenFile: file });
-    const before = (await recorded()).length;
-    const r = await run(script, "PreToolUse", preToolUse(), { [EnvVar.Path]: `${bin}:${processEnv()[EnvVar.Path] ?? ""}` });
-    expect(answer(r)).toEqual(denyPre(REASON));
-    const added = (await recorded()).slice(before);
-    expect(added).toContain("--header");
-    expect(added).not.toContain(SECRET);
+    const env = await pathWith(work, { version: "7.88.1", rejectTokenFlags: true });
+    expect(answer(await run(script, "PreToolUse", preToolUse(), env))).toEqual(denyPre(REASON));
     expect(CURL_MIN_VERSION[CurlTokenSource.File]).toBe("7.55.0");
+  });
+
+  test.skipIf(!realCurlHas(CurlTokenSource.File))("curl 7.88: with no token mechanism, a user-only socket server answers", async () => {
+    const sock = await startSocketServer({ [EnvVar.HookMiddleware]: mod("v1-deny") });
+    try {
+      const script = await install({ harness: "claude", socketPath: sock.socketPath, tokenSource: CurlTokenSource.None });
+      const env = await pathWith(work, { version: "7.88.1", rejectTokenFlags: true });
+      expect(answer(await run(script, "PreToolUse", preToolUse(), env))).toEqual(denyPre(REASON));
+    } finally {
+      await sock.stop();
+    }
+  });
+
+  test("a missing header file is not an error: the call goes without authorization", async () => {
+    const script = await install({ harness: "claude", url: guarded.base, tokenSource: CurlTokenSource.File, tokenFile: join(work, "absent.header") });
+    expect(answer(await run(script, "PreToolUse", preToolUse()))).toEqual({});
+  });
+});
+
+describe("pickCurlTokenSource", () => {
+  test.each([
+    ["8.5.0", true, "env"],
+    ["8.3.0", false, "env"],
+    ["8.2.9", true, "file"],
+    ["7.88.1", true, "file"],
+    ["7.88.1", false, "none"],
+    ["7.55.0", true, "file"],
+    ["7.54.9", true, undefined],
+    ["7.50.0", false, undefined],
+    [undefined, true, undefined],
+  ] as const)("curl %s, token configured %p: %p", (version, token, want) => {
+    expect(pickCurlTokenSource(version, token)).toBe(want);
+  });
+
+  test("the shims differ per mechanism: none has no header or variable, file reads the file, env uses the variable", () => {
+    const none = renderCurlShim({ harness: "claude", tokenSource: CurlTokenSource.None });
+    expect(none).not.toContain("--header");
+    expect(none).not.toContain("--variable");
+    expect(renderCurlShim({ harness: "claude", tokenSource: CurlTokenSource.File, tokenFile: "/x/t.header" })).toContain("--header '@/x/t.header'");
+    expect(renderCurlShim({ harness: "claude" })).toContain("--variable");
   });
 });
 

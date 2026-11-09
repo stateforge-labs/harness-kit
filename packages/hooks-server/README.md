@@ -106,10 +106,10 @@ The installer reads `XDG_CONFIG_HOME`, `XDG_STATE_HOME` and `CODEX_HOME` for the
 | `bun scripts/install.ts service [--apply] [--unit-dir <dir>] [--no-systemctl]` | The systemd user unit that runs this server |
 
 `claude` and `codex` register one shim per hook event. `--shim auto|curl|ts` chooses it: the curl shim, a POSIX sh script written to `--shim-dir`
-(default `$XDG_STATE_HOME/harness-hooks/bin`) as `harness-hooks-<harness>.sh`, is the default when curl 8.3.0 or later is on PATH; the TypeScript shim
+(default `$XDG_STATE_HOME/harness-hooks/bin`) as `harness-hooks-<harness>.sh`, is the default when curl 7.55.0 or later is on PATH; the TypeScript shim
 (`bun hook-shim.ts`) is the fallback and is never changed. The script gets the event name as its argument and bakes in the URL (or `--socket <path>`),
 `HOOK_SHIM_TIMEOUT_MS`, `HOOK_SHIM_FAIL` and `HOOK_SHIM_DENY_REASON` as they are when it is installed; `HOOK_TOKEN` and `HOOK_SHIM_DEBUG` are read from
-the environment on every call, and the token reaches curl through its environment, never an argument. With the curl shim, `claude --apply` writes the script only,
+the environment on every call. The token never reaches curl as an argument, and the mechanism follows the curl on PATH: curl 8.3.0 or later reads `HOOK_TOKEN` from its environment; curl 7.55.0 up to 8.3.0 reads a header file `harness-hooks-<harness>.header`, which the installer writes next to the script with mode 0600 from `HOOK_TOKEN` when it is set, and uses no token mechanism when it is not (loopback or a user-only socket). Run the installer with `HOOK_TOKEN` set to the server's token when the server needs one. With the curl shim, `claude --apply` writes the script only,
 because the settings stay in your dotfiles. `service --socket <path>` makes the unit serve on that socket.
 
 A unix socket with the curl shim, end to end:
@@ -121,7 +121,7 @@ bun scripts/install.ts codex --shim curl --socket "$SOCK" --apply
 ```
 
 The first command writes the service unit that serves on the socket. The second writes `harness-hooks-codex.sh` and a Codex `hooks.json` that runs it. `--shim ts`
-keeps the TypeScript shim, which cannot reach a socket, so `--socket` with `--shim ts` is refused; with `--shim curl` the install stops when curl is older than 8.3.0.
+keeps the TypeScript shim, which cannot reach a socket, so `--socket` with `--shim ts` is refused; with `--shim curl` the install stops when curl is older than 7.55.0 or missing. `--shim auto` then picks the TypeScript shim.
 
 `claude`, `codex` and `service` take `--url <base>` (default `http://127.0.0.1:8787`) and write it into the config. `opencode` ignores
 `--url`, because the plugin reads `HOOK_URL` from OpenCode's environment.
