@@ -10,7 +10,15 @@ const DIST_MARK = "/dist/src/";
 const io = [];
 const envReads = [];
 const cwdCalls = [];
-const fromPackage = () => new Error().stack.includes(DIST_MARK);
+const fromPackage = () => {
+  const saved = Error.stackTraceLimit;
+  Error.stackTraceLimit = Infinity;
+  try {
+    return new Error().stack.includes(DIST_MARK);
+  } finally {
+    Error.stackTraceLimit = saved;
+  }
+};
 for (const name of TARGETS) {
   const mod = require(name);
   for (const key of Object.keys(mod)) {

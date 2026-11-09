@@ -137,6 +137,24 @@ describe("Step 11c: the built package", () => {
     expect(TRAPPED_MODULES.length).toBe(6);
   }, 60_000);
 
+  test("an fs call made more than ten frames below package code is still detected", async () => {
+    const root = await mkdtemp(join(tmpdir(), "harness-adapters-deep-"));
+    try {
+      await mkdir(join(root, "dist", "src"), { recursive: true });
+      await writeFile(join(root, "deep-effect-recurse.mjs"), await readFile(join(import.meta.dir, "support", "deep-effect-recurse.mjs")));
+      const moduleFile = join(root, "dist", "src", "deep-effect-module.mjs");
+      await writeFile(moduleFile, await readFile(join(import.meta.dir, "support", "deep-effect-module.mjs")));
+      const probe = join(root, "probe-deep.mjs");
+      await writeFile(probe, importProbeScript([`file://${moduleFile}`]));
+      const run = await runNode(["probe-deep.mjs"], root);
+      expect(run.code).toBe(0);
+      const report = JSON.parse(run.stdout) as Record<string, { io: string[] }>;
+      expect(Object.values(report)[0]?.io).toContain("fs.readdirSync");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   test("importing every subpath from package code reads no environment variable and never calls process.cwd", async () => {
     const probe = join(consumer, "probe-env.mjs");
     await writeFile(probe, importProbeScript(SUBPATHS.map((sub) => NAME + sub)));
