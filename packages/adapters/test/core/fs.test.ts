@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { listFiles, newestFirst, statFiles, type Stamped } from "../../src/core/fs.ts";
@@ -20,7 +20,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  chmodSync(join(root, "locked"), 0o755);
+  if (existsSync(join(root, "locked"))) chmodSync(join(root, "locked"), 0o755);
   rmSync(root, { recursive: true, force: true });
 });
 
