@@ -153,3 +153,39 @@ export const EnvField = {
 
 export const DEFAULT_PERSIST = true;
 export const NO_HOME_VAR = "";
+
+export const StopReason = {
+  Timeout: "timeout",
+  Aborted: "aborted",
+  OutputTooLarge: "output-too-large",
+} as const;
+export type StopReason = (typeof StopReason)[keyof typeof StopReason];
+
+export const SuperviseMessage = {
+  Aborted: "the run was aborted",
+  Timeout: "the run exceeded its timeout",
+  OutputTooLarge: "the harness wrote more stdout than the limit allows",
+  BinaryMissing: "the harness binary was not found",
+  SpawnFailed: "the harness could not be started",
+} as const;
+
+export const DrainStep = {
+  Expired: "expired",
+} as const;
+
+export const AbortEvent = {
+  Abort: "abort",
+} as const;
+
+export const Decode = {
+  Streaming: { stream: true },
+} as const;
+
+export const ExitCode = {
+  Success: 0,
+} as const;
+
+export const ExecuteText = {
+  Failed: " failed: ",
+  UnknownName: "Error",
+} as const;
