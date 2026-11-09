@@ -93,7 +93,7 @@ async function settleWith<T>(work: Promise<T>, clock: { advance(ms: number): voi
 function verbs(specs: readonly ProcessSpec[]): string[] {
   return specs
     .filter((spec) => spec.args[0] === "session" || spec.args.includes("--title"))
-    .map((spec) => (spec.args[0] !== "session" ? "run" : spec.args.slice(1, 3).join(" ").replace(/ --.*/, "")));
+    .map((spec) => (spec.args[0] !== "session" ? "run" : spec.args[1] === "delete" ? `delete ${spec.args.at(-1)}` : "list"));
 }
 
 const REQUEST = { instructions: "x", input: "y" };

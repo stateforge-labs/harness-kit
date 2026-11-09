@@ -49,17 +49,17 @@ describe("opencode residue cleanup", () => {
   test("a known session is deleted directly and nothing waits", async () => {
     const r = rig([]);
     await removeResidue(r.ctx, "headless", "ses_1");
-    expect(r.specs.map((spec) => spec.args)).toEqual([["session", "delete", "ses_1"]]);
+    expect(r.specs.map((spec) => spec.args)).toEqual([["session", "delete", "--standalone", "ses_1"]]);
     expect(r.sleeps).toEqual([]);
   });
 
   test("without a session it lists, deletes the titled match, waits 3 s, lists again and deletes again", async () => {
     const r = rig([[TITLED("ses_a", "headless"), TITLED("ses_other", "mine")], [TITLED("ses_b", "headless")]]);
     await removeResidue(r.ctx, "headless", null);
-    expect(r.specs.map((spec) => spec.args.slice(0, 3).join(" "))).toEqual([
-      "session list --format",
+    expect(r.specs.map((spec) => (spec.args[1] === "delete" ? `session delete ${spec.args.at(-1)}` : "session list"))).toEqual([
+      "session list",
       "session delete ses_a",
-      "session list --format",
+      "session list",
       "session delete ses_b",
     ]);
     expect(r.sleeps).toEqual([3000]);
@@ -92,6 +92,6 @@ describe("opencode residue cleanup", () => {
     }
     expect((await run.done).ok).toBe(true);
     expect(specs).toHaveLength(2);
-    expect(specs[1]?.args).toEqual(["session", "delete", "ses_seen"]);
+    expect(specs[1]?.args).toEqual(["session", "delete", "--standalone", "ses_seen"]);
   });
 });

@@ -72,7 +72,7 @@ describe("tools policy", () => {
 
   test("strict on an unmeasured cell is refused with the support and no spawn", async () => {
     const { runtime, specs } = routedRig({ stdout: "" });
-    const strict: ToolPolicy = { ...TOOLS_OFF, strict: true };
+    const strict: ToolPolicy = { builtins: "harness-default", mcp: [], settings: "harness-default", strict: true };
     const result = await runtime.headless("opencode", { credential: { mode: "login-store" }, tools: strict } as never).run(REQUEST);
     expect(!result.ok && result.failure).toMatchObject({ kind: "unsupported", support: { state: "unmeasured" } });
     expect(specs).toHaveLength(0);

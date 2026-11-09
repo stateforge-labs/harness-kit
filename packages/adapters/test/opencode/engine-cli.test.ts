@@ -5,11 +5,10 @@ import { opencodeCli } from "../../src/opencode/engines/cli.ts";
 import { opencodeArgs } from "../../src/opencode/launch.ts";
 import type { OpenCodeCredential } from "../../src/core/credential.ts";
 import { secret } from "../../src/core/secret.ts";
-import { resolveTools } from "../../src/core/policy.ts";
-import { Hermetic } from "../../src/core/run.ts";
 import type { EngineInput, ResolvedOptions } from "../../src/driver/port.ts";
 import { adaptersFixtures } from "../support/fixtures.ts";
 import { type InterpretRaw, interpretRaw } from "../support/interpret.ts";
+import { opencodeOptions } from "./options.ts";
 
 const headless = join(adaptersFixtures, "opencode", "headless");
 const synthetic = join(adaptersFixtures, "opencode", "synthetic");
@@ -17,16 +16,7 @@ const stream = readFileSync(join(synthetic, "stream.jsonl"), "utf8");
 const errored = readFileSync(join(headless, "opencode-stream.jsonl"), "utf8");
 const help = readFileSync(join(headless, "help.txt"), "utf8");
 const credential: OpenCodeCredential = { mode: "api-key", key: secret("sk-test"), provider: "anthropic" };
-const base: ResolvedOptions = {
-  model: null,
-  effort: null,
-  hermetic: Hermetic.None,
-  persist: true,
-  maxArgvBytes: null,
-  cwd: "/work",
-  isolation: { kind: "none" },
-  tools: resolveTools(undefined, undefined),
-};
+const base: ResolvedOptions = opencodeOptions();
 
 function input(overrides: Partial<EngineInput<"opencode">> = {}): EngineInput<"opencode"> {
   return { options: base, credential, instructions: "SYS", input: "hello", outFile: "/work/unused.md", runId: "run-1", ...overrides };
@@ -73,14 +63,9 @@ describe("opencodeCli invocation", () => {
     expect(!result.ok && result.failure.kind).toBe("unsupported");
   });
 
-  test("non-persistence is unsupported", () => {
+  test("non-persistence is accepted because the session is deleted after the run", () => {
     const result = opencodeCli.invocation(withOptions({ persist: false }));
-    expect(!result.ok && result.failure.kind).toBe("unsupported");
-  });
-
-  test("full hermetic isolation is unsupported", () => {
-    const result = opencodeCli.invocation(withOptions({ hermetic: Hermetic.Full }));
-    expect(!result.ok && result.failure.kind).toBe("unsupported");
+    expect(result.ok).toBe(true);
   });
 
   test("too-large when the argv exceeds maxArgvBytes", () => {

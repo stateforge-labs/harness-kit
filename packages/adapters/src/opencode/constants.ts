@@ -135,10 +135,59 @@ export const OpenCodeStreamType = {
   Error: "error",
 } as const;
 
-export const OpenCodeToollessConfig = {
-  tools: { "*": false },
-  permission: { "*": "deny" },
+export const OpenCodePermissionField = {
+  List: "permissions",
+  Action: "action",
+  Resource: "resource",
+  Effect: "effect",
+  Deny: "deny",
+  Any: "*",
 } as const;
+
+export const OpenCodeBuiltinActions: readonly string[] = [
+  "read",
+  "edit",
+  "glob",
+  "grep",
+  "shell",
+  "subagent",
+  "skill",
+  "question",
+  "webfetch",
+  "websearch",
+  "experimental_image_generate",
+  "external_directory",
+  "execute",
+];
+
+export const OpenCodeMcpActions: readonly string[] = ["opencode_list_mcp_resources", "opencode_read_mcp_resource"];
+
+export const OpenCodeEnvName = {
+  ConfigDir: "OPENCODE_CONFIG_DIR",
+  DisableProjectConfig: "OPENCODE_DISABLE_PROJECT_CONFIG",
+  DisableClaudeCode: "OPENCODE_DISABLE_CLAUDE_CODE",
+} as const;
+
+export const OPENCODE_ENV_ON = "1";
+
+export const OpenCodeMessage = {
+  Aborted: "the run was aborted",
+  ScratchFailed: "a run directory could not be created",
+} as const;
+
+export const OPENCODE_CONFIG_DIR_PLACEHOLDER = "{config-dir}";
+
+export const OPENCODE_MEASURED = "opencode v2.2.6, 2026-11-09";
+
+export const OpenCodeToolsOffLeftovers: readonly string[] = [
+  "skill",
+  "experimental_image_generate",
+  "opencode_models",
+  "opencode_session_move",
+  "opencode_session_rename",
+  "opencode_worktree_create",
+  "opencode_worktree_list",
+];
 
 export const OpenCodeAuthFile = {
   Auth: "auth.json",

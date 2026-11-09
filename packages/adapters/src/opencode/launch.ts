@@ -1,12 +1,21 @@
 import { obj, num, parseRow, str, type Row } from "../core/rows.ts";
 import { tallyUnknown, type Parsed, type Unknowns } from "../core/issues.ts";
 import { EnvVar } from "../env.ts";
-import { OpenCodeCli, OpenCodeStreamField, OpenCodeStreamType, OpenCodeToollessConfig } from "./constants.ts";
+import { OpenCodeBuiltinActions, OpenCodeCli, OpenCodeMcpActions, OpenCodePermissionField, OpenCodeStreamField, OpenCodeStreamType } from "./constants.ts";
 import { OpenCodeStreamEventType } from "./enums.ts";
 
 export const OPENCODE_BINARY = OpenCodeCli.Binary;
 
-export const OPENCODE_TOOLLESS_CONFIG: string = JSON.stringify(OpenCodeToollessConfig);
+export function opencodeDenyConfig(actions: readonly string[]): string {
+  const rules = actions.map((action) => ({
+    [OpenCodePermissionField.Action]: action,
+    [OpenCodePermissionField.Resource]: OpenCodePermissionField.Any,
+    [OpenCodePermissionField.Effect]: OpenCodePermissionField.Deny,
+  }));
+  return JSON.stringify({ [OpenCodePermissionField.List]: rules });
+}
+
+export const OPENCODE_TOOLLESS_CONFIG: string = opencodeDenyConfig([...OpenCodeBuiltinActions, ...OpenCodeMcpActions]);
 
 export interface OpencodeRunOptions {
   readonly model: string;
@@ -108,9 +117,9 @@ export function parseSessionList(json: string): readonly OpencodeSession[] {
 }
 
 export function opencodeSessionListArgs(): string[] {
-  return [OpenCodeCli.Session, OpenCodeCli.List, OpenCodeCli.Format, OpenCodeCli.FormatJson];
+  return [OpenCodeCli.Session, OpenCodeCli.List, OpenCodeCli.Standalone, OpenCodeCli.Format, OpenCodeCli.FormatJson];
 }
 
 export function opencodeSessionDeleteArgs(id: string): string[] {
-  return [OpenCodeCli.Session, OpenCodeCli.Delete, id];
+  return [OpenCodeCli.Session, OpenCodeCli.Delete, OpenCodeCli.Standalone, id];
 }

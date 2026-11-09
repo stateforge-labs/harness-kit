@@ -1,9 +1,8 @@
 import type { CredentialSpec, OpenCodeCredential } from "../core/credential.ts";
-import { CredentialField, CredentialMode, credentialFailure, finish, homeFailure, isPrivateHome, NO_INJECTION, secretOf, unsupportedFailure, type CredentialPlan, type CredentialPlanInput, type Injection } from "../core/credential-plan.ts";
+import { CredentialField, CredentialMode, credentialFailure, finish, homeFailure, NO_INJECTION, secretOf, unsupportedFailure, type CredentialPlan, type CredentialPlanInput, type Injection } from "../core/credential-plan.ts";
 import { credentialFromSpec, isCredentialSpec, notSpecFailure } from "../core/credential-from.ts";
 import { CredentialReason, CredentialUnsupportedReason, type RunFailure } from "../core/failure.ts";
 import { fail, ok, type Result } from "../core/result.ts";
-import type { IsolationSpec } from "../core/run.ts";
 import { EnvVar } from "../env.ts";
 import { OpenCodeProviderEnv } from "./constants.ts";
 import { OPENCODE_CREDENTIAL_VARS } from "../core/credential-vars.ts";
@@ -21,7 +20,7 @@ function providerVar(provider: string | undefined): Result<string, RunFailure> {
   return ok(name);
 }
 
-function openCodeInjection(spec: CredentialSpec, isolation: IsolationSpec): Result<Injection, RunFailure> {
+function openCodeInjection(spec: CredentialSpec): Result<Injection, RunFailure> {
   switch (spec.mode) {
     case CredentialMode.ApiKey: {
       const key = secretOf(spec.key, CredentialField.Key);
@@ -35,7 +34,7 @@ function openCodeInjection(spec: CredentialSpec, isolation: IsolationSpec): Resu
       return ok({ [name.value]: key.value });
     }
     case CredentialMode.LoginStore:
-      return isPrivateHome(isolation) ? fail(unsupportedFailure(spec.mode, CredentialUnsupportedReason.PrivateHomeNoAuthCopy)) : ok(NO_INJECTION);
+      return ok(NO_INJECTION);
     default:
       return fail(unsupportedFailure(spec.mode, CredentialUnsupportedReason.UnknownMode));
   }
@@ -51,7 +50,7 @@ export function openCodeCredentialPlan(input: CredentialPlanInput<"opencode">): 
     return fail(notSpecFailure());
   }
   const spec: CredentialSpec = candidate;
-  return finish(spec.mode, OPENCODE_CREDENTIAL_VARS, openCodeInjection(spec, input.isolation), null);
+  return finish(spec.mode, OPENCODE_CREDENTIAL_VARS, openCodeInjection(spec), null);
 }
 
 function requiredProvider(provider: unknown): Result<string, RunFailure> {
