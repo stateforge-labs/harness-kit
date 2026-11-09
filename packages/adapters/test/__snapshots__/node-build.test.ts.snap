@@ -15,7 +15,7 @@ export { type ClaudeCredential, type CodexCredential, type CredentialByHarness, 
 export { isSecret, secret, type Secret } from "../core/secret.ts";
 export { type SessionId } from "../core/session.ts";
 export { CredentialReason, CredentialUnsupportedReason, RUN_FAILURE_KINDS, UnavailableReason, type RunFailure, } from "../core/failure.ts";
-export { Hermetic, Isolation, SpawnPurpose, type Cost, type CliPlan, type CommonOptions, type CwdSpec, type Effort, type HeadlessOptions, type IsolationSpec, type LibraryEvent, type Limits, type Plan, type RunEvent, type RunOutput, type RunRequest, type SdkPlan, type TokenUsage, } from "../core/run.ts";
+export { SpawnPurpose, type Cost, type CliPlan, type CommonOptions, type CwdSpec, type Effort, type HeadlessOptions, type LibraryEvent, type Limits, type Plan, type RunEvent, type RunOutput, type RunRequest, type SdkPlan, type TokenUsage, } from "../core/run.ts";
 export type { HeadlessHandle } from "../driver/handle.ts";
 export type { Runtime } from "../driver/create-runtime.ts";
 export * from "./experimental.ts";
@@ -427,8 +427,6 @@ export interface PolicyNotice {
 }
 export interface CredentialEvidence {
     readonly requested: string;
-    readonly observed: string | null;
-    readonly verified: boolean;
     readonly scrubbed: readonly string[];
     readonly billing: "per-token" | "subscription" | "unverified";
     readonly acknowledgement: {
@@ -473,18 +471,14 @@ export declare const CredentialUnsupportedReason: {
     readonly UnknownMode: "unknown-mode";
     readonly ModeNotOffered: "mode-not-offered";
     readonly ModeNotAllowed: "mode-not-allowed";
-    readonly PrivateHomeMovesLogin: "private-home-moves-login";
-    readonly PrivateHomeNoAuthCopy: "private-home-no-auth-copy";
 };
 export type CredentialUnsupportedReason = (typeof CredentialUnsupportedReason)[keyof typeof CredentialUnsupportedReason];
 export declare const UnavailableReason: {
     readonly BinaryMissing: "binary-missing";
     readonly SpawnFailed: "spawn-failed";
-    readonly VersionNotAccepted: "version-not-accepted";
     readonly RuntimeClosed: "runtime-closed";
     readonly InternalError: "internal-error";
     readonly ScratchFailed: "scratch-failed";
-    readonly ScriptExhausted: "script-exhausted";
 };
 export type UnavailableReason = (typeof UnavailableReason)[keyof typeof UnavailableReason];
 /** Why a run did not produce an output; discriminate on kind and keep a default branch. */
@@ -592,22 +586,6 @@ import type { JsonValue } from "./json.ts";
 import type { ConfinementCell, EnvPolicy, ToolPolicy } from "./policy.ts";
 import type { Result } from "./result.ts";
 import type { SessionId } from "./session.ts";
-export declare const Hermetic: {
-    readonly None: "none";
-    readonly Full: "full";
-};
-export type Hermetic = (typeof Hermetic)[keyof typeof Hermetic];
-export declare const Isolation: {
-    readonly None: "none";
-    readonly PrivateHome: "private-home";
-};
-export type Isolation = (typeof Isolation)[keyof typeof Isolation];
-export type IsolationSpec = {
-    readonly kind: "none";
-} | {
-    readonly kind: "private-home";
-    readonly retain: "delete" | "keep";
-};
 export type Effort = "low" | "medium" | "high" | "harness-default" | {
     readonly native: string;
 };
@@ -636,7 +614,6 @@ export interface CommonOptions {
     readonly timeoutMs?: number;
     readonly cwd?: CwdSpec;
     readonly maxArgvBytes?: number;
-    readonly hermetic?: Hermetic;
     readonly persist?: boolean;
     readonly signal?: AbortSignal;
     readonly limits?: Partial<Limits>;
@@ -646,8 +623,6 @@ export interface CommonOptions {
 export interface HeadlessOptions<I extends string = HarnessId> extends CommonOptions {
     readonly credential: CredentialOf<I>;
     readonly engine?: Engine;
-    readonly isolation?: IsolationSpec;
-    readonly acceptVersions?: readonly string[];
 }
 export interface RunRequest extends CommonOptions {
     readonly instructions: string;
@@ -662,9 +637,7 @@ export interface RunOutput {
     readonly engine: Engine;
     readonly stability: "stable" | "experimental";
     readonly elapsedMs: number;
-    readonly hermetic: Hermetic;
     readonly persisted: boolean;
-    readonly isolationDir: string | null;
     readonly binary: {
         readonly path: string;
         readonly version: string | null;
@@ -751,14 +724,6 @@ export type LibraryEvent = {
     readonly harness: string;
     readonly engine: Engine;
 } | {
-    readonly kind: "isolation-created";
-    readonly harness: string;
-    readonly retain: "delete" | "keep";
-} | {
-    readonly kind: "isolation-removed";
-    readonly harness: string;
-    readonly retain: "delete" | "keep";
-} | {
     readonly kind: "cwd-created" | "cwd-removed";
     readonly harness: string;
     readonly retain: "delete" | "keep";
@@ -777,8 +742,6 @@ interface PlanBase {
         readonly retain: "delete" | "keep" | null;
     };
     readonly confinement: readonly ConfinementCell[];
-    readonly layers: Readonly<Record<string, "fact" | "consumer" | "call">>;
-    readonly isolation: IsolationSpec;
     readonly notes: readonly string[];
 }
 export interface CliPlan extends PlanBase {
@@ -1066,19 +1029,30 @@ export declare function deepFreeze<T>(value: T): T;
 
 exports[`Step 11c: the built package the testing declaration surface matches its snapshot 1`] = `
 "// testing/index.d.ts
-export { fakeRuntime, type FakeRuntime, type FakeScripts } from "./fake-runtime.ts";
+export { fakeOutput, fakeRuntime, type FakeCall, type FakeRuntime, type FakeRuntimeOptions, type FakeScripts } from "./fake-runtime.ts";
 export { driverContract, type ContractCheck, type ContractFixtures } from "../driver/contract.ts";
 export { fakeProcessRunner, type FakeProcessRunner, type FakeProcessScript } from "./fake-runner.ts";
 export { fakeFs, type FakeDir, type FakeFs, type FakeFsInit } from "./fake-fs.ts";
 export { fakeClock } from "./fake-clock.ts";
 
 // testing/fake-runtime.d.ts
-import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import { type HarnessId } from "@stateforge-labs/harness-hooks";
+import { type Capabilities, Engine } from "../core/capability.ts";
 import { type RunFailure } from "../core/failure.ts";
-import { type HeadlessOptions, type Plan, type RunOutput, type RunRequest } from "../core/run.ts";
+import type { HeadlessOptions, Plan, RunOutput, RunRequest } from "../core/run.ts";
 import type { HeadlessHandle } from "../driver/handle.ts";
 export interface FakeScripts {
     readonly [id: string]: readonly (RunOutput | RunFailure)[] | undefined;
+}
+export interface FakeCall {
+    readonly id: HarnessId;
+    readonly options: Partial<HeadlessOptions<HarnessId>>;
+    readonly request: RunRequest;
+}
+export interface FakeRuntimeOptions {
+    readonly scripts: FakeScripts;
+    readonly promptLimits?: Partial<Record<HarnessId, number | null>>;
+    readonly capabilities?: Partial<Record<HarnessId, Capabilities>>;
 }
 export interface FakeRuntime {
     headless<I extends HarnessId>(id: I, options?: Partial<HeadlessOptions<I>>): HeadlessHandle<I>;
@@ -1086,10 +1060,13 @@ export interface FakeRuntime {
     [Symbol.asyncDispose](): Promise<void>;
     readonly requests: readonly RunRequest[];
     readonly plans: readonly Plan[];
+    readonly calls: readonly FakeCall[];
+    promptLimit(id: HarnessId, engine?: Engine): number | null;
+    capabilities(id: HarnessId): Capabilities | null;
 }
-export declare function fakeRuntime(options: {
-    readonly scripts: FakeScripts;
-}): FakeRuntime;
+/** A complete RunOutput with neutral defaults; every field in \`over\` replaces its default. */
+export declare function fakeOutput(over?: Partial<RunOutput>): RunOutput;
+export declare function fakeRuntime(config: FakeRuntimeOptions): FakeRuntime;
 
 // driver/contract.d.ts
 import type { CredentialOf } from "../core/credential.ts";
