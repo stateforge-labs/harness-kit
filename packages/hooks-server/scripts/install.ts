@@ -38,19 +38,20 @@ function curlVersion(): string | undefined {
   }
 }
 
+const socketPath = value("--socket");
+
 function chooseShim(): "curl" | "ts" {
   const wanted = value("--shim") ?? ShimKind.Auto;
   if (wanted !== ShimKind.Auto && wanted !== ShimKind.Curl && wanted !== ShimKind.Ts) return fail(`--shim must be ${Object.values(ShimKind).join(", ")}: ${wanted}`);
-  if (wanted === ShimKind.Ts) return ShimKind.Ts;
+  if (wanted === ShimKind.Ts) return socketPath ? fail("--socket needs the curl shim, which is the only client that speaks to a socket") : ShimKind.Ts;
   const version = curlVersion();
   const usable = version !== undefined && curlSupports(version, CurlTokenSource.Env);
   if (usable) return ShimKind.Curl;
   if (wanted === ShimKind.Curl) return fail(`--shim curl needs curl ${CURL_MIN_VERSION[CurlTokenSource.Env]} or later on PATH (found ${version ?? "none"})`);
-  return ShimKind.Ts;
+  return socketPath ? fail(`--socket needs curl ${CURL_MIN_VERSION[CurlTokenSource.Env]} or later on PATH (found ${version ?? "none"})`) : ShimKind.Ts;
 }
 
 const shimKind = chooseShim();
-const socketPath = value("--socket");
 const shimDir = value("--shim-dir") ?? join(env.stateHome, STATE_DIR_NAME, SHIM_DIR_NAME);
 const shimFile = (harness: string): string => join(shimDir, `harness-hooks-${harness}.sh`);
 const opts: RenderOptions = { url, repo, bun: process.execPath, ...(socketPath ? { socketPath } : {}), ...(shimKind === ShimKind.Curl ? { curlShimFile: shimFile } : {}) };

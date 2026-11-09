@@ -40,6 +40,28 @@ describe("e2e: scripts/install.ts", () => {
     }
   });
 
+  test("claude with --socket: every event uses the shim command with its event name and no hook is http", async () => {
+    const shimDir = join(dir, "socket-shims");
+    const r = await install(["claude", "--shim", "curl", "--shim-dir", shimDir, "--socket", join(dir, "h.sock")]);
+    expect(r.code).toBe(0);
+    const { hooks } = JSON.parse(r.stdout) as { hooks: Record<string, { hooks: { type: string; command?: string }[] }[]> };
+    expect(Object.keys(hooks).sort()).toEqual(eventsOf("claude"));
+    for (const [event, groups] of Object.entries(hooks)) {
+      const h = groups[0]!.hooks[0]!;
+      expect(h.type).toBe("command");
+      expect(h.command).toBe(`'${join(shimDir, "harness-hooks-claude.sh")}' ${event}`);
+    }
+  });
+
+  test("a --shim-dir containing a space gives a quoted shim path that a shell runs as one word", async () => {
+    const shimDir = join(dir, "shim dir with space");
+    const r = await install(["claude", "--shim", "curl", "--shim-dir", shimDir]);
+    const command = JSON.parse(r.stdout).hooks.SessionStart[0].hooks[0].command as string;
+    expect(command).toBe(`'${join(shimDir, "harness-hooks-claude.sh")}' SessionStart`);
+    const words = Bun.spawnSync(["sh", "-c", `printf '%s\\n' ${command}`]).stdout.toString().trim().split("\n");
+    expect(words).toEqual([join(shimDir, "harness-hooks-claude.sh"), "SessionStart"]);
+  });
+
   test("claude: --apply is refused, because the settings are managed elsewhere", async () => {
     const r = await install(["claude", "--shim", "ts", "--apply"]);
     expect(r.code).toBe(1);
@@ -69,7 +91,7 @@ describe("e2e: scripts/install.ts", () => {
     expect(preview.code).toBe(0);
     expect(await Bun.file(join(shimDir, "harness-hooks-claude.sh")).exists()).toBe(false);
     const hooks = JSON.parse(preview.stdout).hooks as Record<string, { hooks: { type: string; command?: string }[] }[]>;
-    expect(hooks.SessionStart![0]!.hooks[0]!.command).toBe(`${join(shimDir, "harness-hooks-claude.sh")} SessionStart`);
+    expect(hooks.SessionStart![0]!.hooks[0]!.command).toBe(`'${join(shimDir, "harness-hooks-claude.sh")}' SessionStart`);
 
     const applied = await install(["claude", "--shim", "curl", "--shim-dir", shimDir, "--socket", join(dir, "h.sock"), "--apply"]);
     expect(applied.code).toBe(0);
@@ -89,7 +111,7 @@ describe("e2e: scripts/install.ts", () => {
     expect(r.code).toBe(0);
     const { hooks } = JSON.parse(await readFile(join(home, "hooks.json"), "utf8")) as { hooks: Record<string, { hooks: { command: string }[] }[]> };
     expect(Object.keys(hooks).sort()).toEqual(eventsOf("codex"));
-    for (const [event, groups] of Object.entries(hooks)) expect(groups[0]!.hooks[0]!.command).toBe(`${join(shimDir, "harness-hooks-codex.sh")} ${event}`);
+    for (const [event, groups] of Object.entries(hooks)) expect(groups[0]!.hooks[0]!.command).toBe(`'${join(shimDir, "harness-hooks-codex.sh")}' ${event}`);
     expect(await Bun.file(join(shimDir, "harness-hooks-codex.sh")).exists()).toBe(true);
   });
 

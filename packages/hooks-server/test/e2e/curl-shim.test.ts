@@ -359,3 +359,48 @@ describe("e2e: the server on a unix socket", () => {
     }
   });
 });
+
+describe("e2e: the curl shim script, hostile environments", () => {
+  const FAKE_CURL = "#!/bin/sh\nfor a in \"$@\"; do [ \"$a\" = --variable ] && exit 2; done\nexit 7\n";
+
+  async function withPath(path: string, script: string, event: string, stdin: string): Promise<Run> {
+    const proc = Bun.spawn(["/bin/sh", script, event], { env: { [EnvVar.Path]: path }, stdin: new TextEncoder().encode(stdin), stdout: "pipe", stderr: "pipe" });
+    const code = await proc.exited;
+    return { code, stdout: await new Response(proc.stdout).text(), stderr: await new Response(proc.stderr).text(), ms: 0 };
+  }
+
+  test("curl missing from PATH: fail open prints {} and fail closed prints the exact deny, exit 0", async () => {
+    const empty = await mkdtemp(join(work, "nopath-"));
+    const open = await withPath(empty, await install({ harness: "claude", url: closedTcpUrl() }), "PreToolUse", preToolUse());
+    expect(open.code).toBe(0);
+    expect(JSON.parse(open.stdout)).toEqual({});
+    const closed = await withPath(empty, await install({ harness: "claude", failClosed: true, url: closedTcpUrl() }), "PreToolUse", preToolUse());
+    expect(closed.code).toBe(0);
+    expect(JSON.parse(closed.stdout)).toEqual(denyPre(EnvDefault.DenyReason));
+  });
+
+  test("a hostile socket path and a hostile URL are neutralised: the embedded command never runs and the fallback is printed", async () => {
+    const marker = join(work, "MARKER");
+    const hostile = join(work, `a'$(touch ${marker})' b$HOME`);
+    const socketScript = await install({ harness: "claude", failClosed: true, socketPath: hostile });
+    const s = await run(socketScript, "PreToolUse", preToolUse());
+    expect(s.code).toBe(0);
+    expect(answer(s)).toEqual(denyPre(EnvDefault.DenyReason));
+    const urlScript = await install({ harness: "claude", url: `http://127.0.0.1:1/a'$(touch ${marker})' b$HOME` });
+    const u = await run(urlScript, "PreToolUse", preToolUse());
+    expect(u.code).toBe(0);
+    expect(answer(u)).toEqual({});
+    expect(await Bun.file(marker).exists()).toBe(false);
+  });
+
+  test("a curl too old for the env-token mechanism (exits 2 on --variable) gives the fallback body", async () => {
+    const bin = await mkdtemp(join(work, "fakecurl-"));
+    await writeFile(join(bin, "curl"), FAKE_CURL);
+    await chmod(join(bin, "curl"), 0o755);
+    const open = await withPath(bin, await install({ harness: "claude", url: closedTcpUrl() }), "PreToolUse", preToolUse());
+    expect(open.code).toBe(0);
+    expect(JSON.parse(open.stdout)).toEqual({});
+    const closed = await withPath(bin, await install({ harness: "claude", failClosed: true, url: closedTcpUrl() }), "PreToolUse", preToolUse());
+    expect(JSON.parse(closed.stdout)).toEqual(denyPre(EnvDefault.DenyReason));
+  });
+});

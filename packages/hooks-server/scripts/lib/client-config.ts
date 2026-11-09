@@ -14,13 +14,14 @@ const HOOK_TIMEOUT_S = 10;
 const WORKTREE_HOOK_TIMEOUT_S = WORKTREE_TIMEOUT_MS / 1000;
 
 const events = (harness: string): string[] => Object.keys(adapters.get(harness)!.jsonSchemas()).sort();
+const shellQuote = (text: string): string => `'${text.replaceAll("'", "'\\''")}'`;
 const shimCommand = (o: RenderOptions, harness: string, event: string): string =>
-  o.curlShimFile ? `${o.curlShimFile(harness)} ${event}` : `${EnvVar.HookUrl}=${o.url} ${o.bun} ${shimPath} --harness ${harness}`;
+  o.curlShimFile ? `${shellQuote(o.curlShimFile(harness))} ${event}` : `${EnvVar.HookUrl}=${o.url} ${o.bun} ${shimPath} --harness ${harness}`;
 
 export function claudeHooks(o: RenderOptions): { hooks: Record<string, unknown[]> } {
   const hooks: Record<string, unknown[]> = {};
   for (const event of events(Harness.Claude)) {
-    const handler = CLAUDE_COMMAND_ONLY.has(event)
+    const handler = o.socketPath || CLAUDE_COMMAND_ONLY.has(event)
       ? { type: "command", command: shimCommand(o, Harness.Claude, event), timeout: HOOK_TIMEOUT_S }
       : { type: "http", url: `${o.url}/hook`, timeout: CLAUDE_WORKTREE_HOOKS.has(event) ? WORKTREE_HOOK_TIMEOUT_S : HOOK_TIMEOUT_S };
     hooks[event] = [{ hooks: [handler] }];
