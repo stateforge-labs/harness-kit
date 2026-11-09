@@ -1,28 +1,24 @@
-import { CredentialMode } from "../../core/credential-plan.ts";
 import { measuredValue } from "../../core/evidence.ts";
 import type { RunFailure } from "../../core/failure.ts";
 import { fail, ok, type Result } from "../../core/result.ts";
-import { Hermetic } from "../../core/run.ts";
 import { ArgvCarry } from "../../core/engine-constants.ts";
 import { budgetOf, checkArgv, gatesFor, modelFlag, neutralOrNative } from "../../core/kit.ts";
 import { cliEngine } from "../../engine/cli.ts";
-import type { EngineInput, Invocation } from "../../driver/port.ts";
+import type { EngineInput, Invocation, PolicyApplied } from "../../driver/port.ts";
 import { CLAUDE_CAPABILITIES } from "../capabilities.ts";
-import { ClaudeArg, ClaudeCli, ClaudeSettingSources } from "../constants.ts";
+import { ClaudeArg, ClaudeCli } from "../constants.ts";
 import { CLAUDE_BINARY } from "../launch.ts";
+import { claudePolicy } from "../policy.ts";
 import { CLAUDE_PROFILE } from "../profile.ts";
 import { claudeLineEvents } from "./read-stream.ts";
 
-function claudeArgs(input: EngineInput<"claude">, effort: string | null): string[] {
-  const { options, credential, instructions } = input;
-  const full = options.hermetic === Hermetic.Full;
-  const keepsUserSettings = credential.mode === CredentialMode.LoginStore || credential.mode === CredentialMode.Token;
+function claudeArgs(input: EngineInput<"claude">, policy: PolicyApplied, effort: string | null): string[] {
+  const { options, instructions } = input;
   return [
     ClaudeCli.Print,
     ...modelFlag(ClaudeCli.Model, options.model),
     ...(options.persist ? [] : [ClaudeCli.NoSessionPersistence]),
-    ...(full ? [ClaudeCli.Tools, ClaudeArg.Empty, ClaudeCli.SettingSources, ClaudeArg.Empty, ClaudeCli.StrictMcpConfig] : []),
-    ...(!full && keepsUserSettings ? [ClaudeCli.SettingSources, ClaudeSettingSources.NoUser] : []),
+    ...policy.args,
     ClaudeCli.OutputFormat,
     ClaudeCli.StreamJson,
     ClaudeCli.Verbose,
@@ -41,7 +37,11 @@ export const claudeCli = cliEngine<"claude">({
     if (!effort.ok) {
       return fail(effort.failure);
     }
-    const args = claudeArgs(input, effort.value);
+    const policy = claudePolicy({ tools: input.options.tools, credentialMode: input.credential.mode });
+    if (!policy.ok) {
+      return fail(policy.failure);
+    }
+    const args = claudeArgs(input, policy.value, effort.value);
     const over = checkArgv(args, budgetOf(input.options, CLAUDE_PROFILE));
     if (over !== null) {
       return fail(over);
@@ -52,6 +52,7 @@ export const claudeCli = cliEngine<"claude">({
       stdin: input.input,
       outFile: null,
       argvCarries: [ArgvCarry.Instructions],
+      env: policy.value.env,
     };
     return ok(invocation);
   },

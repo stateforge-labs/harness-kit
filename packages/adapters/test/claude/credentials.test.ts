@@ -1,21 +1,18 @@
 import { describe, expect, test } from "bun:test";
 import { inspect } from "node:util";
 import { CLAUDE_CREDENTIAL_VARS, claudeCredentialPlan } from "../../src/claude/credentials.ts";
-import { CLAUDE_NESTED_ENV } from "../../src/claude/launch.ts";
-import { buildChildEnv, inheritEnv } from "../../src/driver/env-plan.ts";
+import { inheritEnv } from "../../src/driver/env-plan.ts";
 import { secret } from "../../src/core/secret.ts";
 import { EnvVar } from "../../src/env.ts";
-import { Isolation, type IsolationSpec } from "../../src/core/run.ts";
-import { ambientEnv, failureOf, HOMES, planInput, SENTINEL, valueOf } from "../support/credential.ts";
+import { ambientEnv, failureOf, HOMES, SENTINEL, valueOf } from "../support/credential.ts";
+import { claudeChildEnv, claudePlanInput } from "./support.ts";
 
-const NONE: IsolationSpec = { kind: "none" };
-const PRIVATE: IsolationSpec = { kind: "private-home", retain: "delete" };
 const ACK = { acknowledgePolicy: true };
 
-function childFor(credential: unknown, home: string, isolation: IsolationSpec = NONE, isolationDir: string | null = null) {
+function childFor(credential: unknown, home: string) {
   const base = ambientEnv(CLAUDE_CREDENTIAL_VARS, home);
-  const plan = valueOf(claudeCredentialPlan(planInput<"claude">(credential, isolation, base)));
-  const child = buildChildEnv({ base: inheritEnv(base), plan, nestedEnv: CLAUDE_NESTED_ENV, homeVar: EnvVar.ClaudeConfigDir, isolationDir });
+  const plan = valueOf(claudeCredentialPlan(claudePlanInput(credential, base)));
+  const child = claudeChildEnv(inheritEnv(base), plan);
   return { base, plan, child };
 }
 
@@ -76,22 +73,25 @@ describe("claude credential plan, per home", () => {
   }
 });
 
-describe("claude isolation matrix", () => {
-  test("api-key, token and cloud are allowed with a private home", () => {
-    expect(valueOf(claudeCredentialPlan(planInput<"claude">({ mode: "api-key", key: secret(SENTINEL) }, PRIVATE, ambientEnv([], "/h/u")))).mode).toBe("api-key");
-    expect(valueOf(claudeCredentialPlan(planInput<"claude">({ mode: "token", token: secret(SENTINEL), ...ACK }, PRIVATE, ambientEnv([], "/h/u")))).mode).toBe("token");
-    expect(valueOf(claudeCredentialPlan(planInput<"claude">({ mode: "cloud", selector: "bedrock" }, PRIVATE, ambientEnv([], "/h/u")))).mode).toBe("cloud");
+describe("claude base url", () => {
+  test("an api key with a base url injects both variables and the base url is not a secret", () => {
+    const { child, plan } = childFor({ mode: "api-key", key: secret(SENTINEL), baseUrl: "https://gateway.test" }, "/h/u");
+    expect(child.env[EnvVar.AnthropicApiKey]).toBe(SENTINEL);
+    expect(child.env[EnvVar.AnthropicBaseUrl]).toBe("https://gateway.test");
+    expect(child.injected).toEqual([EnvVar.AnthropicApiKey, EnvVar.AnthropicBaseUrl]);
+    expect(child.secrets).toEqual([SENTINEL]);
+    expect(Object.keys(plan.inject)).toEqual([EnvVar.AnthropicApiKey, EnvVar.AnthropicBaseUrl]);
+    expect(JSON.stringify(plan)).not.toContain(SENTINEL);
   });
 
-  test("login-store with a private home is credential-unsupported", () => {
-    const failure = failureOf(claudeCredentialPlan(planInput<"claude">({ mode: "login-store", ...ACK }, PRIVATE, ambientEnv([], "/h/u"))));
-    expect(failure).toMatchObject({ kind: "credential-unsupported", reason: "private-home-moves-login", mode: "login-store" });
+  test("an ambient base url is stripped when the credential has none", () => {
+    const { child } = childFor({ mode: "api-key", key: secret(SENTINEL) }, "/h/u");
+    expect(child.env[EnvVar.AnthropicBaseUrl]).toBeUndefined();
   });
 
-  test("the private home variable is set only when a directory is given", () => {
-    const { child } = childFor({ mode: "api-key", key: secret(SENTINEL) }, "/h/u", PRIVATE, "/iso/dir");
-    expect(child.env[EnvVar.ClaudeConfigDir]).toBe("/iso/dir");
-    expect(child.set).toEqual([EnvVar.ClaudeConfigDir]);
+  test("token and login-store ignore a base url", () => {
+    const { child } = childFor({ mode: "token", token: secret(SENTINEL), baseUrl: "https://gateway.test", ...ACK }, "/h/u");
+    expect(child.env[EnvVar.AnthropicBaseUrl]).toBeUndefined();
   });
 });
 
@@ -101,7 +101,7 @@ describe("claude failures", () => {
   test("HOME unset and empty both give home-unset on HOME", () => {
     for (const home of [null, ""]) {
       const env = ambientEnv(CLAUDE_CREDENTIAL_VARS, home);
-      expect(failureOf(claudeCredentialPlan(planInput<"claude">({ mode: "api-key", key: secret(SENTINEL) }, NONE, env)))).toMatchObject({
+      expect(failureOf(claudeCredentialPlan(claudePlanInput({ mode: "api-key", key: secret(SENTINEL) }, env)))).toMatchObject({
         kind: "credential",
         reason: "home-unset",
         field: "HOME",
@@ -110,7 +110,7 @@ describe("claude failures", () => {
   });
 
   test("a plain string key gives not-a-secret on key", () => {
-    expect(failureOf(claudeCredentialPlan(planInput<"claude">({ mode: "api-key", key: SENTINEL }, NONE, base)))).toMatchObject({
+    expect(failureOf(claudeCredentialPlan(claudePlanInput({ mode: "api-key", key: SENTINEL }, base)))).toMatchObject({
       kind: "credential",
       reason: "not-a-secret",
       field: "key",
@@ -118,7 +118,7 @@ describe("claude failures", () => {
   });
 
   test("a plain string token gives not-a-secret on token", () => {
-    expect(failureOf(claudeCredentialPlan(planInput<"claude">({ mode: "token", token: SENTINEL, ...ACK }, NONE, base)))).toMatchObject({
+    expect(failureOf(claudeCredentialPlan(claudePlanInput({ mode: "token", token: SENTINEL, ...ACK }, base)))).toMatchObject({
       kind: "credential",
       reason: "not-a-secret",
       field: "token",
@@ -126,7 +126,7 @@ describe("claude failures", () => {
   });
 
   test("a missing key gives missing-field on key", () => {
-    expect(failureOf(claudeCredentialPlan(planInput<"claude">({ mode: "api-key" }, NONE, base)))).toMatchObject({
+    expect(failureOf(claudeCredentialPlan(claudePlanInput({ mode: "api-key" }, base)))).toMatchObject({
       kind: "credential",
       reason: "missing-field",
       field: "key",
@@ -134,7 +134,7 @@ describe("claude failures", () => {
   });
 
   test("an empty secret gives empty-secret", () => {
-    expect(failureOf(claudeCredentialPlan(planInput<"claude">({ mode: "api-key", key: secret("") }, NONE, base)))).toMatchObject({
+    expect(failureOf(claudeCredentialPlan(claudePlanInput({ mode: "api-key", key: secret("") }, base)))).toMatchObject({
       kind: "credential",
       reason: "empty-secret",
       field: "key",
@@ -142,7 +142,7 @@ describe("claude failures", () => {
   });
 
   test("an unknown mode gives credential-unsupported unknown-mode", () => {
-    expect(failureOf(claudeCredentialPlan(planInput<"claude">({ mode: "bogus" }, NONE, base)))).toMatchObject({
+    expect(failureOf(claudeCredentialPlan(claudePlanInput({ mode: "bogus" }, base)))).toMatchObject({
       kind: "credential-unsupported",
       reason: "unknown-mode",
       mode: "bogus",
@@ -151,7 +151,7 @@ describe("claude failures", () => {
 
   for (const selector of ["azure", "constructor", "__proto__", "", undefined]) {
     test(`cloud selector ${JSON.stringify(selector)} gives unknown-selector`, () => {
-      expect(failureOf(claudeCredentialPlan(planInput<"claude">({ mode: "cloud", selector }, NONE, base)))).toMatchObject({
+      expect(failureOf(claudeCredentialPlan(claudePlanInput({ mode: "cloud", selector }, base)))).toMatchObject({
         kind: "credential",
         reason: "unknown-selector",
         field: "selector",
@@ -168,7 +168,7 @@ describe("claude failures", () => {
     for (const { label, extra } of cases) {
       test(`${mode} with ${label} gives policy-not-acknowledged`, () => {
         const credential = mode === "token" ? { mode, token: secret(SENTINEL), ...extra } : { mode, ...extra };
-        const failure = failureOf(claudeCredentialPlan(planInput<"claude">(credential, NONE, base)));
+        const failure = failureOf(claudeCredentialPlan(claudePlanInput(credential, base)));
         expect(failure.kind).toBe("policy-not-acknowledged");
         if (failure.kind === "policy-not-acknowledged") {
           expect<string>(failure.notice.mode).toBe(mode);
@@ -184,7 +184,7 @@ describe("claude plans never carry the raw value", () => {
     const { plan } = childFor({ mode: "api-key", key: secret(SENTINEL) }, "/h/u");
     expect(JSON.stringify(plan)).not.toContain(SENTINEL);
     expect(inspect(plan, { depth: 9 })).not.toContain(SENTINEL);
-    const failure = failureOf(claudeCredentialPlan(planInput<"claude">({ mode: "api-key", key: secret("") }, NONE, ambientEnv([], "/h/u"))));
+    const failure = failureOf(claudeCredentialPlan(claudePlanInput({ mode: "api-key", key: secret("") }, ambientEnv([], "/h/u"))));
     expect(JSON.stringify(failure)).not.toContain(SENTINEL);
   });
 });

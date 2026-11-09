@@ -1,9 +1,8 @@
 import type { ClaudeCredential, CredentialSpec, PolicyNotice } from "../core/credential.ts";
-import { CredentialField, CredentialMode, CredentialValue, credentialFailure, finish, homeFailure, isPrivateHome, NO_INJECTION, policyFailure, secretInjection, secretOf, unsupportedFailure, type CredentialPlan, type CredentialPlanInput, type Injection } from "../core/credential-plan.ts";
+import { CredentialField, CredentialMode, CredentialValue, credentialFailure, finish, homeFailure, NO_INJECTION, policyFailure, secretInjection, secretOf, unsupportedFailure, type CredentialPlan, type CredentialPlanInput, type Injection } from "../core/credential-plan.ts";
 import { credentialFromSpec, isCredentialSpec, notSpecFailure } from "../core/credential-from.ts";
 import { CredentialReason, CredentialUnsupportedReason, type RunFailure } from "../core/failure.ts";
 import { fail, ok, type Result } from "../core/result.ts";
-import type { IsolationSpec } from "../core/run.ts";
 import { EnvVar } from "../env.ts";
 import { ClaudeCloudEnv } from "./constants.ts";
 import { claudePolicyNotice } from "./policy-notice.ts";
@@ -19,14 +18,22 @@ function cloudInjection(selector: string | undefined): Result<Injection, RunFail
   return ok({ [name]: CredentialValue.Enabled });
 }
 
-function claudeInjection(spec: CredentialSpec, isolation: IsolationSpec): Result<Injection, RunFailure> {
+function apiKeyInjection(spec: CredentialSpec): Result<Injection, RunFailure> {
+  const key = secretInjection(spec.key, CredentialField.Key, EnvVar.AnthropicApiKey);
+  if (!key.ok || spec.baseUrl === undefined) {
+    return key;
+  }
+  return ok({ ...key.value, [EnvVar.AnthropicBaseUrl]: spec.baseUrl });
+}
+
+function claudeInjection(spec: CredentialSpec): Result<Injection, RunFailure> {
   switch (spec.mode) {
     case CredentialMode.ApiKey:
-      return secretInjection(spec.key, CredentialField.Key, EnvVar.AnthropicApiKey);
+      return apiKeyInjection(spec);
     case CredentialMode.Token:
       return secretInjection(spec.token, CredentialField.Token, EnvVar.ClaudeCodeOauthToken);
     case CredentialMode.LoginStore:
-      return isPrivateHome(isolation) ? fail(unsupportedFailure(spec.mode, CredentialUnsupportedReason.PrivateHomeMovesLogin)) : ok(NO_INJECTION);
+      return ok(NO_INJECTION);
     case CredentialMode.Cloud:
       return cloudInjection(spec.selector);
     default:
@@ -49,7 +56,7 @@ export function claudeCredentialPlan(input: CredentialPlanInput<"claude">): Resu
   if (notice !== null && spec.acknowledgePolicy !== true) {
     return fail(policyFailure(notice));
   }
-  return finish(mode, CLAUDE_CREDENTIAL_VARS, claudeInjection(spec, input.isolation), notice);
+  return finish(mode, CLAUDE_CREDENTIAL_VARS, claudeInjection(spec), notice);
 }
 
 function policyGate(spec: CredentialSpec): Result<true, RunFailure> {
@@ -64,7 +71,10 @@ function claudeCredentialOf(spec: CredentialSpec): Result<ClaudeCredential, RunF
   switch (spec.mode) {
     case CredentialMode.ApiKey: {
       const key = secretOf(spec.key, CredentialField.Key);
-      return key.ok ? ok({ mode: CredentialMode.ApiKey, key: key.value }) : fail(key.failure);
+      if (!key.ok) {
+        return fail(key.failure);
+      }
+      return ok(spec.baseUrl === undefined ? { mode: CredentialMode.ApiKey, key: key.value } : { mode: CredentialMode.ApiKey, key: key.value, baseUrl: spec.baseUrl });
     }
     case CredentialMode.LoginStore: {
       const gate = policyGate(spec);

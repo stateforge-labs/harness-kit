@@ -3,11 +3,13 @@ import { EvidenceKind, measured, unmeasured, type EvidenceRef } from "../core/ev
 import { deepFreeze, type Profile } from "../core/profile.ts";
 import { LINUX_ARGV_EVIDENCE, LINUX_MAX_ARG_BYTES, LINUX_MAX_ARGV_BYTES } from "../core/limits.ts";
 import { CLAUDE_BINARY, CLAUDE_NESTED_ENV } from "./launch.ts";
-import { ClaudeCli } from "./constants.ts";
+import { ClaudeCli, ClaudeQuietEnv } from "./constants.ts";
 
 const CAPTURED_AT = "2026-11-08";
 const DOC_CAPTURED_AT = "2026-11-09";
 const CLAUDE_VERSION = "2.1.319";
+
+const ENV_VARS_DOC = "https://code.claude.com/docs/en/env-vars";
 
 const HELP: EvidenceRef = { kind: EvidenceKind.Capture, ref: "fixtures/claude/headless/help.txt", harnessVersion: CLAUDE_VERSION, capturedAt: CAPTURED_AT };
 
@@ -29,7 +31,7 @@ export const CLAUDE_PROFILE: Profile = deepFreeze({
     homeVar: measured("CLAUDE_CONFIG_DIR", { kind: EvidenceKind.Doc, ref: "https://code.claude.com/docs/en/authentication#log-in-with-multiple-accounts", harnessVersion: null, capturedAt: DOC_CAPTURED_AT }),
     worksHeadless: unmeasured("does a headless run work with an empty CLAUDE_CONFIG_DIR and an injected key?"),
   },
-  quiet: unmeasured("which environment variables does a quiet closed-environment run need to stay offline and non-interactive?"),
+  quiet: measured(ClaudeQuietEnv, { kind: EvidenceKind.Doc, ref: ENV_VARS_DOC, harnessVersion: null, capturedAt: DOC_CAPTURED_AT }),
   cli: {
     flags: measured(
       [ClaudeCli.Print, ClaudeCli.Model, ClaudeCli.NoSessionPersistence, ClaudeCli.Tools, ClaudeCli.SettingSources, ClaudeCli.StrictMcpConfig, ClaudeCli.OutputFormat, ClaudeCli.SystemPrompt, ClaudeCli.Effort],

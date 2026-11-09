@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { CLAUDE_PROFILE } from "../../src/claude/profile.ts";
 import { CLAUDE_NESTED_ENV } from "../../src/claude/launch.ts";
-import { ClaudeCli } from "../../src/claude/constants.ts";
+import { ClaudeCli, ClaudeQuietEnv } from "../../src/claude/constants.ts";
 import { parseVersion } from "../../src/core/version.ts";
 import { flagAppearsIn, readFixture, walkEvidence } from "../support/profile-walk.ts";
 
@@ -11,7 +11,7 @@ describe("the Claude profile", () => {
   test("every measured fact has evidence and every open question ends with a question mark", () => {
     const tally = walkEvidence(CLAUDE_PROFILE);
     expect(tally.measured).toBeGreaterThan(0);
-    expect(tally.unmeasured).toBe(2);
+    expect(tally.unmeasured).toBe(1);
     expect(tally.suggested).toBe(1);
   });
 
@@ -44,6 +44,21 @@ describe("the Claude profile", () => {
 
   test("the headless model suggestion is recorded but not applied", () => {
     expect(CLAUDE_PROFILE.suggested.headlessModel).toMatchObject({ value: "haiku", applied: false });
+  });
+
+  test("the quiet environment is measured from the environment variables page", () => {
+    expect(CLAUDE_PROFILE.quiet).toMatchObject({
+      state: "measured",
+      value: ClaudeQuietEnv,
+      evidence: { kind: "doc", ref: "https://code.claude.com/docs/en/env-vars" },
+    });
+    expect(Object.keys(ClaudeQuietEnv).sort()).toEqual([
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
+      "DISABLE_AUTOUPDATER",
+      "DISABLE_TELEMETRY",
+      "ENABLE_TOOL_SEARCH",
+    ]);
   });
 
   test("the isolation home variable and credential injection", () => {
