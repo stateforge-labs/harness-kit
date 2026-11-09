@@ -1,6 +1,6 @@
 import type { CodexCredential, CredentialSpec } from "../core/credential.ts";
 import { CredentialField, CredentialMode, finish, homeFailure, isPrivateHome, NO_INJECTION, secretInjection, secretOf, unsupportedFailure, type CredentialPlan, type CredentialPlanInput, type Injection } from "../core/credential-plan.ts";
-import { credentialFromSpec } from "../core/credential-from.ts";
+import { credentialFromSpec, isCredentialSpec, notSpecFailure } from "../core/credential-from.ts";
 import { CredentialUnsupportedReason, type RunFailure } from "../core/failure.ts";
 import { fail, ok, type Result } from "../core/result.ts";
 import type { IsolationSpec } from "../core/run.ts";
@@ -26,7 +26,11 @@ export function codexCredentialPlan(input: CredentialPlanInput<"codex">): Result
   if (home !== null) {
     return fail(home);
   }
-  const spec: CredentialSpec = input.credential;
+  const candidate: unknown = input.credential;
+  if (!isCredentialSpec(candidate)) {
+    return fail(notSpecFailure());
+  }
+  const spec: CredentialSpec = candidate;
   return finish(spec.mode, CODEX_CREDENTIAL_VARS, codexInjection(spec, input.isolation), null);
 }
 

@@ -16,13 +16,17 @@ export function isCredentialSpec(value: unknown): value is CredentialSpec {
   return typeof value === "object" && value !== null && !Array.isArray(value) && typeof Reflect.get(value, CredentialSpecField.Mode) === "string";
 }
 
+export function notSpecFailure(): RunFailure {
+  return { kind: "invalid-config", message: CredentialSpecNote.NotObject, field: CredentialSpecField.Credential };
+}
+
 export function credentialFromSpec<I extends string>(
   modes: readonly string[],
   build: (spec: CredentialSpec) => Result<CredentialOf<I>, RunFailure>,
   spec: unknown,
 ): Result<CredentialOf<I>, RunFailure> {
   if (!isCredentialSpec(spec)) {
-    return fail({ kind: "invalid-config", message: CredentialSpecNote.NotObject, field: CredentialSpecField.Credential });
+    return fail(notSpecFailure());
   }
   if (!modes.includes(spec.mode)) {
     return fail(unsupportedFailure(spec.mode, CredentialUnsupportedReason.UnknownMode));

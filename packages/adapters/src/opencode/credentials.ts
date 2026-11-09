@@ -1,6 +1,6 @@
 import type { CredentialSpec, OpenCodeCredential } from "../core/credential.ts";
 import { CredentialField, CredentialMode, credentialFailure, finish, homeFailure, isPrivateHome, NO_INJECTION, secretOf, unsupportedFailure, type CredentialPlan, type CredentialPlanInput, type Injection } from "../core/credential-plan.ts";
-import { credentialFromSpec } from "../core/credential-from.ts";
+import { credentialFromSpec, isCredentialSpec, notSpecFailure } from "../core/credential-from.ts";
 import { CredentialReason, CredentialUnsupportedReason, type RunFailure } from "../core/failure.ts";
 import { fail, ok, type Result } from "../core/result.ts";
 import type { IsolationSpec } from "../core/run.ts";
@@ -54,7 +54,11 @@ export function openCodeCredentialPlan(input: CredentialPlanInput<"opencode">): 
   if (home !== null) {
     return fail(home);
   }
-  const spec: CredentialSpec = input.credential;
+  const candidate: unknown = input.credential;
+  if (!isCredentialSpec(candidate)) {
+    return fail(notSpecFailure());
+  }
+  const spec: CredentialSpec = candidate;
   return finish(spec.mode, OPENCODE_CREDENTIAL_VARS, openCodeInjection(spec, input.isolation), null);
 }
 
