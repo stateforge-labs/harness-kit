@@ -2,8 +2,8 @@ import type { CredentialOf } from "../core/credential.ts";
 import type { RunRequest } from "../core/run.ts";
 import { ContractCheckName, ContractText } from "./contract-constants.ts";
 import { captureThrow } from "./execute.ts";
-import { capabilityProblems, profileEvidenceProblems, profileFieldProblems } from "./contract-checks.ts";
-import { credentialProblems, engineProblems, fixtureProblems, supportProblems } from "./contract-probes.ts";
+import { capabilityProblems, profileEvidenceProblems, profileFieldProblems, sdkColumnProblems } from "./contract-checks.ts";
+import { credentialProblems, engineProblems, fixtureProblems, gatingProblems, supportProblems } from "./contract-probes.ts";
 import type { HarnessDriver } from "./port.ts";
 
 export interface ContractCheck {
@@ -31,7 +31,9 @@ export function driverContract<I extends string>(driver: HarnessDriver<I>, fixtu
   return [
     runCheck(ContractCheckName.ProfileEvidence, () => profileEvidenceProblems(driver.profile)),
     runCheck(ContractCheckName.CapabilityCells, () => capabilityProblems(driver.capabilities)),
+    runCheck(ContractCheckName.SdkColumn, () => sdkColumnProblems(driver.capabilities)),
     runCheck(ContractCheckName.SupportBehaviour, () => supportProblems(driver, fixtures)),
+    runCheck(ContractCheckName.Gating, () => gatingProblems(driver, fixtures)),
     runCheck(ContractCheckName.CredentialGarbage, () => credentialProblems(driver)),
     runCheck(ContractCheckName.EngineGarbage, () => engineProblems(driver)),
     runCheck(ContractCheckName.ProfileFields, () => profileFieldProblems(driver.profile)),

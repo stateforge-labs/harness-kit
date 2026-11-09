@@ -1,4 +1,4 @@
-import { type Capabilities, CapabilityName, Engine, type Support, SupportState, UnsupportedReason } from "../core/capability.ts";
+import { type Capabilities, CapabilityName, Engine, isUsable, type Support, SupportState, UnsupportedReason } from "../core/capability.ts";
 import { EvidenceKind, MeasuredState } from "../core/evidence.ts";
 import type { Profile } from "../core/profile.ts";
 import { ContractText, FactField, PROFILE_FIELDS } from "./contract-constants.ts";
@@ -47,9 +47,9 @@ export function profileFieldProblems(profile: Profile): string[] {
   return PROFILE_FIELDS.filter((field) => profile[field] === undefined).map((field) => `${field}: ${ContractText.MissingField}`);
 }
 
-export function cellOf(caps: Capabilities, name: CapabilityName): Support | undefined {
+export function cellOf(caps: Capabilities, name: CapabilityName, engine: Engine = Engine.Cli): Support | undefined {
   const row: Partial<Record<Engine, Support>> | undefined = caps[name];
-  return row?.[Engine.Cli];
+  return row?.[engine];
 }
 
 function cellProblems(name: string, support: Support | undefined): string[] {
@@ -69,6 +69,13 @@ function cellProblems(name: string, support: Support | undefined): string[] {
 }
 
 export function capabilityProblems(caps: Capabilities): string[] {
-  return Object.values(CapabilityName).flatMap((name) => cellProblems(name, cellOf(caps, name)));
+  return Object.values(CapabilityName).flatMap((name) => Object.values(Engine).flatMap((engine) => cellProblems(`${name}.${engine}`, cellOf(caps, name, engine))));
+}
+
+export function sdkColumnProblems(caps: Capabilities): string[] {
+  return Object.values(CapabilityName).flatMap((name) => {
+    const support = cellOf(caps, name, Engine.Sdk);
+    return support !== undefined && isUsable(support) ? [`${name}.${Engine.Sdk}: ${ContractText.SdkUsable}`] : [];
+  });
 }
 

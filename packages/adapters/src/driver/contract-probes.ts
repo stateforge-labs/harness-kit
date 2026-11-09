@@ -1,12 +1,12 @@
 import type { CredentialOf, CredentialSpec } from "../core/credential.ts";
 import type { RunFailure } from "../core/failure.ts";
 import { ok, type Result } from "../core/result.ts";
-import { CapabilityName, isUsable } from "../core/capability.ts";
-import { resolveTools } from "../core/policy.ts";
+import { CapabilityName, Engine, isUsable, SupportState } from "../core/capability.ts";
+import { confine, resolveTools, type ToolPolicy } from "../core/policy.ts";
 import { Hermetic, Isolation, type RunRequest } from "../core/run.ts";
 import { EnvVar, type EnvSource } from "../env.ts";
 import { PromptText } from "../core/engine-constants.ts";
-import { CONTRACT_CWD, CONTRACT_EFFORT, CONTRACT_EXIT_CODE, CONTRACT_GARBAGE_SPECS, CONTRACT_GARBAGE_TEXT, CONTRACT_HOME, CONTRACT_OUT_FILE, CONTRACT_PLAIN_SPEC, CONTRACT_RUN_ID, ContractText, FailureKind } from "./contract-constants.ts";
+import { CONTRACT_CWD, CONTRACT_TOOL_AXES, CONTRACT_EFFORT, CONTRACT_EXIT_CODE, CONTRACT_GARBAGE_SPECS, CONTRACT_GARBAGE_TEXT, CONTRACT_HOME, CONTRACT_OUT_FILE, CONTRACT_PLAIN_SPEC, CONTRACT_RUN_ID, ContractText, FailureKind } from "./contract-constants.ts";
 import { captureThrow } from "./execute.ts";
 import type { ContractFixtures } from "./contract.ts";
 import { cellOf } from "./contract-checks.ts";
@@ -40,6 +40,12 @@ function refusedBy(result: Result<unknown, RunFailure>, capability: CapabilityNa
   return !result.ok && result.failure.kind === FailureKind.Unsupported && result.failure.capability === capability;
 }
 
+function describeWith<I extends string>(driver: HarnessDriver<I>, credential: CredentialOf<I>, request: RunRequest, options: ResolvedOptions) {
+  return captureThrow(
+    () => driver.run.cli.describe?.({ options, credential, instructions: request.instructions, input: request.input, outFile: CONTRACT_OUT_FILE, runId: CONTRACT_RUN_ID }) ?? ok(null),
+  );
+}
+
 interface SupportCase {
   readonly capability: CapabilityName;
   readonly options: ResolvedOptions;
@@ -54,12 +60,12 @@ export function supportProblems<I extends string>(driver: HarnessDriver<I>, fixt
   const cases: readonly SupportCase[] = [
     { capability: CapabilityName.Effort, options: optionsWith(request, { effort: CONTRACT_EFFORT }) },
     { capability: CapabilityName.Ephemeral, options: optionsWith(request, { persist: false }) },
-    { capability: CapabilityName.SettingsSources, options: optionsWith(request, { hermetic: Hermetic.Full }) },
   ];
   return cases.flatMap(({ capability, options }) => {
-    const outcome = captureThrow(
-      () => driver.run.cli.describe?.({ options, credential, instructions: request.instructions, input: request.input, outFile: CONTRACT_OUT_FILE, runId: CONTRACT_RUN_ID }) ?? ok(null),
-    );
+    if (driver.run.cli.describe === undefined) {
+      return [];
+    }
+    const outcome = describeWith(driver, credential, request, options);
     if (!outcome.ok) {
       return [`${capability}: ${threw(outcome)}`];
     }
@@ -132,4 +138,55 @@ export function fixtureProblems<I extends string>(driver: HarnessDriver<I>, fixt
     return [ContractText.NoSentinel];
   }
   return fixtures.credentials.flatMap((credential) => planProblemsFor(driver, credential, fixtures.sentinels));
+}
+
+function strictOf(tools: ToolPolicy, strict: boolean): ToolPolicy {
+  return { ...tools, strict };
+}
+
+function refusalProblems(result: Result<unknown, RunFailure>, capability: CapabilityName, expectRefusal: boolean, expectation: string): string[] {
+  if (result.ok) {
+    return expectRefusal ? [`${capability}: ${expectation}`] : [];
+  }
+  if (!expectRefusal) {
+    return [`${capability}: ${expectation}`];
+  }
+  return refusedBy(result, capability) ? [] : [`${capability}: ${ContractText.WrongCapability}`];
+}
+
+function confineProblems<I extends string>(driver: HarnessDriver<I>, capability: CapabilityName, tools: ToolPolicy): string[] {
+  const support = cellOf(driver.capabilities, capability);
+  if (support === undefined) {
+    return [];
+  }
+  const strict = confine(resolveTools(strictOf(tools, true), undefined), driver.capabilities, Engine.Cli);
+  const lax = confine(resolveTools(strictOf(tools, false), undefined), driver.capabilities, Engine.Cli);
+  if (support.state === SupportState.Supported) {
+    return [...refusalProblems(strict, capability, false, ContractText.SupportedRefused), ...refusalProblems(lax, capability, false, ContractText.SupportedRefused)];
+  }
+  const laxRefused = support.state === SupportState.Unsupported;
+  return [
+    ...refusalProblems(strict, capability, true, ContractText.NotRefused),
+    ...refusalProblems(lax, capability, laxRefused, laxRefused ? ContractText.NotRefused : ContractText.LaxRefused),
+  ];
+}
+
+function engineToolsProblems<I extends string>(driver: HarnessDriver<I>, fixtures: ContractFixtures<I>, capability: CapabilityName, tools: ToolPolicy): string[] {
+  const support = cellOf(driver.capabilities, capability);
+  const credential = fixtures.credentials[0];
+  if (support?.state !== SupportState.Supported || credential === undefined || driver.run.cli.describe === undefined) {
+    return [];
+  }
+  const outcome = describeWith(driver, credential, fixtures.request, optionsWith(fixtures.request, { tools: resolveTools(tools, undefined) }));
+  if (!outcome.ok) {
+    return [`${capability}: ${threw(outcome)}`];
+  }
+  return refusedBy(outcome.value, capability) ? [`${capability}: ${ContractText.EngineRefusedSupported}`] : [];
+}
+
+export function gatingProblems<I extends string>(driver: HarnessDriver<I>, fixtures: ContractFixtures<I>): string[] {
+  return CONTRACT_TOOL_AXES.flatMap(({ capability, tools }) => [
+    ...confineProblems(driver, capability, tools),
+    ...engineToolsProblems(driver, fixtures, capability, tools),
+  ]);
 }
