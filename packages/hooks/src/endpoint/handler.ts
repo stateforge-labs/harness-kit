@@ -4,7 +4,10 @@ import type { HarnessAdapter } from "../port.ts";
 import { createAdmission, type AdmissionConfig } from "./admission.ts";
 import { DEFAULT_HARNESS, Failure, Header, HEALTH_PATH, HOOK_ROUTE, Reply, Status } from "./constants.ts";
 
-/** A web-standard request handler: what `Bun.serve`, `serveNode`, a worker or a test can all call. */
+/**
+ * A web-standard request handler: what `Bun.serve`, `serveNode` or a test can all call. The handler itself imports `node:` modules,
+ * so it needs a Node-compatible runtime (Node or Bun), not any web runtime.
+ */
 export type HookHandler = (req: Request) => Promise<Response>;
 
 /** What `onHandled` receives after a hook was decoded, run through the pipeline and encoded. */

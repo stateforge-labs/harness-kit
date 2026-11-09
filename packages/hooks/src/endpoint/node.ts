@@ -14,7 +14,7 @@ function headersOf(req: IncomingMessage): Headers {
   return headers;
 }
 
-function bodyOf(req: IncomingMessage, onAbandoned: () => void): ReadableStream<Uint8Array> {
+function bodyOf(req: IncomingMessage): ReadableStream<Uint8Array> {
   let open = true;
   return new ReadableStream<Uint8Array>({
     start(controller) {
@@ -35,13 +35,12 @@ function bodyOf(req: IncomingMessage, onAbandoned: () => void): ReadableStream<U
     },
     cancel() {
       open = false;
-      onAbandoned();
       req.resume();
     },
   });
 }
 
-function requestOf(req: IncomingMessage, onAbandoned: () => void): Request | null {
+function requestOf(req: IncomingMessage): Request | null {
   let url: URL;
   try {
     url = new URL(req.url ?? "/", PLACEHOLDER_ORIGIN);
@@ -51,40 +50,39 @@ function requestOf(req: IncomingMessage, onAbandoned: () => void): Request | nul
   const method = req.method ?? "GET";
   const init: RequestInit & { duplex?: "half" } = { method, headers: headersOf(req) };
   if (!BODYLESS.has(method)) {
-    init.body = bodyOf(req, onAbandoned);
+    init.body = bodyOf(req);
     init.duplex = "half";
   }
   return new Request(url.href, init);
 }
 
-async function respond(res: ServerResponse, response: Response, abandoned: boolean): Promise<void> {
+async function respond(res: ServerResponse, response: Response, unconsumed: boolean): Promise<void> {
   const headers: Record<string, string | string[]> = {};
   response.headers.forEach((value, name) => {
     headers[name] = value;
   });
-  if (abandoned) headers[Header.Connection] = "close";
+  if (unconsumed) headers[Header.Connection] = "close";
   const body = Buffer.from(await response.arrayBuffer());
   res.writeHead(response.status, headers);
   res.end(body);
 }
 
 /**
+ * Needs a Node-compatible runtime (Node or Bun): it binds `node:http`, so it is not for web-only runtimes such as workers.
  * Binds a handler to `node:http` on a TCP port or a unix socket. Request bodies are streamed into the handler,
- * which enforces its own size cap; a request it abandons is answered, then its connection is closed.
+ * which enforces its own size cap; a reply sent while the request body is still unread carries `Connection: close` and the connection is then destroyed.
  */
 export function serveNode(options: ServeOptions): Promise<RunningEndpoint> {
   const { handler, listen } = options;
   const server = createServer((req, res) => {
-    let abandoned = false;
-    const request = requestOf(req, () => {
-      abandoned = true;
-    });
+    const request = requestOf(req);
     const answer = request === null ? Promise.resolve(new Response(Reply.BadRequest, { status: Status.BadRequest })) : handler(request);
     answer
       .catch(() => new Response(Reply.Internal, { status: Status.Internal }))
-      .then((response) => respond(res, response, abandoned))
-      .then(() => {
-        if (abandoned) res.once("finish", () => req.destroy());
+      .then((response) => {
+        const unconsumed = !BODYLESS.has(req.method ?? "GET") && !req.readableEnded;
+        if (unconsumed) res.once("finish", () => req.destroy());
+        return respond(res, response, unconsumed);
       })
       .catch(() => res.destroy());
   });

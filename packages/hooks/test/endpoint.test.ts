@@ -185,6 +185,22 @@ describe.each(targets)("endpoint through $name", ({ make }) => {
     expect((await r.send(post("/hook/claude", writeCall()))).status).toBe(200);
   });
 
+  test("a streamed body with no content-length over the cap is a 413", async () => {
+    const r = await rig(make);
+    if (r.address === null) return;
+    const target = "socketPath" in r.address ? { socketPath: r.address.socketPath } : { host: r.address.host, port: r.address.port };
+    const status = await new Promise<number>((resolve, reject) => {
+      const req = httpRequest({ ...target, method: "POST", path: "/hook/claude", headers: { host: "localhost", ...JSON_HEADERS } }, (res) => {
+        res.resume();
+        resolve(res.statusCode ?? 0);
+      });
+      req.on("error", reject);
+      for (let i = 0; i < 4; i++) req.write("x".repeat(MAX_BODY));
+      req.end();
+    });
+    expect(status).toBe(413);
+  });
+
   test("a bad body is a 400: invalid JSON, an array, a scalar", async () => {
     const r = await rig(make);
     for (const body of ["{nope", "[]", "42", "null", ""]) expect((await r.send(post("/hook/claude", body))).status).toBe(400);
@@ -264,6 +280,22 @@ describe("close() frees what the binder took", () => {
     expect((await pending).text).toBe("late");
     await closing;
     expect(closed).toBe(true);
+  });
+});
+
+describe.each(targets.filter((t) => t.name.startsWith("serveNode")))("an unread body over $name", ({ make }) => {
+  test("a declared oversize body is answered 413 with Connection: close and the socket is closed", async () => {
+    const r = await rig(make);
+    const address = r.address as BoundAddress;
+    const socket = "socketPath" in address ? connect(address.socketPath) : connect(address.port, address.host);
+    let head = "";
+    const closed = new Promise<void>((resolve) => socket.on("close", () => resolve()));
+    socket.on("data", (c) => (head += c.toString("utf8")));
+    socket.write(`POST /hook/claude HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: ${MAX_BODY * 10}\r\n\r\n`);
+    await Promise.race([closed, new Promise((_, no) => setTimeout(() => no(new Error("connection stayed open")), 3000))]);
+    expect(head.startsWith("HTTP/1.1 413")).toBe(true);
+    expect(head.toLowerCase()).toContain("connection: close");
+    await r.close();
   });
 });
 

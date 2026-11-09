@@ -1,17 +1,26 @@
 import type { HookContext, Middleware } from "./pipeline.ts";
 import { mergeReplies } from "./pipeline.ts";
+import { StockFailure } from "./constants.ts";
 import type { NeutralKind } from "./event.ts";
 import { Kind } from "./event.ts";
 
+/** Options for `stopGuard`. */
 export interface StopGuardOptions {
+  /** Most continues granted per session; a whole number, 0 or more. */
   limit: number;
+  /** Continue reason used when the layer below gives an empty one. */
   reason: string;
+  /** Items still missing, used when the layer below names none. */
   missing?: string[];
 }
 
+/**
+ * Caps how often a Stop or SubagentStop may continue the agent: after `limit` continues in a session the continue is dropped.
+ * Throws a `TypeError` when `limit` is not a non-negative integer.
+ */
 export function stopGuard(options: StopGuardOptions): Middleware {
   const { limit, reason, missing } = options;
-  if (!Number.isInteger(limit) || limit < 0) throw new TypeError("stopGuard(): limit must be a non-negative integer");
+  if (!Number.isInteger(limit) || limit < 0) throw new TypeError(StockFailure.StopGuardLimit);
   const continues = new Map<string | null, number>();
   return async function stopGuard(ctx, next) {
     const { kind, session } = ctx.event;
@@ -31,10 +40,13 @@ export function stopGuard(options: StopGuardOptions): Middleware {
   };
 }
 
+/** Options for `once`. */
 export interface OnceOptions {
+  /** Event kinds that trigger the injection. */
   kinds: readonly NeutralKind[];
 }
 
+/** Injects `inject(ctx)` as context the first time a session raises one of `options.kinds`; a null or empty text injects nothing. */
 export function once(inject: (ctx: HookContext) => string | null, options: OnceOptions): Middleware {
   const { kinds } = options;
   const seen = new Set<string | null>();
@@ -48,6 +60,7 @@ export function once(inject: (ctx: HookContext) => string | null, options: OnceO
   };
 }
 
+/** Removes `prefix` from the tool name before the layers below see it; an empty prefix or a name without it passes through. */
 export function stripToolPrefix(prefix: string): Middleware {
   return function stripToolPrefix(ctx, next) {
     const { tool } = ctx.event;
