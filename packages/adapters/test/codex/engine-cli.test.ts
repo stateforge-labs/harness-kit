@@ -2,10 +2,10 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { codexCli } from "../../src/codex/engines/cli.ts";
-import { codexExec } from "../../src/codex/exec.ts";
+import { CODEX_UNUSED_FEATURES } from "../../src/codex/exec.ts";
 import type { CodexCredential } from "../../src/core/credential.ts";
 import { secret } from "../../src/core/secret.ts";
-import { resolveTools } from "../../src/core/policy.ts";
+import { resolveTools, TOOLS_OFF } from "../../src/core/policy.ts";
 import { Hermetic } from "../../src/core/run.ts";
 import type { EngineInput, ResolvedOptions } from "../../src/driver/port.ts";
 import { adaptersFixtures } from "../support/fixtures.ts";
@@ -65,11 +65,11 @@ describe("codexCli invocation", () => {
     expect(result.ok && result.value.args).toEqual(["exec", "--color", "never", "-m", "gpt-6.1-sol", "-c", "model_reasoning_effort=low", "-o", "/work/last.md", "-"]);
   });
 
-  test("full hermetic run matches the 0.1.0 exec builder exactly", () => {
-    const result = codexCli.invocation(withOptions({ model: "gpt-6.1-sol", effort: "low", persist: false, hermetic: Hermetic.Full }));
-    expect(result.ok && result.value.args).toEqual(
-      codexExec({ model: "gpt-6.1-sol", effort: "low", outFile: "/work/last.md" }).args,
-    );
+  test("tools off under a non-persisted run locks down the exec argv", () => {
+    const result = codexCli.invocation(withOptions({ persist: false, tools: resolveTools(TOOLS_OFF, undefined) }));
+    const lockdown = ["--skip-git-repo-check", "--ignore-user-config", "-s", "read-only", ...CODEX_UNUSED_FEATURES.flatMap((feature) => ["--disable", feature])];
+    expect(result.ok && result.value.args).toEqual(["exec", "--ephemeral", ...lockdown, "--color", "never", "-o", "/work/last.md", "-"]);
+    expect(result.ok && result.value.env).toEqual({});
   });
 
   test("a native effort is unsupported because codex effort is unmeasured", () => {
