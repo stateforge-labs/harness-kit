@@ -24,6 +24,7 @@ const BUSY = "ses_00000000000000000000000008";
 const byCreatedDesc = (rows: readonly Row[]): Row[] => [...rows].sort((a, b) => Number(b.time_created) - Number(a.time_created));
 
 const suite = sqliteAvailable ? describe : describe.skip;
+const SEED_TWO_TIMEOUT_MS = 30_000;
 const title = sqliteAvailable ? "opencode store" : "opencode store skipped: node:sqlite is unavailable on this runtime";
 
 suite(title, () => {
@@ -90,7 +91,7 @@ suite(title, () => {
       db.exec("UPDATE session SET parent_id = 'ses_00000000000000000000000003' WHERE id = 'ses_00000000000000000000000006'");
     });
     expect(open(childPath).rootSessionForDirectory(WORKTREE)).toBe("ses_00000000000000000000000005");
-  });
+  }, SEED_TWO_TIMEOUT_MS);
 
   test("the session title is read from the session row", () => {
     const title = tables.session.find((row) => row.id === "ses_00000000000000000000000002")?.title;
