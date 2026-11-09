@@ -1,5 +1,10 @@
-import type { CredentialOf } from "../core/credential.ts";
+import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { Capabilities, Engine } from "../core/capability.ts";
+import type { CredentialOf, CredentialSpec, PolicyNotice } from "../core/credential.ts";
+import type { CredentialPlan, CredentialPlanInput } from "../core/credential-plan.ts";
 import type { RunFailure } from "../core/failure.ts";
+import type { CredentialInspection, InspectIo } from "../core/inspect.ts";
+import type { Profile } from "../core/profile.ts";
 import type { Result } from "../core/result.ts";
 import type { Cost, Effort, Hermetic, IsolationSpec, TokenUsage } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
@@ -59,4 +64,27 @@ export interface CliEngine<I extends string> {
   textOf(line: string): string | null;
   readonly helpArgs: readonly string[] | null;
   checkHelp(help: string): Result<null, RunFailure>;
+}
+
+export type Drivers<H extends string> = { readonly [K in H]: HarnessDriver<K> };
+
+export interface RunFacet<I extends string> {
+  readonly engines: readonly Engine[];
+  readonly cli: CliEngine<I>;
+}
+
+export interface CredentialFacet<I extends string> {
+  readonly modes: readonly string[];
+  readonly from: (spec: CredentialSpec) => Result<CredentialOf<I>, RunFailure>;
+  readonly plan: (input: CredentialPlanInput<I>) => Result<CredentialPlan, RunFailure>;
+  readonly policyNotice: (mode: string) => PolicyNotice | null;
+  readonly inspect: (io: InspectIo) => Promise<Result<CredentialInspection, RunFailure>>;
+}
+
+export interface HarnessDriver<I extends string = HarnessId> {
+  readonly id: I;
+  readonly profile: Profile;
+  readonly capabilities: Capabilities;
+  readonly credentials: CredentialFacet<I>;
+  readonly run: RunFacet<I>;
 }

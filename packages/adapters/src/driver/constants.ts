@@ -1,3 +1,5 @@
+import type { Limits } from "../core/run.ts";
+
 export const FAILURE_TAIL_BYTES = 4096;
 
 export const EngineReason = {
@@ -46,3 +48,63 @@ export const PromptText = {
   Separator: "\n\n",
   Line: "\n",
 } as const;
+
+export const KILL_GRACE_MS = 5_000;
+export const PROCESS_DRAIN_GRACE_MS = 1_000;
+export const DRAIN_GRACE_MS = 1_000;
+export const VERSION_PROBE_MS = 10_000;
+export const STDERR_TAIL_BYTES = 4096;
+export const VERSION_OUTPUT_BYTES = 4096;
+export const ISOLATION_PREFIX = "stateforge-adapters-run-";
+export const SCRATCH_PREFIX = "stateforge-adapters-scratch-";
+export const PLACEHOLDER_OUT_FILE = "{out-file}";
+export const TMP_FALLBACK = "/tmp";
+export const DIR_MODE = 0o700;
+
+export const DEFAULT_LIMITS: Limits = {
+  maxStdoutBytes: 8_388_608,
+  maxStderrBytes: 65_536,
+};
+
+export const Signal = {
+  Term: "SIGTERM",
+  Kill: "SIGKILL",
+} as const;
+export type Signal = (typeof Signal)[keyof typeof Signal];
+
+export const SpawnCode = {
+  NotFound: "not-found",
+  SpawnFailed: "spawn-failed",
+  ArgvTooBig: "argv-too-big",
+} as const;
+export type SpawnCode = (typeof SpawnCode)[keyof typeof SpawnCode];
+
+export const SystemCode = {
+  NoEntry: "ENOENT",
+  TooBig: "E2BIG",
+  NoProcess: "ESRCH",
+} as const;
+
+export const ProcessEvent = {
+  Spawn: "spawn",
+  Error: "error",
+  Exit: "exit",
+  Close: "close",
+} as const;
+
+export const Stdio = {
+  Pipe: "pipe",
+} as const;
+
+export const Platform = {
+  Linux: "linux",
+} as const;
+
+export const Encoding = {
+  Utf8: "utf8",
+} as const;
+
+export const OpenFlag = {
+  Read: "r",
+} as const;
+export type OpenFlag = (typeof OpenFlag)[keyof typeof OpenFlag];
