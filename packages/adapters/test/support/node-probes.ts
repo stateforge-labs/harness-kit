@@ -1,3 +1,5 @@
+export const PROBE_FRAMES = 64;
+
 export const TRAPPED_MODULES = ["fs", "fs/promises", "child_process", "net", "dns", "os"] as const;
 
 export function importProbeScript(urls: readonly string[]): string {
@@ -7,12 +9,14 @@ const require = createRequire(process.cwd() + "/");
 const TARGETS = ${JSON.stringify(TRAPPED_MODULES)};
 const URLS = ${JSON.stringify(urls)};
 const DIST_MARK = "/dist/src/";
+const PROBE_FRAMES = ${PROBE_FRAMES};
+const limitBefore = Error.stackTraceLimit;
 const io = [];
 const envReads = [];
 const cwdCalls = [];
 const fromPackage = () => {
   const saved = Error.stackTraceLimit;
-  Error.stackTraceLimit = Infinity;
+  Error.stackTraceLimit = PROBE_FRAMES;
   try {
     return new Error().stack.includes(DIST_MARK);
   } finally {
@@ -65,6 +69,7 @@ for (const url of URLS) {
   await import(url);
   report[url] = { io: [...io], env: [...envReads], cwd: cwdCalls.length };
 }
+if (Error.stackTraceLimit !== limitBefore) throw new Error("stackTraceLimit changed by the probe");
 console.log(JSON.stringify(report));
 `;
 }

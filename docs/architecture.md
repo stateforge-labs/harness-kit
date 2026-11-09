@@ -298,6 +298,8 @@ packages/adapters/src/
 
 Each module is a subpath export, so a consumer that imports only one harness never loads another's code or `node:sqlite`.
 
+The runtime (`@stateforge-labs/harness-adapters/runtime`) starts every harness process through an injected `ProcessRunner`, set by `RuntimeConfig.spawn`. The default, `nodeRunner` in `packages/adapters/src/driver/node-defaults.ts`, starts each process detached in its own process group, so a timeout or abort signals the whole group. Tests inject `fakeProcessRunner` instead, which replays scripted output without starting a process, so the driver logic runs with no harness installed.
+
 ## Configuration (`packages/hooks/src/env.ts`)
 
 Every environment variable is named, defaulted and parsed in one module, `packages/hooks/src/env.ts` (`EnvVar`, `EnvDefault`, `FailMode`),

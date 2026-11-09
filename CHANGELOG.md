@@ -5,6 +5,18 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ## Unreleased
 
+### `@stateforge-labs/harness-adapters`
+
+- Tool and env policy: `ToolPolicy` (`builtins`, `mcp`, `settings`, `strict`) with `TOOLS_OFF` and `TOOLS_DEFAULT`, and `EnvPolicy` (`inherit` with an optional transform, or `closed`).
+- Per-harness capability cells (`CapabilityName`, `Support`, `isUsable`, `supportWhy`), declared by each built-in driver.
+- Billed basis for cost reporting, with the cost capability declared per harness.
+- `allowedModes` on `createRuntime` refuses credential modes that the consumer has not allowed.
+- `baseUrl` on the Claude and Codex API-key credentials.
+- A private working directory per run, removed on close unless kept.
+- `./engine` subpath (experimental): the CLI engine contract for building a harness driver.
+- `invalid-config` for a driver table that throws, instead of an uncaught exception.
+- `./testing` additions: `fakeRuntime` with scripted runs, `calls`, `promptLimit` and `capabilities`; `fakeOutput`; and the driver contract checks.
+
 ## harness-hooks 0.2.0, harness-adapters 0.1.0 - 2026-11-09
 
 ### `@stateforge-labs/harness-hooks`
