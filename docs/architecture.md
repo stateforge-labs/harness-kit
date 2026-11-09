@@ -276,6 +276,25 @@ harness version must never stop an agent. Value sets are zod enums in one `enums
 A validation result carries dotted paths and expected types, never values, which is why it may be logged. The JSON Schemas under
 `packages/hooks/schemas/` are generated from the zod schemas (draft 2020-12) for documentation only; checks that are code are not in them.
 
+## harness-adapters (`packages/adapters/src/`)
+
+The public package holds the harness knowledge that is not a hook. It imports `@stateforge-labs/harness-hooks` and nothing else from the
+repository, and it reads no environment variable outside `src/env.ts`.
+
+```text
+packages/adapters/src/
+  index.ts          package root: cross-harness facts, adapterEnv, EnvVar
+  env.ts            the only process.env reader (HOME, XDG_DATA_HOME, CODEX_HOME)
+  constants.ts      path constants
+  claude/index.ts   Claude Code module   (@stateforge-labs/harness-adapters/claude)
+  codex/index.ts    Codex module         (.../codex)
+  opencode/index.ts OpenCode module      (.../opencode)
+  opencode/store.ts OpenCode store reader, the only node:sqlite importer (.../opencode/store)
+  tui/index.ts      TUI screen chrome    (.../tui)
+```
+
+Each module is a subpath export, so a consumer that imports only one harness never loads another's code or `node:sqlite`.
+
 ## Configuration (`packages/hooks/src/env.ts`)
 
 Every environment variable is named, defaulted and parsed in one module, `packages/hooks/src/env.ts` (`EnvVar`, `EnvDefault`, `FailMode`),

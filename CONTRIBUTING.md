@@ -35,7 +35,7 @@ Run these from the repository root before you open a pull request.
 | `bun run test` | `tools/check-boundaries.ts`, then `bun test` for every package |
 | `bun run typecheck` | `tsc --noEmit` over `packages/` and `tools/`, using the `bun` export condition |
 | `bun run gen:check` | fails if a generated file is stale (the handler index, `schemas.ts` and the JSON Schemas) |
-| `bun run build` | builds `dist/` for `@stateforge-labs/harness-hooks` (ESM and `.d.ts`, for Node) |
+| `bun run build` | builds `dist/` for `@stateforge-labs/harness-hooks` and `@stateforge-labs/harness-adapters` (ESM and `.d.ts`, for Node) |
 
 `tools/check-boundaries.ts` enforces the package boundaries. A workspace package may be imported only if it is declared, and only
 through a path in its `exports` map (no deep imports). The shipped code of `hooks` and `adapters` (`src/` and `clients/`) must not
@@ -53,6 +53,10 @@ After a schema change, run `bun run gen` in `packages/hooks`, then review the re
     `handle()`. Each answer must equal its `.expected.json`.
   - `contract-v1-pipeline.test.ts`: per-layer timeouts and fault modes, deny-wins, fail-closed `handle()`, and `toolAllowlist`, in process.
   - `log-meta-keys.test.ts`: for every fixture, a handler's `meta` uses no reserved log field, and repeats a common field only with its value.
+- `packages/adapters/test/` checks the public package as it ships: `env.test.ts` (the environment defaults and overrides),
+  `boundaries.test.ts` (every `exports` target exists, and `default` points into `dist/` at the file the `bun` condition names),
+  `node-build.test.ts` (builds `dist/`, has Node import every subpath by name, and lists the `npm pack` contents: `dist/`, `src/`, the
+  README and the license only). Each harness module adds its fixture-driven tests beside them.
 - `packages/hooks-server/test/` is end to end only. `test/e2e/harness.ts` spawns `bun src/server.ts`, and every test talks to it over
   HTTP. `contract.test.ts` loops over every harness and fixture, and checks the answer and the log line as recorded (timestamp and
   session id aside). The event cases in `events/<harness>/` cover what is unique to one event.
@@ -83,6 +87,22 @@ flag is an error, so a mistyped flag cannot make a write run rewrite the real tr
 Fixtures: `scripts/export-fixtures.ts` keeps one payload per distinct (event, key set, discriminating values). A re-run replaces the
 exported fixtures and keeps hand-made `<nn>-synthetic.json` files and `provenance.json`. Each harness's `provenance.json` records whether a
 fixture was `captured` or `synthetic`, with where it came from.
+
+### Library layout (`packages/adapters`)
+
+| Path | What |
+| --- | --- |
+| `src/index.ts` | the package root: cross-harness facts and the environment helper |
+| `src/env.ts` | the only reader of `process.env` in the package (`adapterEnv`, `EnvVar`) |
+| `src/constants.ts` | path constants shared by the modules |
+| `src/<harness>/` | one module per harness (`claude/`, `codex/`, `opencode/`), each exported as `@stateforge-labs/harness-adapters/<harness>` |
+| `src/opencode/store.ts` | the OpenCode store reader, the only file that imports `node:sqlite`, exported as `.../opencode/store` |
+| `src/tui/` | the TUI screen chrome, exported as `.../tui` |
+| `fixtures/<harness>/` | masked captures, see Captures and fixtures below |
+| `test/` | the package tests (see Tests) |
+
+Every subpath has its `bun` condition pointing at `src/` and its `default` condition at the matching file in `dist/`. `boundaries.test.ts`
+keeps the two in step.
 
 ### Server layout (`packages/hooks-server`)
 
@@ -145,7 +165,7 @@ MIT. See [LICENSE](LICENSE). A copy is in `packages/hooks/LICENSE` so the npm ta
 ## Style
 
 - Keep comments out of `src/` and `clients/`. Name things so the code explains itself.
-- Hook names and environment variables are constants. Every environment variable is read in one module, `packages/hooks/src/env.ts`.
+- Hook names and environment variables are constants. Every environment variable is read in one module per package: `packages/hooks/src/env.ts` and `packages/adapters/src/env.ts`.
 - Use zod schemas for payloads. Closed sets of values live in `enums.ts`.
 - A harness-specific detail belongs in `src/adapters/<harness>/`, never in `src/core/`.
 

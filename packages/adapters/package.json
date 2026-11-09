@@ -1,12 +1,85 @@
 {
   "name": "@stateforge-labs/harness-adapters",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
-  "description": "Non-interactive harness adapters behind one port. Private workspace package.",
-  "license": "MIT",
-  "dependencies": {
-    "@stateforge-labs/harness-hooks": "workspace:*"
+  "description": "Harness knowledge beyond hooks: transcript and store readers, in-flight detection, CLI invocation, usage and context windows, tool facts and TUI chrome for Claude Code, Codex and OpenCode.",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "opencode",
+    "transcript",
+    "coding-agent",
+    "zod"
+  ],
+  "homepage": "https://github.com/stateforge-labs/harness-kit/tree/main/packages/adapters#readme",
+  "bugs": {
+    "url": "https://github.com/stateforge-labs/harness-kit/issues"
   },
-  "author": "stateforge-labs"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stateforge-labs/harness-kit.git",
+    "directory": "packages/adapters"
+  },
+  "license": "MIT",
+  "author": "stateforge-labs",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./claude": {
+      "bun": "./src/claude/index.ts",
+      "types": "./dist/src/claude/index.d.ts",
+      "default": "./dist/src/claude/index.js"
+    },
+    "./codex": {
+      "bun": "./src/codex/index.ts",
+      "types": "./dist/src/codex/index.d.ts",
+      "default": "./dist/src/codex/index.js"
+    },
+    "./opencode": {
+      "bun": "./src/opencode/index.ts",
+      "types": "./dist/src/opencode/index.d.ts",
+      "default": "./dist/src/opencode/index.js"
+    },
+    "./opencode/store": {
+      "bun": "./src/opencode/store.ts",
+      "types": "./dist/src/opencode/store.d.ts",
+      "default": "./dist/src/opencode/store.js"
+    },
+    "./tui": {
+      "bun": "./src/tui/index.ts",
+      "types": "./dist/src/tui/index.d.ts",
+      "default": "./dist/src/tui/index.js"
+    }
+  },
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepack": "bun run build"
+  },
+  "dependencies": {
+    "@stateforge-labs/harness-hooks": "^0.1.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "7.0.2"
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
 }

@@ -9,7 +9,7 @@
     "gen:check": "bun --filter @stateforge-labs/harness-hooks gen:check",
     "start": "bun --filter @stateforge-labs/harness-hooks-server start",
     "test": "bun tools/check-boundaries.ts && bun test",
-    "build": "bun --filter @stateforge-labs/harness-hooks build"
+    "build": "bun --filter @stateforge-labs/harness-hooks build && bun --filter @stateforge-labs/harness-adapters build"
   },
   "devDependencies": {
     "@types/bun": "1.4.4"
