@@ -3,5 +3,8 @@
   "extends": ["config:recommended"],
   "rangeStrategy": "pin",
   "minimumReleaseAge": "14 days",
-  "dependencyDashboard": true
+  "dependencyDashboard": true,
+  "packageRules": [
+    { "matchPackageNames": ["@stateforge-labs/**"], "minimumReleaseAge": null }
+  ]
 }

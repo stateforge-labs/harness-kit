@@ -24,7 +24,7 @@ mise install       # Bun 1.4.4
 bun install        # the workspace, from bun.lock (the lockfile is exact)
 ```
 
-`bunfig.toml` pins exact versions and refuses to install a version published less than 14 days ago.
+`bunfig.toml` pins exact versions and refuses to install a version published less than 14 days ago. Our own @stateforge-labs packages are exempt from the 14-day age; exact pins still apply.
 
 ## Checks
 
