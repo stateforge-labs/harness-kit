@@ -140,10 +140,10 @@ TUI screens, one directory per harness (`claude/`, `codex/`, `opencode/`), each 
 `tools/mask-captures.ts` builds them from a raw directory that stays outside the repository:
 
 ```sh
-bun tools/mask-captures.ts --in <raw dir> --out packages/adapters/fixtures --extra <private names> [--check]
+bun tools/mask-captures.ts --in <raw dir> --out packages/adapters/fixtures --extra <private names> --private <project names> [--check]
 ```
 
-`--extra` takes the local user name and any other private word, comma separated, so those words never appear in the repository. The
+`--extra` takes the local user name and any other private word, and `--private` the private project names that become `proj`, both comma separated, so those words never appear in the repository. The
 run is deterministic. `--check` scans the fixtures for leaks (home paths, user names, host names, addresses, keys and tokens) and fails
 on a match. Never commit a raw capture, and never hand-edit a fixture to hide a leak: fix the masker and run it again.
 
