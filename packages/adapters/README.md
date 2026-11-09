@@ -105,11 +105,11 @@ its cells read `unsupported: not-implemented`.
 | `effort` | supported | supported | unmeasured: 2.2.6 documents provider/model#variant in --model; is there an effort flag? |
 | `structured-output` | unsupported: not-implemented | unsupported: not-implemented | unmeasured: does OpenCode 2.2.6 run have a structured output flag? |
 | `sessions-delete` | unsupported: not-implemented | unsupported: not-implemented | unsupported: not-implemented |
-| `ephemeral` | supported | supported | unmeasured: does `session delete` reach a `--standalone` run's session? |
+| `ephemeral` | supported | supported | emulated: every run leaves a session; session delete --standalone removes it in about 0.24 s after the run (opencode v2.2.6, 2026-11-09) |
 | `cost` | supported | unsupported: harness-limit | unmeasured: committed capture is an error stream; does the real 2.2.6 step_finish carry cost? |
-| `settings-sources` | supported | supported | unmeasured: does any OpenCode flag or env skip user config for a headless run? |
-| `builtin-tools-off` | supported | emulated: read-only sandbox, --ignore-user-config and --disable features; apply_patch and MCP resource tools remain | unmeasured: does a V2 permissions deny list hide every built-in tool, including skill and the opencode_* meta tools? |
-| `mcp-none` | supported | emulated: --ignore-user-config drops configured MCP servers; MCP resource tools remain | unmeasured: does an empty config directory leave no MCP server configured for a headless run? |
+| `settings-sources` | supported | supported | emulated: an empty OPENCODE_CONFIG_DIR replaces the global config directory and OPENCODE_DISABLE_PROJECT_CONFIG and OPENCODE_DISABLE_CLAUDE_CODE are set; an AGENTS.md marker in the global config was not obeyed, global plugins untested, auth stays in the data directory (opencode v2.2.6, 2026-11-09) |
+| `builtin-tools-off` | supported | emulated: read-only sandbox, --ignore-user-config and --disable features; apply_patch and MCP resource tools remain | emulated: permissions deny rules in OPENCODE_CONFIG_CONTENT hide read, edit, glob, grep, shell, subagent, webfetch, websearch, execute and question; the model still lists skill, experimental_image_generate, opencode_models, opencode_session_move, opencode_session_rename, opencode_worktree_create, opencode_worktree_list (opencode v2.2.6, 2026-11-09); whether those leftovers can run is untested |
+| `mcp-none` | supported | emulated: --ignore-user-config drops configured MCP servers; MCP resource tools remain | unmeasured: does a deny on the MCP resource tools plus an empty config directory leave no MCP server tool callable in a headless run? |
 | `mcp-allowlist` | unsupported: engine-limit | unsupported: engine-limit | unsupported: engine-limit |
 | `closed-env` | supported | unmeasured: does a closed environment with only CODEX_HOME and PATH keep a headless run working? | unmeasured: does a closed environment keep an OpenCode headless run working? |
 | `base-url` | supported | unmeasured: which config key or variable points a codex run at another base url? | unmeasured: which config key points an OpenCode run at another base url? |
