@@ -63,17 +63,23 @@ and reports a `credential` failure for a missing or empty field. `secret(value)`
 ```ts
 import { createRuntime, Harness } from "@stateforge-labs/harness-adapters/runtime";
 
-export async function answer(question: string): Promise<string> {
+const QUESTION = "What is a monad, in one sentence?";
+
+async function main(): Promise<number> {
   await using runtime = createRuntime();
   const claude = runtime.headless(Harness.Claude, {
     credential: { mode: "login-store", acknowledgePolicy: true },
   });
-  const result = await claude.run({ instructions: "Answer in one short sentence.", input: question });
+  const result = await claude.run({ instructions: "Answer in one short sentence.", input: QUESTION });
   if (!result.ok) {
-    throw new Error(result.failure.message);
+    console.error(`${result.failure.kind}: ${result.failure.message}`);
+    return 1;
   }
-  return result.value.text;
+  console.log(result.value.text);
+  return 0;
 }
+
+process.exitCode = await main();
 ```
 
 `run` returns a `Result`: `{ ok: true, value }` or `{ ok: false, failure }`. Branch on `failure.kind` (see Errors). `headless(...)` also
@@ -81,8 +87,8 @@ returns `plan(...)`, to see the invocation without running it, and `stream(...)`
 
 ## Tool and env policy
 
-`ToolPolicy` controls what the harness may use during a run: `builtins` (`"off"`, `"none"` or `"harness-default"`), `mcp` (an allowlist
-of endpoints, or `"harness-default"`), `settings` (which settings sources load), and `strict`. `TOOLS_OFF` turns every built-in and MCP
+`ToolPolicy` controls what the harness may use during a run: `builtins` (`"off"` or `"harness-default"`), `mcp` (an allowlist
+of endpoints, or `"harness-default"`), `settings` (`"none"` or `"harness-default"`: which settings sources load), and `strict`. `TOOLS_OFF` turns every built-in and MCP
 tool off; `TOOLS_DEFAULT` leaves the harness's defaults alone. A call's policy is merged with the consumer's policy by `resolveTools`.
 
 Each axis is checked against the chosen engine's capability cells: an axis the engine cannot enforce fails with `unsupported`, and an
@@ -177,8 +183,8 @@ version may change them.
 
 - **OpenCode v2.2.6**: `opencode run` has no `--pure` flag and no flags for tools or base URL. Without `--standalone` it uses a shared
   background service that ignores per-call environment, so `--standalone` is required. Setting `OPENCODE_CONFIG_DIR` to an empty directory
-  replaces the global config directory; it works together with `OPENCODE_DISABLE_PROJECT_CONFIG` and `OPENCODE_DISABLE_CLAUDE_CODE`, and
-  setting the config directory alone does not isolate the run. The V2 permission deny rules hide `read`, `edit`, `glob`, `grep`, `shell`,
+  replaces the global config directory. The run was measured with `OPENCODE_CONFIG_DIR`, `OPENCODE_DISABLE_PROJECT_CONFIG` and
+  `OPENCODE_DISABLE_CLAUDE_CODE` set together; which of the three alone is enough to isolate it was not isolated. The V2 permission deny rules hide `read`, `edit`, `glob`, `grep`, `shell`,
   `webfetch`, `websearch`, `execute`, `question` and `subagent`, but `skill`, `experimental_image_generate` and the `opencode_*` meta tools
   remain. Tools-off on OpenCode is therefore emulated, with those leftovers named, and the leftovers are unmeasured.
 - **OpenCode sessions**: each run leaves a session. `opencode session delete --standalone <id>` removes it in about 0.24 s. Auth lives in the

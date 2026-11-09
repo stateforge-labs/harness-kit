@@ -1,13 +1,19 @@
 import { createRuntime, Harness } from "../src/runtime/index.ts";
 
-export async function answer(question: string): Promise<string> {
+const QUESTION = "What is a monad, in one sentence?";
+
+async function main(): Promise<number> {
   await using runtime = createRuntime();
   const claude = runtime.headless(Harness.Claude, {
     credential: { mode: "login-store", acknowledgePolicy: true },
   });
-  const result = await claude.run({ instructions: "Answer in one short sentence.", input: question });
+  const result = await claude.run({ instructions: "Answer in one short sentence.", input: QUESTION });
   if (!result.ok) {
-    throw new Error(result.failure.message);
+    console.error(`${result.failure.kind}: ${result.failure.message}`);
+    return 1;
   }
-  return result.value.text;
+  console.log(result.value.text);
+  return 0;
 }
+
+process.exitCode = await main();

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { ok } from "../../src/core/result.ts";
+import { envBytes } from "../../src/core/limits.ts";
 import { unparsable } from "../../src/core/kit.ts";
 import { KILL_GRACE_MS, PLACEHOLDER_OUT_FILE, Signal } from "../../src/driver/constants.ts";
 import { nextRunId } from "../../src/driver/context.ts";
@@ -262,6 +263,32 @@ describe("cliEngine start", () => {
     const done = await run.done;
     expect(!done.ok && done.failure.kind).toBe("aborted");
     expect(gate.signals).toContain(Signal.Term);
+  });
+
+  test("an environment plus argv exactly at the limit still spawns", async () => {
+    const { runner, specs } = chunkedRunner([{ chunks: ["fits\n"] }]);
+    const env = { KEY: "v".repeat(40) };
+    const limit = envBytes(env);
+    const run = lineEngine.start(runInput({ env, options: { ...runInput().options, maxArgvBytes: limit } }), ioWith(runner));
+    for await (const event of run.events) {
+      void event;
+    }
+    const done = await run.done;
+    expect(done.ok).toBe(true);
+    expect(specs).toHaveLength(1);
+  });
+
+  test("an environment plus argv one byte over the limit is too-large on the environment field and spawns nothing", async () => {
+    const { runner, specs } = chunkedRunner([{ chunks: ["never\n"] }]);
+    const env = { KEY: "v".repeat(40) };
+    const limit = envBytes(env) - 1;
+    const run = lineEngine.start(runInput({ env, options: { ...runInput().options, maxArgvBytes: limit } }), ioWith(runner));
+    for await (const event of run.events) {
+      void event;
+    }
+    const done = await run.done;
+    expect(!done.ok && done.failure).toMatchObject({ kind: "too-large", field: "environment", limitBytes: limit, actualBytes: limit + 1 });
+    expect(specs).toHaveLength(0);
   });
 
   test("helpArgs default to null and checkHelp to accepting", () => {

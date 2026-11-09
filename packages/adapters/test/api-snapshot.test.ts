@@ -14,6 +14,11 @@ describe("public export keys", () => {
     expect(keys).toEqual(["CapabilityName", "ConfinementAxis", "CredentialReason", "CredentialUnsupportedReason", "Engine", "EnvKind", "EvidenceKind", "Harness", "McpWhy", "RUN_FAILURE_KINDS", "SpawnPurpose", "TOOLS_DEFAULT", "TOOLS_OFF", "ToolSetting", "UnavailableReason", "UnsupportedReason", "createRuntime", "fail", "isSecret", "isUsable", "ok", "secret", "supportWhy"]);
   });
 
+  test("the engine entry exports exactly the cli engine factory", async () => {
+    const keys = Object.keys(await import(src("engine/index.ts"))).sort();
+    expect(keys).toEqual(["cliEngine"]);
+  });
+
   test("the testing entry exports exactly the fake helpers", async () => {
     const keys = Object.keys(await import(src("testing/index.ts"))).sort();
     expect(keys).toEqual(["driverContract", "fakeClock", "fakeFs", "fakeOutput", "fakeProcessRunner", "fakeRuntime"]);

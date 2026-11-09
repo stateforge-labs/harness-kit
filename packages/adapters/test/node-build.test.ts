@@ -6,7 +6,7 @@ import { bunImportScript, importProbeScript, processGroupScript, TRAPPED_MODULES
 
 const pkg = join(import.meta.dir, "..");
 const NAME = "@stateforge-labs/harness-adapters";
-const SUBPATHS = ["", "/claude", "/codex", "/opencode", "/opencode/store", "/tui", "/runtime", "/testing"];
+const SUBPATHS = ["", "/claude", "/codex", "/opencode", "/opencode/store", "/tui", "/runtime", "/engine", "/testing"];
 const SDK_PACKAGES = ["@anthropic-ai", "@openai/codex", "@opencode-ai"];
 const SCRIPT = `
 const out = { resolved: {}, loaded: {}, env: null };
@@ -214,6 +214,10 @@ describe("Step 11c: the built package", () => {
 
   test("the experimental declaration surface matches its snapshot", async () => {
     expect(await concatenatedDeclarations("runtime/experimental.d.ts")).toMatchSnapshot();
+  });
+
+  test("the engine declaration surface matches its snapshot", async () => {
+    expect(await concatenatedDeclarations("engine/index.d.ts")).toMatchSnapshot();
   });
 
   test("the testing declaration surface matches its snapshot", async () => {

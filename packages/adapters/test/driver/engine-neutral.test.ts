@@ -5,6 +5,7 @@ import type { RunEvent } from "../../src/core/run.ts";
 import { makeHandle } from "../../src/driver/handle.ts";
 import type { EngineImpl } from "../../src/driver/engine.ts";
 import { echoDriver, FAKE_PROFILE } from "../support/fake-driver.ts";
+import { fakeProcessRunner } from "../support/fakes.ts";
 import { options, request } from "../support/prepare.ts";
 import { runtimeCtx } from "../support/runtime.ts";
 
@@ -36,10 +37,12 @@ async function collect(events: AsyncIterable<RunEvent>): Promise<RunEvent[]> {
 
 describe("an engine that is not a process", () => {
   test("run reaches the engine with no program, argv or out file and spawns nothing", async () => {
-    const { ctx } = runtimeCtx();
+    const procs = fakeProcessRunner([]);
+    const { ctx } = runtimeCtx({ runner: procs.runner });
     const result = await makeHandle(ctx, memoryDriver(), "fake", options()).run(request({ input: "ping" }));
     expect(result.ok && result.value.text).toBe("answer to ping");
     expect(calls).toContain("ping");
+    expect(procs.specs).toHaveLength(0);
   });
 
   test("stream yields started, text and finished only", async () => {
