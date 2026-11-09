@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
+import { ADAPTERS_PACKAGE, declarationViolations, sourceViolations, textViolations } from "./lib/adapter-rules.ts";
 
 const argRoot = process.argv.indexOf("--root");
 const root = resolve(argRoot >= 0 ? process.argv[argRoot + 1]! : join(import.meta.dir, ".."));
@@ -38,6 +39,14 @@ function files(dir: string): string[] {
   });
 }
 
+function every(dir: string, keep: (name: string) => boolean): string[] {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).flatMap((e) => {
+    const p = join(dir, e);
+    return statSync(p).isDirectory() ? every(p, keep) : keep(e) ? [p] : [];
+  });
+}
+
 function specifiers(src: string): string[] {
   const out: string[] = [];
   for (const m of src.matchAll(/(?:^|\n)\s*(?:import|export)\s[^;]*?from\s*["']([^"']+)["']/g)) out.push(m[1]!);
@@ -55,7 +64,8 @@ for (const pkg of pkgs) {
   for (const file of files(pkg.dir)) {
     const rel = relative(root, file);
     const src = readFileSync(file, "utf8");
-    for (const spec of specifiers(src)) {
+    const specs = specifiers(src);
+    for (const spec of specs) {
       if (spec.startsWith(".")) {
         const target = resolve(dirname(file), spec);
         if (!(target + sep).startsWith(pkg.dir + sep) && target !== pkg.dir) violations.push(`${rel}: relative import leaves ${pkg.name}: ${spec}`);
@@ -80,6 +90,19 @@ for (const pkg of pkgs) {
     if (NODE_ONLY.has(pkg.name) && SHIPPED.some((d) => rel.includes(`${sep}${d}${sep}`)) && /\bBun\.[a-zA-Z]/.test(src.replace(/\/\/.*$|\/\*[\s\S]*?\*\//gm, ""))) {
       violations.push(`${rel}: Bun API in shipped library code`);
     }
+    const pkgRel = relative(pkg.dir, file).split(sep).join("/");
+    if (pkg.name === ADAPTERS_PACKAGE && pkgRel.startsWith("src/")) {
+      violations.push(...sourceViolations(rel, pkgRel, src, specs.filter((s) => !s.startsWith("."))));
+    }
+  }
+}
+
+const adapters = byName.get(ADAPTERS_PACKAGE);
+if (adapters) {
+  const docs = [join(adapters.dir, "README.md"), ...every(join(adapters.dir, "examples"), () => true)].filter((f) => existsSync(f));
+  for (const doc of docs) violations.push(...textViolations(relative(root, doc), readFileSync(doc, "utf8")));
+  for (const decl of every(join(adapters.dir, "dist"), (e) => e.endsWith(".d.ts"))) {
+    violations.push(...declarationViolations(relative(root, decl), readFileSync(decl, "utf8")));
   }
 }
 
