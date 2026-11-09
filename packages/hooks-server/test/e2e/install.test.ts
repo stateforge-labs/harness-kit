@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { opencodePluginPath } from "@stateforge-labs/harness-hooks";
 import { join } from "node:path";
 import { ClaudeHook, WORKTREE_TIMEOUT_MS, adapters } from "@stateforge-labs/harness-hooks";
-import { EnvVar, processEnv } from "@stateforge-labs/harness-hooks";
+import { CURL_MIN_VERSION, CurlTokenSource, EnvVar, processEnv } from "@stateforge-labs/harness-hooks";
 
 const repo = join(import.meta.dir, "..", "..");
 let dir: string;
@@ -13,8 +13,8 @@ beforeAll(async () => {
 });
 afterAll(() => rm(dir, { recursive: true, force: true }));
 
-async function install(args: string[]) {
-  const proc = Bun.spawn(["bun", join(repo, "scripts/install.ts"), ...args], { cwd: repo, stdout: "pipe", stderr: "pipe", env: { ...processEnv(), [EnvVar.Home]: dir, [EnvVar.XdgConfigHome]: join(dir, "xdg") } });
+async function install(args: string[], env: Record<string, string> = {}) {
+  const proc = Bun.spawn([process.execPath, join(repo, "scripts/install.ts"), ...args], { cwd: repo, stdout: "pipe", stderr: "pipe", env: { ...processEnv(), [EnvVar.Home]: dir, [EnvVar.XdgConfigHome]: join(dir, "xdg"), ...env } });
   const [stdout, stderr] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text()]);
   return { code: await proc.exited, stdout, stderr };
 }
@@ -22,7 +22,7 @@ const eventsOf = (harness: string) => Object.keys(adapters.get(harness)!.jsonSch
 
 describe("e2e: scripts/install.ts", () => {
   test("claude: a hook for every event, http except SessionStart and Setup, pointing at the given URL", async () => {
-    const r = await install(["claude", "--url", "http://127.0.0.1:9999/"]);
+    const r = await install(["claude", "--shim", "ts", "--url", "http://127.0.0.1:9999/"]);
     expect(r.code).toBe(0);
     const { hooks } = JSON.parse(r.stdout) as { hooks: Record<string, { hooks: { type: string; url?: string; command?: string }[] }[]> };
     expect(Object.keys(hooks).sort()).toEqual(eventsOf("claude"));
@@ -41,26 +41,76 @@ describe("e2e: scripts/install.ts", () => {
   });
 
   test("claude: --apply is refused, because the settings are managed elsewhere", async () => {
-    const r = await install(["claude", "--apply"]);
+    const r = await install(["claude", "--shim", "ts", "--apply"]);
     expect(r.code).toBe(1);
     expect(r.stderr).toContain("dotfiles");
   });
 
   test("codex: a shim command for every event; --apply writes hooks.json once and refuses to overwrite a different file", async () => {
     const home = join(dir, "codex-home");
-    const preview = await install(["codex", "--codex-home", home]);
+    const preview = await install(["codex", "--shim", "ts", "--codex-home", home]);
     expect(Object.keys(JSON.parse(preview.stdout).hooks).sort()).toEqual(eventsOf("codex"));
     expect(await Bun.file(join(home, "hooks.json")).exists()).toBe(false);
 
-    expect((await install(["codex", "--apply", "--codex-home", home])).code).toBe(0);
+    expect((await install(["codex", "--shim", "ts", "--apply", "--codex-home", home])).code).toBe(0);
     const written = await readFile(join(home, "hooks.json"), "utf8");
     expect(JSON.parse(written).hooks.Stop[0].hooks[0].command).toContain("--harness codex");
-    expect((await install(["codex", "--apply", "--codex-home", home])).stdout).toContain("unchanged");
+    expect((await install(["codex", "--shim", "ts", "--apply", "--codex-home", home])).stdout).toContain("unchanged");
 
     await writeFile(join(home, "hooks.json"), '{"hooks":{}}');
-    const clash = await install(["codex", "--apply", "--codex-home", home]);
+    const clash = await install(["codex", "--shim", "ts", "--apply", "--codex-home", home]);
     expect(clash.code).toBe(1);
     expect(await readFile(join(home, "hooks.json"), "utf8")).toBe('{"hooks":{}}');
+  });
+
+  test("claude with the curl shim: --apply writes only the script into --shim-dir and the block points at it", async () => {
+    const shimDir = join(dir, "claude-shims");
+    const preview = await install(["claude", "--shim", "curl", "--shim-dir", shimDir]);
+    expect(preview.code).toBe(0);
+    expect(await Bun.file(join(shimDir, "harness-hooks-claude.sh")).exists()).toBe(false);
+    const hooks = JSON.parse(preview.stdout).hooks as Record<string, { hooks: { type: string; command?: string }[] }[]>;
+    expect(hooks.SessionStart![0]!.hooks[0]!.command).toBe(`${join(shimDir, "harness-hooks-claude.sh")} SessionStart`);
+
+    const applied = await install(["claude", "--shim", "curl", "--shim-dir", shimDir, "--socket", join(dir, "h.sock"), "--apply"]);
+    expect(applied.code).toBe(0);
+    const script = join(shimDir, "harness-hooks-claude.sh");
+    expect((await stat(script)).mode & 0o777).toBe(0o755);
+    const text = await readFile(script, "utf8");
+    expect(text.startsWith("#!/bin/sh\n")).toBe(true);
+    expect(text).toContain(`--unix-socket '${join(dir, "h.sock")}'`);
+    expect(text).toContain("/hook/claude");
+    expect((await install(["claude", "--shim", "curl", "--shim-dir", shimDir, "--socket", join(dir, "h.sock"), "--apply"])).stdout).toContain("unchanged");
+  });
+
+  test("codex with the curl shim: every hook runs the script with its event name, and hooks.json is written next to a script in --shim-dir", async () => {
+    const home = join(dir, "codex-curl-home");
+    const shimDir = join(dir, "codex-shims");
+    const r = await install(["codex", "--shim", "curl", "--shim-dir", shimDir, "--codex-home", home, "--apply"]);
+    expect(r.code).toBe(0);
+    const { hooks } = JSON.parse(await readFile(join(home, "hooks.json"), "utf8")) as { hooks: Record<string, { hooks: { command: string }[] }[]> };
+    expect(Object.keys(hooks).sort()).toEqual(eventsOf("codex"));
+    for (const [event, groups] of Object.entries(hooks)) expect(groups[0]!.hooks[0]!.command).toBe(`${join(shimDir, "harness-hooks-codex.sh")} ${event}`);
+    expect(await Bun.file(join(shimDir, "harness-hooks-codex.sh")).exists()).toBe(true);
+  });
+
+  test("auto picks the curl shim when curl of the minimum version is on PATH, and the TypeScript shim when it is not", async () => {
+    const withCurl = await install(["codex"]);
+    expect(withCurl.stdout).toContain("harness-hooks-codex.sh");
+    const noCurl = await install(["codex"], { [EnvVar.Path]: join(dir, "empty-path") });
+    expect(noCurl.stdout).toContain("--harness codex");
+    expect(noCurl.stdout).not.toContain("harness-hooks-codex.sh");
+    const refused = await install(["codex", "--shim", "curl"], { [EnvVar.Path]: join(dir, "empty-path") });
+    expect(refused.code).toBe(1);
+    expect(refused.stderr).toContain(CURL_MIN_VERSION[CurlTokenSource.Env]);
+  });
+
+  test("--shim must be auto, curl or ts", async () => {
+    expect((await install(["codex", "--shim", "wget"])).code).toBe(1);
+  });
+
+  test("service: --socket puts the socket path in the unit", async () => {
+    const r = await install(["service", "--socket", "/run/user/1000/harness-hooks.sock"]);
+    expect(r.stdout).toContain(`Environment=${EnvVar.HookSocket}=/run/user/1000/harness-hooks.sock`);
   });
 
   test("opencode: --apply copies the plugin, a second run is a no-op copy, and without --apply nothing is written", async () => {

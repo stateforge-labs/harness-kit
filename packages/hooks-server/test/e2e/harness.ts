@@ -107,3 +107,48 @@ export async function eventually<T>(check: () => Promise<T | undefined>, ms = 30
     await Bun.sleep(25);
   }
 }
+
+export interface RunningSocketServer {
+  socketPath: string;
+  dir: string;
+  stop(signal?: "SIGTERM" | "SIGINT"): Promise<number>;
+}
+
+export function spawnWithSocket(socketPath: string, env: Record<string, string> = {}, logFile = join(tmpdir(), "harness-hooks-socket.jsonl")) {
+  return Bun.spawn(["bun", "src/server.ts"], {
+    cwd: join(import.meta.dir, "..", ".."),
+    env: { ...cleanEnv(), [EnvVar.HookSocket]: socketPath, [EnvVar.HookLogFile]: logFile, ...env },
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+}
+
+export async function startSocketServer(env: Record<string, string> = {}): Promise<RunningSocketServer> {
+  const dir = await mkdtemp(join(tmpdir(), "harness-hooks-sock-"));
+  const socketPath = join(dir, "hooks.sock");
+  const proc = spawnWithSocket(socketPath, env, join(dir, "events.jsonl"));
+  const reader = proc.stdout.getReader();
+  const decoder = new TextDecoder();
+  let seen = "";
+  const deadline = Date.now() + 10_000;
+  while (!seen.includes(`listening on unix:${socketPath}`)) {
+    if (Date.now() > deadline) {
+      proc.kill();
+      throw new Error(`socket server did not announce itself; output so far: ${seen}`);
+    }
+    const { value, done } = await reader.read();
+    if (done) throw new Error(`socket server exited early; output: ${seen}; stderr: ${await new Response(proc.stderr).text()}`);
+    seen += decoder.decode(value);
+  }
+  reader.releaseLock();
+  return {
+    socketPath,
+    dir,
+    async stop(signal = "SIGTERM") {
+      proc.kill(signal);
+      const code = await proc.exited;
+      await rm(dir, { recursive: true, force: true });
+      return code;
+    },
+  };
+}
