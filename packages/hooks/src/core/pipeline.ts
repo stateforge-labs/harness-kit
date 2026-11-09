@@ -60,7 +60,7 @@ export class Pipeline {
 
   constructor(options: PipelineOptions = {}) {
     this.#timeoutMs = options.timeoutMs ?? 2000;
-    this.#onFault = options.onFault ?? ((m) => console.error(m));
+    this.#onFault = options.onFault ?? (() => {});
   }
 
   use(layer: Middleware, options: LayerOptions): this;

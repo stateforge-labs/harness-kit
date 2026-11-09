@@ -48,7 +48,7 @@ export class HookHandler {
     const payload = await this.#readPayload(req);
     if (payload instanceof Response) return payload;
 
-    const handled = await handle(adapter, payload, this.#pipeline);
+    const handled = await handle(adapter, payload, this.#pipeline, { onError: (message, error) => console.error(message, error) });
     void logEvent(this.#config.logFile, payload, handled, this.#config.logFullPayload, new Date().toISOString(), this.#config.logMaxBytes);
     return Response.json(handled.body);
   }
