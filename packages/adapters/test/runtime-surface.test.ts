@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import * as runtime from "../src/runtime/index.ts";
 
 describe("the ./runtime value surface", () => {
-  test("exports only the constants and the result helpers so far", () => {
+  test("exports the constants, the result helpers and the secret helpers so far", () => {
     expect(Object.keys(runtime).sort()).toEqual([
       "CapabilityName",
       "CredentialReason",
@@ -17,7 +17,9 @@ describe("the ./runtime value surface", () => {
       "UnavailableReason",
       "UnsupportedReason",
       "fail",
+      "isSecret",
       "ok",
+      "secret",
     ]);
   });
 

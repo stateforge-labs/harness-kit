@@ -2,7 +2,18 @@ export { Harness, type HarnessId } from "@stateforge-labs/harness-hooks";
 export { Engine, UnsupportedReason, CapabilityName, type Capabilities, type Support } from "../core/capability.ts";
 export { EvidenceKind, type EvidenceRef, type Measured, type Suggested } from "../core/evidence.ts";
 export { ok, fail, type Result } from "../core/result.ts";
-export { type CredentialEvidence, type CredentialOf, type CredentialSpec, type PolicyNotice, type PolicyQuote } from "../core/credential.ts";
+export {
+  type ClaudeCredential,
+  type CodexCredential,
+  type CredentialByHarness,
+  type CredentialEvidence,
+  type CredentialOf,
+  type CredentialSpec,
+  type OpenCodeCredential,
+  type PolicyNotice,
+  type PolicyQuote,
+} from "../core/credential.ts";
+export { isSecret, secret, type Secret } from "../core/secret.ts";
 export { type SessionId } from "../core/session.ts";
 export {
   CredentialReason,
