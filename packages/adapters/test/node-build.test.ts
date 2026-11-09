@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 const pkg = join(import.meta.dir, "..");
 const NAME = "@stateforge-labs/harness-adapters";
-const SUBPATHS = ["", "/claude", "/codex", "/opencode", "/opencode/store", "/tui"];
+const SUBPATHS = ["", "/claude", "/codex", "/opencode", "/opencode/store", "/tui", "/runtime", "/testing"];
 const SCRIPT = `
 const out = { resolved: {}, loaded: {}, env: null };
 for (const sub of ${JSON.stringify(SUBPATHS)}) {
