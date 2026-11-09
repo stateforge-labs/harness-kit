@@ -8,11 +8,24 @@ and the project uses [Semantic Versioning](https://semver.org).
 ### `@stateforge-labs/harness-hooks`
 
 - Export the zod schemas, enums, hook names and tool inputs of every harness from the index.
+- The Claude tool-input table is exported as `claudeToolInputs`, with `anyToolInput` (any tool input record) and `checkToolInput` (the refinement for a tool input). These three names have no harness prefix in the index, unlike the other exports of their kind.
 - Tool name constants expanded for Claude, Codex and OpenCode, with the names each harness and version emits.
 
 ### `@stateforge-labs/harness-adapters`
 
 - The package is public. It has one subpath per harness (`claude`, `codex`, `opencode`), the OpenCode store reader (`opencode/store`) and the TUI chrome (`tui`).
+- Claude records: `readClaudeRecords()`, `parseClaudeRecord()`, the record and block types, the Claude enums, `humanPrompt()`, `toolUses()`, compaction helpers (`compactBoundary()`, `compactSummary()`, `compactionFailed()`, `transcriptHasCompactBoundary()`), `isNoise()`, `awaySummary()` and `unwrapPastedContent()`.
+- Claude background tasks and sessions: `scanClaudeBackground()` and `claudeSessionIdOfPid()`.
+- Claude locate: `claudeHome()`, `claudeProjectsRoot()`, `listClaudeTranscripts()` and `locateClaudeTranscript()`.
+- Claude usage and context: `claudeContextUse()`, `claudeContextWindow()` (the `[1m]` marker anywhere in the id selects the 1,000,000 window) and `stripClaudeContextSuffix()`.
+- Claude launch: `claudeHeadlessArgs()`, `parseClaudeResult()`, `CLAUDE_BINARY` and `CLAUDE_NESTED_ENV`.
+- Codex rollouts: `listRollouts()`, `readRollout()`, `parseRolloutRow()`, `findRolloutByCwd()`, `rolloutMeta()` and `sessionIdOfRolloutPath()`, with the row types and the Codex enums.
+- Codex open work: `openWork()` reports open calls, running cells and the turn start.
+- Codex exec and usage: `codexExec()`, `codexVersionArgs()`, `parseCodexVersion()`, `readLastMessage()`, `CODEX_UNUSED_FEATURES`, `tokenCounts()` and `contextUsage()`.
+- Tool facts for Claude and Codex: `claudeToolClass()`, `claudeToolTarget()`, `codexToolClass()`, `codexToolTarget()` and `parseCodexToolCall()`.
+- OpenCode launch: `opencodeArgs()`, `opencodeHermeticEnv()`, `opencodeSessionListArgs()`, `opencodeSessionDeleteArgs()`, `parseSessionList()`, `parseOpencodeStream()` and `readOpencodeStream()`.
+- OpenCode usage and catalogue: `messageUsage()`, `modelRef()`, `opencodeModelsFile()` and `readOpencodeCatalogue()`.
+- Shared core readers used by every harness module: row parsing, enum observation, unknown tallies and file listing.
 - OpenCode parts and messages: `parsePart()` and `parseMessage()` report unseen types and statuses as issues, `isToolInFlight()` and `humanText()`. `openOpencodeStore()` reads the database read-only with `node:sqlite` and returns `null` when it cannot open it.
 - Tool facts per harness: `toolClass()` (shell, read, edit, web, agent, other) and `toolTarget()` (the file or pattern a tool acts on). Codex exec sources are parsed for shell, apply_patch and web uses.
 - TUI screen chrome per harness: `CLAUDE_TUI_CHROME`, `CODEX_TUI_CHROME`, `OPENCODE_TUI_CHROME`, `tuiChrome()` and `isChromeLine()`. Claude's list is the one the screen reader used; Codex and OpenCode lists come from their idle screens, so a Claude footer is no longer chrome for them.

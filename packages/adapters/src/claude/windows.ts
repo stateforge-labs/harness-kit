@@ -14,7 +14,7 @@ const isLongFamily = (major: number, minor: number): boolean =>
 
 export function claudeContextWindow(model: string): ClaudeContextWindow {
   const id = model.toLowerCase();
-  if (id.endsWith(ClaudeWindow.LongSuffix)) {
+  if (id.includes(ClaudeWindow.LongSuffix)) {
     return { window: ClaudeWindow.Long, basis: ClaudeWindowBasis.Suffix };
   }
   const version = ClaudeWindow.Family.exec(id);

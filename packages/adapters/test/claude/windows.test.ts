@@ -16,6 +16,7 @@ const CASES: readonly [string, number, ClaudeWindowBasis][] = [
   [ClaudeModel.Synthetic, 200_000, ClaudeWindowBasis.Default],
   ["claude-opus-4-5[1m]", 1_000_000, ClaudeWindowBasis.Suffix],
   ["claude-haiku-4-5[1M]", 1_000_000, ClaudeWindowBasis.Suffix],
+  ["claude-opus-4-5[1m]-20251101", 1_000_000, ClaudeWindowBasis.Suffix],
 ];
 
 const CAPTURED: Readonly<Record<string, number>> = {

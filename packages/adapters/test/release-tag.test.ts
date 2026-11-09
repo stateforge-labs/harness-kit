@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const HELPER = fileURLToPath(new URL("../../../ci/lib/release-tag.sh", import.meta.url));
@@ -34,8 +35,13 @@ describe("ci/lib/release-tag.sh", () => {
   test("reads the minimum of a caret range from a package's dependencies", () => {
     expect(run(`dependency_min_version packages/adapters @stateforge-labs/harness-hooks`)).toMatchObject({
       status: 0,
-      stdout: "0.1.0",
+      stdout: "0.2.0",
     });
+  });
+
+  test("the harness-hooks minimum adapters depends on is the version this workspace builds against", () => {
+    const hooks = JSON.parse(readFileSync(new URL("../../hooks/package.json", import.meta.url), "utf8")).version;
+    expect(run(`dependency_min_version packages/adapters @stateforge-labs/harness-hooks`).stdout).toBe(hooks);
   });
 
   test("refuses a dependency that is not declared", () => {
