@@ -206,6 +206,13 @@ describe.each(targets)("endpoint through $name", ({ make }) => {
     for (const body of ["{nope", "[]", "42", "null", ""]) expect((await r.send(post("/hook/claude", body))).status).toBe(400);
   });
 
+  test("onHandled sees the neutral deny in reply", async () => {
+    const pipeline = new Pipeline({ onFault: () => {} }).use(() => ({ deny: { reason: "ENDPOINT-DENY" } }));
+    const r = await rig(make, { pipeline });
+    await r.send(post("/hook/claude", writeCall()));
+    expect(r.seen[0]!.handled.reply.deny).toEqual({ reason: "ENDPOINT-DENY" });
+  });
+
   test("onHandled sees the payload and the handled hook, and its failure does not touch the reply", async () => {
     const r = await rig(make);
     await r.send(post("/hook/claude", writeCall()));

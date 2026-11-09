@@ -141,11 +141,7 @@ for (const harness of ["claude", "codex"] as const) {
 
     test("UserPromptSubmit: follows the per-harness context rule (v1-everything)", async () => {
       const body = await answer(S["v1-everything"]!, harness, "UserPromptSubmit");
-      if (harness === "codex") {
-        expect(body).toEqual({ hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: "V1-CONTEXT" } });
-      } else {
-        expect(body).toEqual({});
-      }
+      expect(body).toEqual({ hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: "V1-CONTEXT" } });
     });
   });
 }

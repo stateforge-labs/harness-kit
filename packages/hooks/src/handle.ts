@@ -7,6 +7,8 @@ export interface Handled {
   body: unknown;
   decoded: Decoded;
   common: Common;
+  /** The neutral reply the pipeline produced, after fail-closed handling; `reply.deny` is set when the call was refused. */
+  readonly reply: NeutralReply;
 }
 
 export interface HandleOptions {
@@ -39,5 +41,5 @@ export async function handle(
   } catch (err) {
     onError(`encode failed (${adapter.id})`, err);
   }
-  return { harness: adapter.id, body, decoded, common };
+  return { harness: adapter.id, body, decoded, common, reply };
 }

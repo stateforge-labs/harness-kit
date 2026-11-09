@@ -22,6 +22,8 @@ its own.**
      - `PreToolUse` for the `Agent` tool, which gets the spawn advisory only when it applies (the brief names no return format or word
        limit, or a non-Haiku model is asked for); otherwise `{}`.
 
+     `UserPromptSubmit` can also carry context, but the server injects nothing there; only a consumer's layer can.
+
      No handler blocks, denies, retries, edits input or output, sets `continue: false`, or returns a `systemMessage`.
    - **Codex:** `SessionStart` gets the delegation rules and `SubagentStart` the subagent rules (the maintainers approved the wording on
      2026-11-07); every other event is answered `{}`. There is no spawn advisory, since a Codex spawn names no model.

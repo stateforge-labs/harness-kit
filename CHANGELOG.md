@@ -13,6 +13,8 @@ and the project uses [Semantic Versioning](https://semver.org).
 - Added the stock layers `stopGuard`, `once` and `stripToolPrefix`. `Next` now accepts an optional replacement context, which `stripToolPrefix` uses.
 - Added `HandleOptions` with an `onError` callback for `handle`, and an `onError` option on `createHookHandler`.
 - Added `renderCurlShim`, which renders a POSIX sh hook shim that posts with curl (over TCP or a unix socket) instead of starting a JavaScript process, with `parseCurlVersion`, `curlSupports` and `CURL_MIN_VERSION` (8.3.0). The token reaches curl through its environment (or a header file), never an argument. Added the `HOOK_SOCKET` variable name.
+- Added: Claude `UserPromptSubmit` replies can now carry `additionalContext` when a layer returns context there; the built-in layers still answer `{}` on that event.
+- Added `Handled.reply`: the neutral reply the pipeline produced, including `deny`, so an embedder can react without parsing the harness-specific body.
 - Changed: the library no longer logs by default. `handle` and `Pipeline` stay silent unless given `onError` or `onFault`; `@stateforge-labs/harness-hooks-server` passes both and logs as before.
 
 ### `@stateforge-labs/harness-hooks-server`

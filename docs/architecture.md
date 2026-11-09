@@ -93,7 +93,7 @@ missing item (`continueText`).
 | permission-request, OpenCode `permission.evaluate` | not encoded in v1 (the pre-tool deny refuses the call) | not encoded | not encoded | not encoded |
 | stop, Claude/Codex `Stop`; subagent-stop, Claude/Codex `SubagentStop` | **not encoded**: a block means "go on", the opposite of a deny | not encoded | `{ decision: "block", reason }` | not encoded (context on Stop is itself a continuation) |
 | stop, OpenCode `session.experimental.idle` | not encoded | not encoded | `{ continue: text }`; the plugin sends it as a synthetic user message, at most `HOOK_PLUGIN_MAX_CONTINUES` (8) times in a row per session (the cap Claude Code puts on Stop continuations), so a layer that always says continue cannot loop forever. The count resets when an idle is not continued; a failed continuation lets the session stop. Idle is the stop point because OpenCode awaits that hook; `session.execution.*` are events the plugin cannot answer | not encoded |
-| session-start, subagent-start (Claude, Codex); prompt-submit (Codex) | not encoded | not encoded | not encoded | `hookSpecificOutput.additionalContext`, as before v1 |
+| session-start, subagent-start (Claude, Codex); prompt-submit (Claude, Codex) | not encoded | not encoded | not encoded | `hookSpecificOutput.additionalContext`, as before v1 |
 | session-start, subagent-start, OpenCode `session.context` | not encoded | not encoded | not encoded | `{ context: text }`; the plugin adds it to the model request's system text as a `{ type: "text", text }` part |
 | every other event | not encoded | not encoded | not encoded | not encoded |
 
