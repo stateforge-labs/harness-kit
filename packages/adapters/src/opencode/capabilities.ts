@@ -1,4 +1,4 @@
-import { CapabilityName, cell, emulated, unmeasuredSupport, unsupported, UnsupportedReason, type Capabilities } from "../core/capability.ts";
+import { CapabilityName, cell, emulated, supported, unmeasuredSupport, unsupported, UnsupportedReason, type Capabilities } from "../core/capability.ts";
 import { OPENCODE_MEASURED, OpenCodeToolsOffLeftovers } from "./constants.ts";
 
 export const OPENCODE_TOOLS_OFF_HOW = `permissions deny rules in OPENCODE_CONFIG_CONTENT hide read, edit, glob, grep, shell, subagent, webfetch, websearch, execute and question; the model still lists ${OpenCodeToolsOffLeftovers.join(", ")} (${OPENCODE_MEASURED}); whether those leftovers can run is untested`;
@@ -18,7 +18,7 @@ export const OPENCODE_CAPABILITIES: Capabilities = {
   [CapabilityName.StructuredOutput]: cell(unmeasuredSupport("does OpenCode 2.2.6 run have a structured output flag?")),
   [CapabilityName.SessionsDelete]: cell(unsupported(UnsupportedReason.NotImplemented)),
   [CapabilityName.Ephemeral]: cell(OPENCODE_EPHEMERAL),
-  [CapabilityName.Cost]: cell(unmeasuredSupport("committed capture is an error stream; does the real 2.2.6 step_finish carry cost?")),
+  [CapabilityName.Cost]: cell(supported),
   [CapabilityName.SettingsSources]: cell(OPENCODE_SETTINGS_SKIP),
   [CapabilityName.BuiltinToolsOff]: cell(OPENCODE_BUILTINS_OFF),
   [CapabilityName.McpNone]: cell(OPENCODE_MCP_NONE),
