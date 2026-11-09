@@ -4,7 +4,7 @@ import { ClaudeHook } from "./names.ts";
 export const output: HookOutputRules = {
   preTool: ClaudeHook.PreToolUse,
   permission: ClaudeHook.PermissionRequest,
-  context: new Set([ClaudeHook.SessionStart, ClaudeHook.SubagentStart, ClaudeHook.PreToolUse]),
+  context: new Set([ClaudeHook.SessionStart, ClaudeHook.SubagentStart, ClaudeHook.PreToolUse, ClaudeHook.UserPromptSubmit]),
   stop: new Set([ClaudeHook.Stop, ClaudeHook.SubagentStop]),
   worktreeCreate: ClaudeHook.WorktreeCreate,
 };

@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { EnvDefault, Harness, installEnv, opencodePluginPath } from "@stateforge-labs/harness-hooks";
+import { CURL_MIN_VERSION, CurlTokenSource, EnvDefault, Harness, type CurlTokenSourceName, installEnv, opencodePluginPath, parseCurlVersion, pickCurlTokenSource, renderCurlShim, renderCurlTokenFile, shimEnv } from "@stateforge-labs/harness-hooks";
 import { claudeHooks, codexHooks, systemdUnit, type RenderOptions } from "./lib/client-config.ts";
 
 const repo = resolve(import.meta.dir, "..");
@@ -22,9 +22,76 @@ try {
 } catch {
   fail(`--url is not a URL: ${url}`);
 }
-const opts: RenderOptions = { url, repo, bun: process.execPath };
 const apply = flag("--apply");
 const env = installEnv();
+const ShimKind = { Auto: "auto", Curl: "curl", Ts: "ts" } as const;
+const SHIM_DIR_NAME = "bin";
+const SHIM_FILE_MODE = 0o755;
+const TOKEN_FILE_MODE = 0o600;
+const TOKEN_FILE_SUFFIX = ".header";
+const STATE_DIR_NAME = "harness-hooks";
+
+function curlVersion(): string | undefined {
+  try {
+    const r = Bun.spawnSync(["curl", "--version"], { stdout: "pipe", stderr: "ignore" });
+    return r.exitCode === 0 ? parseCurlVersion(r.stdout.toString()) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+const socketPath = value("--socket");
+
+const tokenConfigured = shimEnv().token !== "";
+const tokenFloor = CURL_MIN_VERSION[CurlTokenSource.File];
+
+function chooseShim(): { kind: "curl" | "ts"; tokenSource?: CurlTokenSourceName } {
+  const wanted = value("--shim") ?? ShimKind.Auto;
+  if (wanted !== ShimKind.Auto && wanted !== ShimKind.Curl && wanted !== ShimKind.Ts) return fail(`--shim must be ${Object.values(ShimKind).join(", ")}: ${wanted}`);
+  if (wanted === ShimKind.Ts) return socketPath ? fail("--socket needs the curl shim, which is the only client that speaks to a socket") : { kind: ShimKind.Ts };
+  const version = curlVersion();
+  const tokenSource = pickCurlTokenSource(version, tokenConfigured);
+  if (tokenSource) return { kind: ShimKind.Curl, tokenSource };
+  if (wanted === ShimKind.Curl) return fail(`--shim curl needs curl ${tokenFloor} or later on PATH (found ${version ?? "none"})`);
+  return socketPath ? fail(`--socket needs curl ${tokenFloor} or later on PATH (found ${version ?? "none"})`) : { kind: ShimKind.Ts };
+}
+
+const chosen = chooseShim();
+const shimKind = chosen.kind;
+const tokenSource = chosen.tokenSource;
+const shimDir = value("--shim-dir") ?? join(env.stateHome, STATE_DIR_NAME, SHIM_DIR_NAME);
+const shimFile = (harness: string): string => join(shimDir, `harness-hooks-${harness}.sh`);
+const tokenFile = (harness: string): string => join(shimDir, `harness-hooks-${harness}${TOKEN_FILE_SUFFIX}`);
+const opts: RenderOptions = { url, repo, bun: process.execPath, ...(socketPath ? { socketPath } : {}), ...(shimKind === ShimKind.Curl ? { curlShimFile: shimFile } : {}) };
+
+function writeTokenFile(path: string, content: string): void {
+  if (existsSync(path) && readFileSync(path, "utf8") === content) return void chmodSync(path, TOKEN_FILE_MODE);
+  mkdirSync(shimDir, { recursive: true });
+  writeFileSync(path, content, { mode: TOKEN_FILE_MODE });
+  chmodSync(path, TOKEN_FILE_MODE);
+  console.log(`wrote: ${path}`);
+}
+
+function writeShim(harness: string): void {
+  const client = shimEnv();
+  const script = renderCurlShim({
+    harness,
+    url,
+    ...(socketPath ? { socketPath } : {}),
+    ...(tokenSource ? { tokenSource } : {}),
+    ...(tokenSource === CurlTokenSource.File ? { tokenFile: tokenFile(harness) } : {}),
+    timeoutMs: client.timeoutMs,
+    failClosed: client.failClosed,
+    denyReason: client.denyReason,
+  });
+  const path = shimFile(harness);
+  if (tokenSource === CurlTokenSource.File) writeTokenFile(tokenFile(harness), renderCurlTokenFile(client.token));
+  if (existsSync(path) && readFileSync(path, "utf8") === script) return void console.log(`unchanged: ${path}`);
+  mkdirSync(shimDir, { recursive: true });
+  writeFileSync(path, script, { mode: SHIM_FILE_MODE });
+  chmodSync(path, SHIM_FILE_MODE);
+  console.log(`wrote: ${path}`);
+}
 const SERVICE = "service";
 const OPENCODE_CONFIG_DIR = "opencode";
 const PLUGIN_FILE = "harness-hooks.js";
@@ -69,13 +136,15 @@ switch (target) {
     break;
   }
   case Harness.Claude: {
-    if (apply) fail("claude settings are managed in dotfiles; merge the printed block into settings.json there (no --apply)");
+    if (apply && shimKind === ShimKind.Ts) fail("claude settings are managed in dotfiles; merge the printed block into settings.json there (no --apply)");
+    if (apply) writeShim(Harness.Claude);
     console.log(JSON.stringify(claudeHooks(opts), null, 2));
     break;
   }
   case Harness.Codex: {
     const home = value("--codex-home") ?? env.codexHome;
     const content = JSON.stringify(codexHooks(opts), null, 2) + "\n";
+    if (apply && shimKind === ShimKind.Curl) writeShim(Harness.Codex);
     if (!apply) {
       console.log(content.trimEnd());
       console.error(`(would be written to ${join(home, "hooks.json")} with --apply)`);
@@ -86,7 +155,7 @@ switch (target) {
   }
   case SERVICE: {
     const unitDir = value("--unit-dir") ?? join(env.configHome, "systemd", "user");
-    const stateDir = join(env.stateHome, "harness-hooks");
+    const stateDir = join(env.stateHome, STATE_DIR_NAME);
     const unit = systemdUnit(opts, stateDir);
     if (!apply) {
       console.log(unit.trimEnd());
@@ -105,5 +174,5 @@ switch (target) {
     break;
   }
   default:
-    fail("usage: install.ts <opencode|claude|codex|service> [--apply] [--url <base>] [--config-dir|--codex-home|--unit-dir <dir>] [--no-systemctl]");
+    fail("usage: install.ts <opencode|claude|codex|service> [--apply] [--url <base>] [--shim auto|curl|ts] [--shim-dir <dir>] [--socket <path>] [--config-dir|--codex-home|--unit-dir <dir>] [--no-systemctl]");
 }

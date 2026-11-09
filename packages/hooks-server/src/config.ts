@@ -13,6 +13,10 @@ const digits = (name: string, min: number, max: number) => {
 const EnvSchema = z.object({
   [EnvVar.Port]: digits(EnvVar.Port, 0, 65535).default(EnvDefault.Port),
   [EnvVar.HookHost]: z.string().min(1, `${EnvVar.HookHost} must not be empty`).default(EnvDefault.HookHost),
+  [EnvVar.HookSocket]: z
+    .string()
+    .default("")
+    .refine((v) => v === "" || isAbsolute(v), `${EnvVar.HookSocket} must be an absolute path`),
   [EnvVar.HookToken]: z.string().default(""),
   [EnvVar.HookLogFile]: z.string().default(EnvDefault.HookLogFile),
   [EnvVar.HookLogPayload]: z.string().default("").transform(isEnabled),
@@ -30,6 +34,7 @@ const EnvSchema = z.object({
 export class ServerConfig {
   readonly port: number;
   readonly host: string;
+  readonly socketPath: string | undefined;
   readonly token: string;
   readonly logFile: string;
   readonly logFullPayload: boolean;
@@ -45,6 +50,7 @@ export class ServerConfig {
     const e = parsed.data;
     this.port = e[EnvVar.Port];
     this.host = e[EnvVar.HookHost];
+    this.socketPath = e[EnvVar.HookSocket] === "" ? undefined : e[EnvVar.HookSocket];
     this.token = e[EnvVar.HookToken];
     this.logFile = e[EnvVar.HookLogFile];
     this.logFullPayload = e[EnvVar.HookLogPayload];
@@ -53,7 +59,7 @@ export class ServerConfig {
     this.shutdownGraceMs = e[EnvVar.HookShutdownGraceMs];
     this.middleware = e[EnvVar.HookMiddleware];
     this.middlewareTimeoutMs = e[EnvVar.HookMiddlewareTimeoutMs];
-    if (this.token === "" && !isLoopbackHost(this.host)) {
+    if (this.token === "" && this.socketPath === undefined && !isLoopbackHost(this.host)) {
       throw new ConfigError(`${EnvVar.HookToken} is empty, so the server only starts on a loopback address, not on ${this.host}`);
     }
   }

@@ -37,17 +37,18 @@ harness-hooks listening on 127.0.0.1:8787
 The first line is a warning that appears only when `HOOK_TOKEN` is empty.
 
 In code, build a server from a config and the adapters. Both inputs are required, so a half-configured server cannot be built. Layers
-are added outermost first. The built-in policy always runs innermost, so every layer sees its reply and can change it.
+are added outermost first. `build()` is asynchronous and returns the running endpoint (`address` and `close()`). The built-in policy always runs innermost, so every layer sees its reply and can change it.
 
 ```ts
 import { adapters } from "@stateforge-labs/harness-hooks";
 import { ServerConfig } from "./src/config.ts";
 import { HookServerBuilder } from "./src/server.ts";
 
-const server = new HookServerBuilder()
+const server = await new HookServerBuilder()
   .withConfig(new ServerConfig())
   .withAdapters(adapters)
   .build();
+console.log(server.address);
 ```
 
 ## Environment variables
@@ -59,7 +60,8 @@ invalid setting and exits with code 2. The message never contains the token.
 | --- | --- | --- |
 | `PORT` | `8787` | Listening port. `0` asks the system for a free port |
 | `HOOK_HOST` | `127.0.0.1` | Listening address. A non-loopback address requires `HOOK_TOKEN` |
-| `HOOK_TOKEN` | empty | Bearer token for `POST /hook/<harness>`. Empty means loopback only |
+| `HOOK_SOCKET` | empty | Absolute path of a unix socket to serve on instead of `PORT`/`HOOK_HOST`. The file is created readable by its owner only, a stale one is removed on start, and a file that is not a socket, or a socket another server answers on, stops the start |
+| `HOOK_TOKEN` | empty | Bearer token for `POST /hook/<harness>`. Empty means loopback only (Host and content-type are checked on a socket too) |
 | `HOOK_LOG_FILE` | `./data/events.jsonl` | JSONL log. It rotates to `<file>.1` at `HOOK_LOG_MAX_BYTES` |
 | `HOOK_LOG_MAX_BYTES` | 100 MiB | Size at which the log rotates |
 | `HOOK_LOG_PAYLOAD` | off | `1` also logs the full payload. For debugging only; it can contain prompts and tool input |
@@ -103,6 +105,24 @@ The installer reads `XDG_CONFIG_HOME`, `XDG_STATE_HOME` and `CODEX_HOME` for the
 | `bun scripts/install.ts opencode [--apply] [--config-dir <dir>]` | Bundles the plugin into one file, `plugins/harness-hooks.js`. It removes an older `harness-hooks.ts` |
 | `bun scripts/install.ts service [--apply] [--unit-dir <dir>] [--no-systemctl]` | The systemd user unit that runs this server |
 
+`claude` and `codex` register one shim per hook event. `--shim auto|curl|ts` chooses it: the curl shim, a POSIX sh script written to `--shim-dir`
+(default `$XDG_STATE_HOME/harness-hooks/bin`) as `harness-hooks-<harness>.sh`, is the default when curl 7.55.0 or later is on PATH; the TypeScript shim
+(`bun hook-shim.ts`) is the fallback and is never changed. The script gets the event name as its argument and bakes in the URL (or `--socket <path>`),
+`HOOK_SHIM_TIMEOUT_MS`, `HOOK_SHIM_FAIL` and `HOOK_SHIM_DENY_REASON` as they are when it is installed; `HOOK_TOKEN` and `HOOK_SHIM_DEBUG` are read from
+the environment on every call. The token never reaches curl as an argument, and the mechanism follows the curl on PATH: curl 8.3.0 or later reads `HOOK_TOKEN` from its environment; curl 7.55.0 up to 8.3.0 reads a header file `harness-hooks-<harness>.header`, which the installer writes next to the script with mode 0600 from `HOOK_TOKEN` when it is set, and uses no token mechanism when it is not (loopback or a user-only socket). Run the installer with `HOOK_TOKEN` set to the server's token when the server needs one. With the curl shim, `claude --apply` writes the script only,
+because the settings stay in your dotfiles. `service --socket <path>` makes the unit serve on that socket.
+
+A unix socket with the curl shim, end to end:
+
+```sh
+SOCK="$XDG_RUNTIME_DIR/harness-hooks.sock"
+bun scripts/install.ts service --socket "$SOCK" --apply
+bun scripts/install.ts codex --shim curl --socket "$SOCK" --apply
+```
+
+The first command writes the service unit that serves on the socket. The second writes `harness-hooks-codex.sh` and a Codex `hooks.json` that runs it. `--shim ts`
+keeps the TypeScript shim, which cannot reach a socket, so `--socket` with `--shim ts` is refused; with `--shim curl` the install stops when curl is older than 7.55.0 or missing. `--shim auto` then picks the TypeScript shim.
+
 `claude`, `codex` and `service` take `--url <base>` (default `http://127.0.0.1:8787`) and write it into the config. `opencode` ignores
 `--url`, because the plugin reads `HOOK_URL` from OpenCode's environment.
 
@@ -134,6 +154,18 @@ Each request writes one line to `HOOK_LOG_FILE`. Only allowlisted fields are wri
 ```
 
 The log holds key names and counts, never the text of prompts or tool input (unless `HOOK_LOG_PAYLOAD=1`).
+
+The server serves the hook endpoint of `@stateforge-labs/harness-hooks/endpoint` and passes it the callbacks that write the log and the fault messages to
+stderr; the library itself logs nothing.
+
+## Load test
+
+`load/hook-load.js` is a [k6](https://k6.io) script that posts `PreToolUse` and `PostToolUse` payloads from 10 or 50 simulated agents for 30 seconds and
+fails when a request fails, an answer is not a JSON object or the p95 latency is over 25 ms. It targets loopback TCP. See [`load/README.md`](load/README.md).
+
+```sh
+SCENARIO=agents10 mise exec k6@2.3.0 -- k6 run load/hook-load.js
+```
 
 ## Endpoints
 

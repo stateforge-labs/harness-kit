@@ -1,6 +1,6 @@
 {
   "name": "@stateforge-labs/harness-hooks",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Neutral hook events and replies, per-harness decode/encode for Claude Code, Codex and OpenCode, and the middleware pipeline.",
   "license": "MIT",
@@ -31,6 +31,11 @@
       "stateforge-source": "./src/index.ts",
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
+    },
+    "./endpoint": {
+      "stateforge-source": "./src/endpoint/index.ts",
+      "types": "./dist/src/endpoint/index.d.ts",
+      "default": "./dist/src/endpoint/index.js"
     },
     "./shim": {
       "stateforge-source": "./clients/shim/hook-shim.ts",

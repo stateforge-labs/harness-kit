@@ -74,9 +74,10 @@ After a schema change, run `bun run gen` in `packages/hooks`, then review the re
 | Path | What |
 | --- | --- |
 | `src/core/` | neutral event, reply, policy and the pipeline. Knows no harness |
+| `src/endpoint/` | the embeddable hook endpoint (`./endpoint`): handler, admission, loopback check, and the `serveNode` and `serveBun` binders |
 | `src/port.ts` | the `HarnessAdapter` interface every harness implements |
 | `src/adapters/<harness>/` | zod schemas (`events/`), log metadata (`handlers/`), closed value sets (`enums.ts`), the kind table (`neutral.ts`) and the encode rules |
-| `clients/` | the shim (runs with Node or Bun) and the OpenCode plugin (bundled into one file by the installer) |
+| `clients/` | the shim (runs with Node or Bun), the curl shim generator, and the OpenCode plugin (bundled into one file by the installer) |
 | `fixtures/<harness>/<Event>/` | payloads and snapshots, with a `provenance.json` per harness |
 | `schemas/<harness>/` | generated JSON Schemas. Do not edit |
 | `scripts/` | `gen-registry.ts` and `gen-json-schema.ts` (generators, with `--check`), `export-fixtures.ts` (captures to scrubbed fixtures), `lib/emit.ts` |
@@ -109,8 +110,8 @@ keeps the two in step.
 | Path | What |
 | --- | --- |
 | `src/server.ts` | `HookServerBuilder` and the entry point |
-| `src/http/` | `hook-handler.ts` (routes) and `admission.ts` (token, loopback `Host`, JSON content type) |
-| `src/config.ts`, `src/net.ts` | environment validation, and the loopback decision with `ipaddr.js` (no DNS) |
+| `src/socket.ts` | the unix socket: a stale socket file is removed on start, and the new one is created user-only |
+| `src/config.ts`, `src/net.ts` | environment validation, and the loopback decision, which is `isLoopbackHost` from `@stateforge-labs/harness-hooks/endpoint` (no DNS) |
 | `src/log.ts`, `src/shutdown.ts` | the JSONL log (an allowlist, rotation) and the drain on SIGTERM and SIGINT |
 | `src/middleware-loader.ts` | imports the `HOOK_MIDDLEWARE` modules. A module that fails to import stops the start |
 | `scripts/install.ts` | the client installers (`claude`, `codex`, `opencode`, `service`) |

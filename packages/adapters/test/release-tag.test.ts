@@ -35,7 +35,7 @@ describe("ci/lib/release-tag.sh", () => {
   test("reads the minimum of a caret range from a package's dependencies", () => {
     expect(run(`dependency_min_version packages/adapters @stateforge-labs/harness-hooks`)).toMatchObject({
       status: 0,
-      stdout: "0.2.0",
+      stdout: "0.3.0",
     });
   });
 

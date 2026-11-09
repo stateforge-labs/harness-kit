@@ -10,7 +10,7 @@ export interface HookContext {
   readonly raw: Readonly<Record<string, unknown>>;
 }
 
-export type Next = () => Promise<NeutralReply>;
+export type Next = (ctx?: HookContext) => Promise<NeutralReply>;
 
 export type Middleware = (ctx: HookContext, next: Next) => NeutralReply | Promise<NeutralReply>;
 
@@ -60,7 +60,7 @@ export class Pipeline {
 
   constructor(options: PipelineOptions = {}) {
     this.#timeoutMs = options.timeoutMs ?? 2000;
-    this.#onFault = options.onFault ?? ((m) => console.error(m));
+    this.#onFault = options.onFault ?? (() => {});
   }
 
   use(layer: Middleware, options: LayerOptions): this;
@@ -127,11 +127,11 @@ export class Pipeline {
         startedAt = performance.now();
         timer = setTimeout(() => fault(`timed out after ${layer.timeoutMs} ms`), Math.max(0, remaining));
       };
-      const next: Next = () => {
+      const next: Next = (override) => {
         if (!below) {
           clearTimeout(timer);
           remaining -= performance.now() - startedAt;
-          below = this.#dispatch(index + 1, ctx);
+          below = this.#dispatch(index + 1, override ?? ctx);
           void below.then(() => {
             if (!settled) arm();
           });

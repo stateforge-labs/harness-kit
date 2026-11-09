@@ -16,6 +16,7 @@ export const EnvVar = {
   PluginMaxContinues: "HOOK_PLUGIN_MAX_CONTINUES",
   Port: "PORT",
   HookHost: "HOOK_HOST",
+  HookSocket: "HOOK_SOCKET",
   HookLogFile: "HOOK_LOG_FILE",
   HookLogPayload: "HOOK_LOG_PAYLOAD",
   HookLogMaxBytes: "HOOK_LOG_MAX_BYTES",

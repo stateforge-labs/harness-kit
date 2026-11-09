@@ -1,6 +1,7 @@
 export { Harness, Kind, type HarnessId, type MetaValue, type NeutralEvent, type NeutralKind, type Spawn, type ToolRef, type WorktreeRef } from "./core/event.ts";
 export { continueText, denyText, type Continue, type Deny, type NeutralReply, type WorktreePath } from "./core/reply.ts";
 export { toolAllowlist, type ToolAllowlistOptions } from "./core/layers.ts";
+export { once, stopGuard, stripToolPrefix, type OnceOptions, type StopGuardOptions } from "./core/stock-layers.ts";
 export { WORKTREE_BRANCH_PREFIX, WORKTREE_DIR, WORKTREE_TIMEOUT_MS, createWorktree, removeWorktree, worktreeLayer } from "./core/worktree.ts";
 export { policy, type Rules } from "./core/policy.ts";
 export {
@@ -18,9 +19,11 @@ export {
   type PipelineOptions,
 } from "./core/pipeline.ts";
 export type { Common, Decoded, HarnessAdapter } from "./port.ts";
-export { handle, type Handled } from "./handle.ts";
+export { handle, type HandleOptions, type Handled } from "./handle.ts";
 export { adapters } from "./adapters/index.ts";
 export { opencodePluginPath, schemasDir, shimPath } from "./paths.ts";
+export { renderCurlShim, parseCurlVersion, curlSupports, pickCurlTokenSource, renderCurlTokenFile, type CurlShimOptions } from "../clients/shim/curl-shim.ts";
+export { CURL_MIN_VERSION, CurlTokenSource, type CurlTokenSourceName } from "../clients/shim/curl-constants.ts";
 export { ClaudeHook, ClaudeTool, type ClaudeHookName } from "./adapters/claude/names.ts";
 export { CodexHook, CodexTool, type CodexHookName } from "./adapters/codex/names.ts";
 export { OpenCodeHook, OpenCodeTool, type OpenCodeHookName } from "./adapters/opencode/names.ts";

@@ -37,7 +37,6 @@
   },
   "dependencies": {
     "@stateforge-labs/harness-hooks": "workspace:*",
-    "ipaddr.js": "2.5.0",
     "zod": "4.6.7"
   }
 }
