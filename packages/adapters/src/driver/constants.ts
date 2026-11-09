@@ -16,6 +16,7 @@ export const EngineMessage = {
   StandaloneMissing: "this opencode build does not offer --standalone",
   ArgvTooLarge: "the argument vector exceeds the platform budget",
   ArgTooLarge: "one argument exceeds the platform per-argument limit",
+  EnvTooLarge: "the argument vector and environment exceed the platform budget",
   Exit: "the harness exited with a failure",
   Unparsable: "the harness output could not be read",
 } as const;
@@ -108,3 +109,47 @@ export const OpenFlag = {
   Read: "r",
 } as const;
 export type OpenFlag = (typeof OpenFlag)[keyof typeof OpenFlag];
+
+export const PlanNote = {
+  ArgvExposure: "argv-readable-by-same-user",
+  ClaudeSettingsMayOverride: "claude-user-settings-may-override-credentials",
+  ClaudeApiKeyHelperUnmeasured: "claude-apikeyhelper-interaction-unmeasured",
+  OpencodeInjectionUnmeasured: "opencode-credential-injection-unmeasured",
+  EnvBytesNotCounted: "environment-bytes-counted-at-run-only",
+  IsolationHeadlessUnmeasured: "isolation-headless-unmeasured",
+} as const;
+
+export const Layer = {
+  Fact: "fact",
+  Consumer: "consumer",
+  Call: "call",
+} as const;
+export type Layer = (typeof Layer)[keyof typeof Layer];
+
+export const ConfigField = {
+  TimeoutMs: "timeoutMs",
+  MaxArgvBytes: "maxArgvBytes",
+  Model: "model",
+  Input: "input",
+  Instructions: "instructions",
+  Credential: "credential",
+  Engine: "engine",
+  Cwd: "cwd",
+  Effort: "effort",
+  Limits: "limits",
+} as const;
+
+export const ConfigMessage = {
+  Positive: "must be a positive integer",
+  Text: "must be a string",
+  NonEmpty: "must be a non-empty string",
+  Required: "is required",
+  CliOnly: "must be the cli engine",
+} as const;
+
+export const EnvField = {
+  Environment: "environment",
+} as const;
+
+export const DEFAULT_PERSIST = true;
+export const NO_HOME_VAR = "";
