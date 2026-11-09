@@ -16,6 +16,10 @@ and the project uses [Semantic Versioning](https://semver.org).
 - `./engine` subpath (experimental): the CLI engine contract for building a harness driver.
 - `invalid-config` for a driver table that throws, instead of an uncaught exception.
 - `./testing` additions: `fakeRuntime` with scripted runs, `calls`, `promptLimit` and `capabilities`; `fakeOutput`; and the driver contract checks.
+- **Breaking:** a run with no `tools` option now resolves to `TOOLS_OFF` (no built-in tools, no MCP servers, no user settings). Pass `TOOLS_DEFAULT` to keep the harness defaults.
+- **Breaking:** `Hermetic`, `Isolation`, `IsolationSpec`, the `hermetic`, `isolation` and `acceptVersions` options, `Plan.layers`, `Plan.isolation`, `RunOutput.hermetic` and `RunOutput.isolationDir`, `CredentialEvidence.observed` and `verified`, the `isolation-created` and `isolation-removed` library events, the private-home credential reasons and the `version-not-accepted` and `script-exhausted` reasons are removed. Use `tools`, `cwd: { private }` and `env` instead.
+- **Breaking:** `opencodeHermeticEnv` is renamed `opencodeToollessEnv`.
+- OpenCode: tools-off, MCP-none, settings-sources and ephemeral are now emulated with named leftovers, measured on OpenCode 2.2.6.
 
 ## harness-hooks 0.2.0, harness-adapters 0.1.0 - 2026-11-09
 
