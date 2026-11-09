@@ -1,10 +1,18 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "rangeStrategy": "pin",
   "minimumReleaseAge": "14 days",
   "dependencyDashboard": true,
   "packageRules": [
-    { "matchPackageNames": ["@stateforge-labs/**"], "minimumReleaseAge": null }
+    {
+      "description": "Our own @stateforge-labs packages are exempt from the release age; they stay pinned exactly.",
+      "matchPackageNames": [
+        "@stateforge-labs/**"
+      ],
+      "minimumReleaseAge": "0 days"
+    }
   ]
 }
