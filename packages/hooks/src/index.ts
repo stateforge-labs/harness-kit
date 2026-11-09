@@ -19,7 +19,7 @@ export {
   type PipelineOptions,
 } from "./core/pipeline.ts";
 export type { Common, Decoded, HarnessAdapter } from "./port.ts";
-export { handle, type Handled } from "./handle.ts";
+export { handle, type HandleOptions, type Handled } from "./handle.ts";
 export { adapters } from "./adapters/index.ts";
 export { opencodePluginPath, schemasDir, shimPath } from "./paths.ts";
 export { ClaudeHook, ClaudeTool, type ClaudeHookName } from "./adapters/claude/names.ts";

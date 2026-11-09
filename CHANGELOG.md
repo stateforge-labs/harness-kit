@@ -5,6 +5,13 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ## Unreleased
 
+### `@stateforge-labs/harness-hooks`
+
+- Added the `./endpoint` subpath: `createHookHandler` builds a web-standard `(Request) => Promise<Response>` hook handler with token or loopback admission, and `serveNode` and `serveBun` serve it on a TCP port or a unix socket.
+- Added the stock layers `stopGuard`, `once` and `stripToolPrefix`. `Next` now accepts an optional replacement context, which `stripToolPrefix` uses.
+- Added `HandleOptions` with an `onError` callback for `handle`, and an `onError` option on `createHookHandler`.
+- Changed: the library no longer logs by default. `handle` and `Pipeline` stay silent unless given `onError` or `onFault`; `@stateforge-labs/harness-hooks-server` passes both and logs as before.
+
 ## harness-hooks 0.2.0, harness-adapters 0.1.0 - 2026-11-09
 
 ### `@stateforge-labs/harness-hooks`

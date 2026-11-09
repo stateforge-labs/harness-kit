@@ -32,6 +32,11 @@
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
     },
+    "./endpoint": {
+      "stateforge-source": "./src/endpoint/index.ts",
+      "types": "./dist/src/endpoint/index.d.ts",
+      "default": "./dist/src/endpoint/index.js"
+    },
     "./shim": {
       "stateforge-source": "./clients/shim/hook-shim.ts",
       "types": "./dist/clients/shim/hook-shim.d.ts",
