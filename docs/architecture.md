@@ -291,7 +291,9 @@ packages/adapters/src/
   opencode/index.ts OpenCode module      (.../opencode)
   opencode/parts.ts  OpenCode parts and messages, in-flight tools, human text (.../opencode)
   opencode/store.ts OpenCode store reader, the only node:sqlite importer (.../opencode/store)
-  tui/index.ts      TUI screen chrome    (.../tui)
+  tui/chrome.ts     TUI screen chrome per harness (.../tui): CLAUDE/CODEX/OPENCODE_TUI_CHROME, tuiChrome, isChromeLine
+  tui/constants.ts  the chrome patterns
+  tui/index.ts      re-exports the chrome module
 ```
 
 Each module is a subpath export, so a consumer that imports only one harness never loads another's code or `node:sqlite`.

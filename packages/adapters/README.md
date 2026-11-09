@@ -38,6 +38,30 @@ Pass an explicit object to test a module without touching the real environment.
 | `@stateforge-labs/harness-adapters/opencode/store` | the OpenCode store reader. It imports `node:sqlite`, which prints an `ExperimentalWarning` on Node 22 (checked on 22.23); the other subpaths never load it |
 | `@stateforge-labs/harness-adapters/tui` | the TUI screen chrome |
 
+## TUI screen chrome
+
+`@stateforge-labs/harness-adapters/tui` lists the lines each harness's interactive screen draws around the conversation: borders, the
+prompt, key hints, spinners and status footers. A screen reader strips them before it reads the text. Each harness has its own list,
+so a Claude footer is not treated as chrome for Codex or OpenCode.
+
+| Export | What |
+| --- | --- |
+| `CLAUDE_TUI_CHROME`, `CODEX_TUI_CHROME`, `OPENCODE_TUI_CHROME` | `{ boxOnly, lines }`: one border class and a list of line patterns per harness |
+| `tuiChrome(harness)` | the record for one harness |
+| `isChromeLine(harness, line)` | `true` when the line is a border row, blank, or matches one of the harness's patterns |
+| `TuiChrome` | the record type |
+
+```ts
+import { isChromeLine } from "@stateforge-labs/harness-adapters/tui";
+import { Harness } from "@stateforge-labs/harness-hooks";
+
+isChromeLine(Harness.Claude, "  ⏵⏵ auto mode on (shift+tab to cycle)"); // true
+isChromeLine(Harness.Codex, "  ⏵⏵ auto mode on (shift+tab to cycle)"); // false
+```
+
+The patterns carry no `g` or `y` flag, so `test()` is stateless. The Claude list is the tab-recap screen reader's list, with the empty prompt widened to accept a no-break space after the chevron (the captured idle screen has one). The Codex
+and OpenCode lists were built from their idle screens (`fixtures/codex/screens/idle.txt`, `fixtures/opencode/screens/idle.txt`).
+
 Anything not listed is internal. The `bun` export condition points at `src/`. Every other runtime gets `dist/`.
 
 ## License
