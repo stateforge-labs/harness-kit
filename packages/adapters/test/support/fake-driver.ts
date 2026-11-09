@@ -7,8 +7,8 @@ import { CredentialUnsupportedReason, type RunFailure, UnavailableReason } from 
 import type { Profile } from "../../src/core/profile.ts";
 import { fail, ok, type Result } from "../../src/core/result.ts";
 import { ArgvCarry } from "../../src/driver/constants.ts";
-import { budgetOf, checkArgv, modelFlag, neutralOrNative, unparsable } from "../../src/driver/kit.ts";
-import type { CliEngine, CredentialFacet, EngineInput, HarnessDriver, Invocation } from "../../src/driver/port.ts";
+import { budgetOf, checkArgv, modelFlag, NO_USAGE, neutralOrNative, unparsable } from "../../src/driver/kit.ts";
+import type { CliEngine, CredentialFacet, EngineInput, HarnessDriver, Invocation, ParsedRun, RawRun } from "../../src/driver/port.ts";
 
 export const FAKE_STRIP = "FAKE_KEY";
 export const FAKE_INJECT = "FAKE_KEY_INJECTED";
@@ -94,4 +94,36 @@ export function fakeDriver(): HarnessDriver<"fake"> {
     credentials: FAKE_CREDENTIALS,
     run: { engines: [Engine.Cli], cli: FAKE_CLI },
   };
+}
+
+export const ECHO_PREFIX = "text:";
+const ECHO_NO_LINE = "";
+
+function echoTextOf(line: string): string | null {
+  return line.startsWith(ECHO_PREFIX) ? line.slice(ECHO_PREFIX.length) : null;
+}
+
+function echoInterpret(raw: RawRun): Result<ParsedRun, RunFailure> {
+  const streamed = raw.stdout.split("\n").map(echoTextOf).filter((text): text is string => text !== null).join(ECHO_NO_LINE);
+  const text = raw.outFileText ?? streamed;
+  return ok({
+    text,
+    usage: NO_USAGE,
+    cost: { usd: null, basis: "unavailable" },
+    model: null,
+    sessionId: null,
+    unrecognised: raw.stdout.includes("odd") ? [{ odd: true }] : [],
+  });
+}
+
+export const ECHO_CLI: CliEngine<"fake"> = {
+  invocation: fakeInvocation,
+  interpret: echoInterpret,
+  textOf: echoTextOf,
+  helpArgs: null,
+  checkHelp: () => ok(null),
+};
+
+export function echoDriver(): HarnessDriver<"fake"> {
+  return { ...fakeDriver(), run: { engines: [Engine.Cli], cli: ECHO_CLI } };
 }

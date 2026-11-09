@@ -68,3 +68,19 @@ export function safeEmit(handler: ((event: LibraryEvent) => void) | undefined, e
     return;
   }
 }
+
+export function guardSync<T>(label: string, work: () => Result<T, RunFailure>): Result<T, RunFailure> {
+  try {
+    return work();
+  } catch (error) {
+    return fail(internalFailure(label, error));
+  }
+}
+
+export async function settle<T>(work: () => Promise<T>): Promise<Captured<T>> {
+  try {
+    return { ok: true, value: await work() };
+  } catch (error) {
+    return { ok: false, errorName: nameOf(error) };
+  }
+}

@@ -137,6 +137,7 @@ export const ConfigField = {
   Cwd: "cwd",
   Effort: "effort",
   Limits: "limits",
+  Env: "env",
 } as const;
 
 export const ConfigMessage = {
@@ -188,4 +189,43 @@ export const ExitCode = {
 export const ExecuteText = {
   Failed: " failed: ",
   UnknownName: "Error",
+} as const;
+
+export const OUT_FILE_NAME = "last-message.txt";
+export const HELP_OUTPUT_BYTES = 65_536;
+
+export const DirKind = {
+  Delete: "delete",
+  Keep: "keep",
+  Scratch: "scratch",
+} as const;
+export type DirKind = (typeof DirKind)[keyof typeof DirKind];
+
+export const TextLine = {
+  Break: "\n",
+  Empty: "",
+} as const;
+
+export const ProbeOutcome = {
+  Ok: "ok",
+  Unavailable: "unavailable",
+  Timeout: "timeout",
+  Exit: "exit",
+} as const;
+export type ProbeOutcome = (typeof ProbeOutcome)[keyof typeof ProbeOutcome];
+
+export const HandleMessage = {
+  RuntimeClosed: "the runtime has been closed",
+  UnknownHarness: "no driver is registered for this harness",
+  EnvTransform: "the env transform failed or did not return strings",
+  ScratchFailed: "a run directory could not be created",
+  VersionRejected: "the installed harness version is not in acceptVersions",
+  NoResult: "the run ended without a result",
+  HelpUnavailable: "the harness help output could not be read",
+} as const;
+
+export const HandleLabel = {
+  Plan: "plan",
+  Stream: "stream",
+  Run: "run",
 } as const;
