@@ -5,10 +5,10 @@ import { tailBytes } from "../core/limits.ts";
 import type { Limits } from "../core/run.ts";
 import { fail, ok, type Result } from "../core/result.ts";
 import { FAILURE_TAIL_BYTES } from "../core/engine-constants.ts";
-import { Decode, DrainStep, StopReason, SuperviseMessage } from "./constants.ts";
+import { Decode, DrainStep, NEWLINE_BYTE, StopReason, SuperviseMessage } from "./constants.ts";
 import type { ProcessExit } from "./port.ts";
 import type { ProcessRunner, ProcessSpec, RunningProcess } from "./ports.ts";
-import { rollingText } from "./rolling-text.ts";
+import { rollingText, tailText } from "./rolling-text.ts";
 import { exitFailure, isFailedExit, spawnFailure, stopFailure } from "./supervise-failure.ts";
 import { lifecycle, type Lifecycle } from "./supervise-lifecycle.ts";
 
@@ -51,6 +51,26 @@ export async function* supervise(input: SuperviseInput): Supervised {
   }
 }
 
+type Step = IteratorResult<Uint8Array> | typeof DrainStep.Expired;
+
+function stepper(iterator: AsyncIterator<Uint8Array>, life: Lifecycle): () => Promise<Step> {
+  let wake: () => void = () => {};
+  let expired = false;
+  void life.expired.then(() => {
+    expired = true;
+    wake();
+  });
+  return () =>
+    new Promise<Step>((resolve, reject) => {
+      if (expired) {
+        resolve(DrainStep.Expired);
+        return;
+      }
+      wake = () => resolve(DrainStep.Expired);
+      iterator.next().then(resolve, reject);
+    });
+}
+
 async function* pump(input: SuperviseInput, running: RunningProcess, life: Lifecycle): Supervised {
   const stderr = rollingText(input.limits.maxStderrBytes, input.redact);
   const errDecoder = new TextDecoder();
@@ -62,29 +82,37 @@ async function* pump(input: SuperviseInput, running: RunningProcess, life: Lifec
   })();
 
   const outDecoder = new TextDecoder();
-  const iterator = running.stdout[Symbol.asyncIterator]();
-  let stdoutBytes = 0;
-  let stdoutText = "";
+  const nextStep = stepper(running.stdout[Symbol.asyncIterator](), life);
+  const stdout = tailText(input.limits.maxStdoutBytes);
+  let lineBytes = 0;
+  let overBytes = 0;
   for (;;) {
-    const step = await Promise.race([iterator.next(), life.expired]);
+    const step = await nextStep();
     if (step === DrainStep.Expired || step.done === true) {
       break;
     }
-    stdoutBytes += step.value.byteLength;
-    if (stdoutBytes > input.limits.maxStdoutBytes) {
+    if (overBytes > 0) {
+      continue;
+    }
+    const lastBreak = step.value.lastIndexOf(NEWLINE_BYTE);
+    const firstBreak = step.value.indexOf(NEWLINE_BYTE);
+    const longest = firstBreak === -1 ? lineBytes + step.value.byteLength : lineBytes + firstBreak;
+    lineBytes = lastBreak === -1 ? lineBytes + step.value.byteLength : step.value.byteLength - lastBreak - 1;
+    if (longest > input.limits.maxStdoutBytes || lineBytes > input.limits.maxStdoutBytes) {
+      overBytes = Math.max(longest, lineBytes);
       life.stop({ kind: StopReason.OutputTooLarge });
       continue;
     }
     const text = outDecoder.decode(step.value, Decode.Streaming);
     if (text !== "") {
-      stdoutText += text;
+      stdout.append(text);
       yield text;
     }
   }
   if (life.stopped() === null) {
     const rest = outDecoder.decode();
     if (rest !== "") {
-      stdoutText += rest;
+      stdout.append(rest);
       yield rest;
     }
   }
@@ -95,10 +123,10 @@ async function* pump(input: SuperviseInput, running: RunningProcess, life: Lifec
 
   const stop = life.stopped();
   if (stop !== null) {
-    return fail(stopFailure(stop, stdoutBytes, input.limits));
+    return fail(stopFailure(stop, overBytes, input.limits));
   }
   if (isFailedExit(exit)) {
     return fail(exitFailure(exit, stderrTail));
   }
-  return ok({ stdout: stdoutText, stderrTail, exit });
+  return ok({ stdout: stdout.read(), stderrTail, exit });
 }

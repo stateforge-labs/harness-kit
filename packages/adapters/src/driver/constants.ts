@@ -11,6 +11,7 @@ export const SCRATCH_PREFIX = "stateforge-adapters-scratch-";
 export const PLACEHOLDER_OUT_FILE = "{out-file}";
 export const TMP_FALLBACK = "/tmp";
 export const DIR_MODE = 0o700;
+export const NEWLINE_BYTE = 0x0a;
 
 export const DEFAULT_LIMITS: Limits = {
   maxStdoutBytes: 8_388_608,

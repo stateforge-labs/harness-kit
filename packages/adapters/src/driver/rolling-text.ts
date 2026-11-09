@@ -18,3 +18,24 @@ export function rollingText(limitBytes: number, redact: (text: string) => string
     read: () => text,
   };
 }
+
+export interface TailText {
+  append(chunk: string): void;
+  read(): string;
+}
+
+export function tailText(limitBytes: number): TailText {
+  const chunks: { readonly text: string; readonly bytes: number }[] = [];
+  let total = 0;
+  return {
+    append(chunk) {
+      const bytes = Buffer.byteLength(chunk);
+      chunks.push({ text: chunk, bytes });
+      total += bytes;
+      while (chunks.length > 1 && total - (chunks[0]?.bytes ?? 0) >= limitBytes) {
+        total -= chunks.shift()?.bytes ?? 0;
+      }
+    },
+    read: () => tailBytes(chunks.map((entry) => entry.text).join(""), limitBytes),
+  };
+}

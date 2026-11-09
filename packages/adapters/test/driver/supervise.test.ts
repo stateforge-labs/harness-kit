@@ -9,6 +9,7 @@ import { nodeClock, nodeRunner } from "../../src/driver/node-defaults.ts";
 import type { ProcessRunner, ProcessSpec, SpawnError } from "../../src/driver/ports.ts";
 import { type SuperviseDone, supervise, type SuperviseInput } from "../../src/driver/supervise.ts";
 import { fakeClock, fakeProcessRunner } from "../support/fakes.ts";
+import { STREAM_CHUNK_BYTES, streamRunner } from "../support/stream-runner.ts";
 
 const SPEC: ProcessSpec = { program: "p", args: [], env: {}, cwd: "/", stdin: null };
 const LIMITS = { maxStdoutBytes: 8_388_608, maxStderrBytes: 65_536 };
@@ -253,5 +254,87 @@ describe("supervise", () => {
     if (outcome.result.ok) {
       expect(outcome.result.value.stdout).toContain("ok");
     }
+  });
+});
+
+const MIB = 1_048_576;
+const STREAM_LIMITS = { maxStdoutBytes: 8 * MIB, maxStderrBytes: 65_536 };
+const MAX_STREAM_MS = 10_000;
+const MAX_HEAP_GROWTH = 64 * MIB;
+const STREAM_TIMEOUT_MS = 100;
+const CHUNKS_BEFORE_TIMEOUT = 100;
+
+function heapNow(): number {
+  Bun.gc(true);
+  return process.memoryUsage().heapUsed;
+}
+
+describe("supervise streaming", () => {
+  test("50 MiB of lines streams through with a bounded retained tail", async () => {
+    const stream = streamRunner({ totalBytes: 50 * MIB, newlines: true });
+    const generator = supervise(input({ runner: stream.runner, limits: STREAM_LIMITS }));
+    const before = heapNow();
+    const started = performance.now();
+    let yielded = 0;
+    let result: Result<SuperviseDone, RunFailure> | null = null;
+    for (;;) {
+      const step = await generator.next();
+      if (step.done === true) {
+        result = step.value;
+        break;
+      }
+      yielded += Buffer.byteLength(step.value);
+    }
+    const elapsed = performance.now() - started;
+    const growth = heapNow() - before;
+    expect(result.ok).toBe(true);
+    expect(yielded).toBe(50 * MIB);
+    if (result.ok) {
+      expect(Buffer.byteLength(result.value.stdout)).toBeLessThanOrEqual(8 * MIB);
+      expect(result.value.stdout.endsWith(stream.lastLine())).toBe(true);
+    }
+    expect(elapsed).toBeLessThan(MAX_STREAM_MS);
+    expect(growth).toBeLessThan(MAX_HEAP_GROWTH);
+  });
+
+  test("a 9 MiB single line fails with output-too-large and stops the child", async () => {
+    const stream = streamRunner({ totalBytes: 9 * MIB, newlines: false });
+    const outcome = await run(input({ runner: stream.runner, limits: STREAM_LIMITS }));
+    expect(outcome.result.ok).toBe(false);
+    if (!outcome.result.ok) {
+      expect(outcome.result.failure.kind).toBe("output-too-large");
+      if (outcome.result.failure.kind === "output-too-large") {
+        expect(outcome.result.failure.limitBytes).toBe(8 * MIB);
+        expect(outcome.result.failure.actualBytes).toBeGreaterThan(8 * MIB);
+      }
+    }
+    expect(stream.signals).toEqual([Signal.Term]);
+  });
+
+  test("a timeout fired mid-stream fails with timeout and sends SIGTERM", async () => {
+    const clock = fakeClock(0);
+    const stream = streamRunner({ totalBytes: 50 * MIB, newlines: true });
+    const generator = supervise(
+      input({ runner: stream.runner, limits: STREAM_LIMITS, clock, timeoutMs: STREAM_TIMEOUT_MS }),
+    );
+    let chunks = 0;
+    let result: Result<SuperviseDone, RunFailure> | null = null;
+    for (;;) {
+      const step = await generator.next();
+      if (step.done === true) {
+        result = step.value;
+        break;
+      }
+      chunks += 1;
+      if (chunks === CHUNKS_BEFORE_TIMEOUT) {
+        clock.advance(STREAM_TIMEOUT_MS);
+      }
+    }
+    expect(result).toEqual({
+      ok: false,
+      failure: { kind: "timeout", message: "the run exceeded its timeout", timeoutMs: STREAM_TIMEOUT_MS },
+    });
+    expect(stream.signals).toEqual([Signal.Term]);
+    expect(chunks * STREAM_CHUNK_BYTES).toBeLessThan(50 * MIB);
   });
 });
