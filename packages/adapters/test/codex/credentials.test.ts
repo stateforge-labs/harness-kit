@@ -8,12 +8,11 @@ import type { IsolationSpec } from "../../src/core/run.ts";
 import { ambientEnv, failureOf, HOMES, planInput, SENTINEL, valueOf } from "../support/credential.ts";
 
 const NONE: IsolationSpec = { kind: "none" };
-const PRIVATE: IsolationSpec = { kind: "private-home", retain: "delete" };
 
-function childFor(credential: unknown, home: string, isolation: IsolationSpec = NONE, isolationDir: string | null = null) {
+function childFor(credential: unknown, home: string) {
   const base = ambientEnv(CODEX_CREDENTIAL_VARS, home);
-  const plan = valueOf(codexCredentialPlan(planInput<"codex">(credential, isolation, base)));
-  const child = buildChildEnv({ base: inheritEnv(base), plan, nestedEnv: [], homeVar: EnvVar.CodexHome, isolationDir });
+  const plan = valueOf(codexCredentialPlan(planInput<"codex">(credential, NONE, base)));
+  const child = buildChildEnv({ base: inheritEnv(base), plan, nestedEnv: [], homeVar: EnvVar.CodexHome, isolationDir: null });
   return { base, plan, child };
 }
 
@@ -40,17 +39,6 @@ describe("codex credential plan", () => {
       expect(plan.acknowledgement).toBeNull();
     });
   }
-
-  test("login-store with a private home is credential-unsupported", () => {
-    const failure = failureOf(codexCredentialPlan(planInput<"codex">({ mode: "login-store" }, PRIVATE, ambientEnv([], "/h/u"))));
-    expect(failure).toMatchObject({ kind: "credential-unsupported", reason: "private-home-no-auth-copy", mode: "login-store" });
-  });
-
-  test("api-key with a private home sets CODEX_HOME to the directory", () => {
-    const { child } = childFor({ mode: "api-key", key: secret(SENTINEL) }, "/h/u", PRIVATE, "/iso/codex");
-    expect(child.env[EnvVar.CodexHome]).toBe("/iso/codex");
-    expect(child.set).toEqual([EnvVar.CodexHome]);
-  });
 
   test("token is not offered by codex", () => {
     expect(failureOf(codexCredentialPlan(planInput<"codex">({ mode: "token", token: secret(SENTINEL) }, NONE, ambientEnv([], "/h/u"))))).toMatchObject({

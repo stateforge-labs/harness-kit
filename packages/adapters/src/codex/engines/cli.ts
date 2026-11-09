@@ -1,6 +1,5 @@
 import { measuredValue } from "../../core/evidence.ts";
 import type { RunFailure } from "../../core/failure.ts";
-import { Hermetic } from "../../core/run.ts";
 import { asSessionId } from "../../core/session.ts";
 import { fail, ok, type Result } from "../../core/result.ts";
 import { CostBasis, EngineReason, PromptText } from "../../core/engine-constants.ts";
@@ -8,22 +7,21 @@ import { budgetOf, checkArgv, exitFailure, gatesFor, modelFlag, neutralOrNative,
 import { cliEngine } from "../../engine/cli.ts";
 import type { AfterContext, EngineEvent, EngineInput, Invocation } from "../../driver/port.ts";
 import { CODEX_CAPABILITIES } from "../capabilities.ts";
-import { CODEX_BINARY, CODEX_UNUSED_FEATURES } from "../exec.ts";
+import { CODEX_BINARY } from "../exec.ts";
+import { codexPolicy } from "../policy.ts";
 import { CodexCli, CodexStdout } from "../constants.ts";
 import { CODEX_PROFILE } from "../profile.ts";
 
-function codexArgs(input: EngineInput<"codex">, effort: string | null): string[] {
+function codexArgs(input: EngineInput<"codex">, effort: string | null, policy: readonly string[]): string[] {
   const { options } = input;
-  const full = options.hermetic === Hermetic.Full;
   return [
     CodexCli.Exec,
     ...(options.persist ? [] : [CodexCli.Ephemeral]),
-    ...(full ? [CodexCli.SkipGitRepoCheck, CodexCli.IgnoreUserConfig, CodexCli.Sandbox, CodexCli.ReadOnly] : []),
+    ...policy,
     CodexCli.Color,
     CodexCli.ColorNever,
     ...modelFlag(CodexCli.Model, options.model),
     ...(effort === null ? [] : [CodexCli.Config, `${CodexCli.ReasoningEffortKey}=${effort}`]),
-    ...(full ? CODEX_UNUSED_FEATURES.flatMap((feature) => [CodexCli.Disable, feature]) : []),
     CodexCli.Output,
     input.outFile,
     CodexCli.Stdin,
@@ -60,7 +58,11 @@ export const codexCli = cliEngine<"codex">({
     if (!effort.ok) {
       return fail(effort.failure);
     }
-    const args = codexArgs(input, effort.value);
+    const policy = codexPolicy({ tools: input.options.tools, credentialMode: input.credential.mode });
+    if (!policy.ok) {
+      return fail(policy.failure);
+    }
+    const args = codexArgs(input, effort.value, policy.value.args);
     const over = checkArgv(args, budgetOf(input.options, CODEX_PROFILE));
     if (over !== null) {
       return fail(over);
@@ -71,6 +73,7 @@ export const codexCli = cliEngine<"codex">({
       stdin: `${input.instructions}${PromptText.Separator}${input.input}`,
       outFile: input.outFile,
       argvCarries: [],
+      env: policy.value.env,
     };
     return ok(invocation);
   },

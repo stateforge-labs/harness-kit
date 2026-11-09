@@ -1,20 +1,19 @@
 import type { CodexCredential, CredentialSpec } from "../core/credential.ts";
-import { CredentialField, CredentialMode, finish, homeFailure, isPrivateHome, NO_INJECTION, secretInjection, secretOf, unsupportedFailure, type CredentialPlan, type CredentialPlanInput, type Injection } from "../core/credential-plan.ts";
+import { CredentialField, CredentialMode, finish, homeFailure, NO_INJECTION, secretInjection, secretOf, unsupportedFailure, type CredentialPlan, type CredentialPlanInput, type Injection } from "../core/credential-plan.ts";
 import { credentialFromSpec, isCredentialSpec, notSpecFailure } from "../core/credential-from.ts";
 import { CredentialUnsupportedReason, type RunFailure } from "../core/failure.ts";
 import { fail, ok, type Result } from "../core/result.ts";
-import type { IsolationSpec } from "../core/run.ts";
 import { EnvVar } from "../env.ts";
 import { CODEX_CREDENTIAL_VARS } from "../core/credential-vars.ts";
 
 const CODEX_MODES: readonly string[] = [CredentialMode.ApiKey, CredentialMode.LoginStore];
 
-function codexInjection(spec: CredentialSpec, isolation: IsolationSpec): Result<Injection, RunFailure> {
+function codexInjection(spec: CredentialSpec): Result<Injection, RunFailure> {
   switch (spec.mode) {
     case CredentialMode.ApiKey:
       return secretInjection(spec.key, CredentialField.Key, EnvVar.CodexApiKey);
     case CredentialMode.LoginStore:
-      return isPrivateHome(isolation) ? fail(unsupportedFailure(spec.mode, CredentialUnsupportedReason.PrivateHomeNoAuthCopy)) : ok(NO_INJECTION);
+      return ok(NO_INJECTION);
     default:
       return fail(unsupportedFailure(spec.mode, CredentialUnsupportedReason.UnknownMode));
   }
@@ -30,7 +29,7 @@ export function codexCredentialPlan(input: CredentialPlanInput<"codex">): Result
     return fail(notSpecFailure());
   }
   const spec: CredentialSpec = candidate;
-  return finish(spec.mode, CODEX_CREDENTIAL_VARS, codexInjection(spec, input.isolation), null);
+  return finish(spec.mode, CODEX_CREDENTIAL_VARS, codexInjection(spec), null);
 }
 
 function codexCredentialOf(spec: CredentialSpec): Result<CodexCredential, RunFailure> {
