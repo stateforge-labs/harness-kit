@@ -1,6 +1,7 @@
 export { Harness, Kind, type HarnessId, type MetaValue, type NeutralEvent, type NeutralKind, type Spawn, type ToolRef, type WorktreeRef } from "./core/event.ts";
 export { continueText, denyText, type Continue, type Deny, type NeutralReply, type WorktreePath } from "./core/reply.ts";
 export { toolAllowlist, type ToolAllowlistOptions } from "./core/layers.ts";
+export { once, stopGuard, stripToolPrefix, type OnceOptions, type StopGuardOptions } from "./core/stock-layers.ts";
 export { WORKTREE_BRANCH_PREFIX, WORKTREE_DIR, WORKTREE_TIMEOUT_MS, createWorktree, removeWorktree, worktreeLayer } from "./core/worktree.ts";
 export { policy, type Rules } from "./core/policy.ts";
 export {
