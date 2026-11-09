@@ -1,0 +1,16 @@
+title = "harness-kit"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Anthropic beta header names recorded in the Claude captures"
+targetRules = ["generic-api-key"]
+regexTarget = "match"
+regexes = ['''(?:interleaved-thinking-2025-05-14|oauth-2025-04-20)''']
+
+[[allowlists]]
+description = "Synthetic AWS key used to test the masker"
+targetRules = ["aws-access-token"]
+paths = ['''^tools/mask-captures\.test\.ts$''']
+regexes = ['''AKIAABCDEFGHIJKLMNOP''']

@@ -33,7 +33,8 @@ function scrubString(key: string, s: string, id: string): string {
     .replace(/-tmp-tmp-[A-Za-z0-9]+/g, "-tmp-work")
     .replace(/-home-[a-z0-9_]+-/g, "-home-user-")
     .replace(/\/home\/user\/\.claude\/projects\/[^/]+\/[0-9a-f-]{36}/g, `/home/user/.claude/projects/p/${id}`)
-    .replace(/(claude-tmp\/claude-\d+\/[^/]+\/)[0-9a-f-]{36}/g, `$1${id}`)
+    .replace(/\.cache\/[a-z]+-tmp\/[a-z]+-\d+\//g, ".cache/tmp/")
+    .replace(/(\.cache\/tmp\/[^/]+\/)[0-9a-f-]{36}/g, `$1${id}`)
     .replace(UUID, "00000000-0000-4000-8000-000000000000");
   if (out.length > 300) out = `LONG-${key}-${out.length}`;
   return out;
