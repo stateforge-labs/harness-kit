@@ -1,4 +1,4 @@
-export { fakeRuntime, type FakeRuntime, type FakeScripts } from "./fake-runtime.ts";
+export { fakeOutput, fakeRuntime, type FakeCall, type FakeRuntime, type FakeRuntimeOptions, type FakeScripts } from "./fake-runtime.ts";
 export { driverContract, type ContractCheck, type ContractFixtures } from "../driver/contract.ts";
 export { fakeProcessRunner, type FakeProcessRunner, type FakeProcessScript } from "./fake-runner.ts";
 export { fakeFs, type FakeDir, type FakeFs, type FakeFsInit } from "./fake-fs.ts";

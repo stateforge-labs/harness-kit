@@ -1,31 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import type { Runtime } from "../../src/driver/create-runtime.ts";
-import { fakeRuntime, type FakeRuntime, type FakeScripts } from "../../src/testing/fake-runtime.ts";
-import { Engine } from "../../src/core/capability.ts";
+import { createRuntime } from "../../src/runtime/index.ts";
+import { fakeOutput, fakeRuntime, type FakeRuntime, type FakeScripts } from "../../src/testing/index.ts";
+import { CapabilityName, Engine } from "../../src/core/capability.ts";
 import type { RunFailure } from "../../src/core/failure.ts";
-import { Hermetic, Isolation, type RunOutput, type RunRequest } from "../../src/core/run.ts";
+import { TOOLS_OFF } from "../../src/core/policy.ts";
+import type { RunOutput, RunRequest } from "../../src/core/run.ts";
 import { NO_USAGE } from "../../src/core/kit.ts";
 
 const REQUEST: RunRequest = { instructions: "do", input: "work" };
 
 function output(text: string): RunOutput {
-  return {
-    text,
-    usage: NO_USAGE,
-    cost: { usd: null, basis: "unavailable" },
-    model: null,
-    sessionId: null,
-    engine: Engine.Cli,
-    stability: "stable",
-    confinement: [],
-    elapsedMs: 0,
-    hermetic: Hermetic.None,
-    persisted: true,
-    isolationDir: null,
-    binary: { path: "/bin/fake", version: null, source: "installed" },
-    cwd: "/work",
-    credential: { requested: "api-key", observed: null, verified: false, scrubbed: [], billing: "unverified", acknowledgement: null },
-  };
+  return fakeOutput({ text });
 }
 
 const FAILURE: RunFailure = { kind: "unavailable", message: "scripted failure", reason: "binary-missing" };
@@ -59,7 +45,7 @@ describe("fakeRuntime scripts", () => {
     expect(result).toEqual({ ok: false, failure: FAILURE });
   });
 
-  test("reports script-exhausted once a harness runs out", async () => {
+  test("reports an internal-error unavailable once a harness runs out", async () => {
     const runtime = scripted({ claude: [output("only")] });
     const handle = runtime.headless("claude", {});
     await handle.run(REQUEST);
@@ -68,12 +54,12 @@ describe("fakeRuntime scripts", () => {
     if (result.ok) {
       return;
     }
-    expect(result.failure).toEqual({ kind: "unavailable", message: "claude: fake runtime script exhausted", reason: "script-exhausted" });
+    expect(result.failure).toEqual({ kind: "unavailable", message: "claude: fake runtime script exhausted", reason: "internal-error" });
   });
 
-  test("reports script-exhausted for a harness with no script", async () => {
+  test("reports an internal-error unavailable for a harness with no script", async () => {
     const result = await scripted({}).headless("opencode", {}).run(REQUEST);
-    expect(!result.ok && result.failure.kind).toBe("unavailable");
+    expect(!result.ok && result.failure.kind === "unavailable" && result.failure.reason).toBe("internal-error");
   });
 });
 
@@ -106,7 +92,8 @@ describe("fakeRuntime recorder", () => {
     expect(requests).toHaveLength(1);
     expect(plans).toHaveLength(1);
     expect(plans[0]?.harness).toBe("claude");
-    expect(plans[0]?.isolation).toEqual({ kind: Isolation.None });
+    expect(plans[0]?.engine).toBe(Engine.Cli);
+    expect(plans[0]?.confinement).toEqual([]);
     await handle.run(REQUEST);
     expect(requests).toHaveLength(2);
     expect(runtime.requests).toBe(requests);
@@ -139,5 +126,65 @@ describe("fakeRuntime type surface", () => {
   test("is assignable to the headless and close slice of Runtime", () => {
     const slice: Pick<Runtime, "headless" | "close"> = scripted({});
     expect(typeof slice.close).toBe("function");
+  });
+});
+
+describe("fakeRuntime calls", () => {
+  test("records the id, the options and the request of each call", async () => {
+    const runtime = scripted({ claude: [output("a")] });
+    const handle = runtime.headless("claude", { tools: TOOLS_OFF });
+    await handle.run(REQUEST);
+    expect(runtime.calls).toHaveLength(1);
+    expect(runtime.calls[0]?.id).toBe("claude");
+    expect(runtime.calls[0]?.options.tools).toEqual(TOOLS_OFF);
+    expect(runtime.calls[0]?.request).toBe(REQUEST);
+  });
+
+  test("records an empty options object when none were passed", () => {
+    const runtime = scripted({});
+    runtime.headless("codex").plan(REQUEST);
+    expect(runtime.calls[0]?.options).toEqual({});
+  });
+});
+
+describe("fakeOutput", () => {
+  test("defaults every field and lets an override win", () => {
+    const made = fakeOutput({ text: "hi", model: "m" });
+    expect(made.text).toBe("hi");
+    expect(made.model).toBe("m");
+    expect(made.usage).toEqual(NO_USAGE);
+    expect(made.cost).toEqual({ usd: 0, basis: "list" });
+    expect(made.confinement).toEqual([]);
+    expect(made.cwd).toBe("/fake-cwd");
+    expect(made.engine).toBe(Engine.Cli);
+  });
+
+  test("with no override gives empty text", () => {
+    expect(fakeOutput().text).toBe("");
+  });
+});
+
+describe("fakeRuntime promptLimit and capabilities", () => {
+  test("default to the real built-in values", async () => {
+    const runtime = scripted({});
+    const real = createRuntime();
+    for (const id of ["claude", "codex", "opencode"] as const) {
+      expect(runtime.promptLimit(id)).toBe(real.promptLimit(id));
+      expect(runtime.promptLimit(id, Engine.Sdk)).toBe(real.promptLimit(id, Engine.Sdk));
+      expect(runtime.capabilities(id)).toEqual(real.capabilities(id));
+    }
+    await real.close();
+    expect(runtime.promptLimit("claude")).not.toBeNull();
+    expect(runtime.promptLimit("codex")).toBeNull();
+  });
+
+  test("an override wins, including a null limit", async () => {
+    const real = createRuntime();
+    const caps = real.capabilities("codex");
+    await real.close();
+    const runtime = fakeRuntime({ scripts: {}, promptLimits: { claude: null, codex: 7 }, capabilities: caps === null ? {} : { claude: caps } });
+    expect(runtime.promptLimit("claude")).toBeNull();
+    expect(runtime.promptLimit("codex")).toBe(7);
+    expect(runtime.capabilities("claude")?.[CapabilityName.ClosedEnv]).toEqual(caps?.[CapabilityName.ClosedEnv]);
   });
 });

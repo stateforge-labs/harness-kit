@@ -16,6 +16,6 @@ describe("public export keys", () => {
 
   test("the testing entry exports exactly the fake helpers", async () => {
     const keys = Object.keys(await import(src("testing/index.ts"))).sort();
-    expect(keys).toEqual(["driverContract", "fakeClock", "fakeFs", "fakeProcessRunner", "fakeRuntime"]);
+    expect(keys).toEqual(["driverContract", "fakeClock", "fakeFs", "fakeOutput", "fakeProcessRunner", "fakeRuntime"]);
   });
 });

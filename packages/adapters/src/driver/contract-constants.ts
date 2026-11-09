@@ -1,9 +1,13 @@
+import { CapabilityName } from "../core/capability.ts";
+import { type ToolPolicy, ToolSetting } from "../core/policy.ts";
 import type { Profile } from "../core/profile.ts";
 import { CredentialMode } from "../core/credential-plan.ts";
 
 export const ContractCheckName = {
   ProfileEvidence: "profile-evidence",
   CapabilityCells: "capability-cells",
+  SdkColumn: "sdk-column",
+  Gating: "gating",
   SupportBehaviour: "support-behaviour",
   CredentialGarbage: "credential-garbage",
   EngineGarbage: "engine-garbage",
@@ -23,6 +27,12 @@ export const ContractText = {
   BadReason: "unsupported cell has no known reason",
   MissingCell: "capability cell is missing",
   GateMismatch: "refusal does not match the capability cell",
+  SdkUsable: "sdk cell is usable but no sdk engine is built",
+  NotRefused: "tools did not refuse a cell the table does not support",
+  LaxRefused: "non-strict tools refused a cell that is not unsupported",
+  SupportedRefused: "tools refused a supported cell",
+  WrongCapability: "refusal names another capability",
+  EngineRefusedSupported: "engine refuses a tools cell the table marks supported",
   PlainAccepted: "a plain string secret was accepted",
   PlanFailed: "a valid fixture credential gave no plan",
   SecretLeak: "plan serialises a fixture secret",
@@ -32,6 +42,12 @@ export const ContractText = {
   Question: "?",
   NoFixture: "no fixture credential",
 } as const;
+
+export const CONTRACT_TOOL_AXES: readonly { readonly capability: CapabilityName; readonly tools: ToolPolicy }[] = [
+  { capability: CapabilityName.BuiltinToolsOff, tools: { builtins: ToolSetting.Off, mcp: ToolSetting.HarnessDefault, settings: ToolSetting.HarnessDefault } },
+  { capability: CapabilityName.McpNone, tools: { builtins: ToolSetting.HarnessDefault, mcp: [], settings: ToolSetting.HarnessDefault } },
+  { capability: CapabilityName.SettingsSources, tools: { builtins: ToolSetting.HarnessDefault, mcp: ToolSetting.HarnessDefault, settings: ToolSetting.None } },
+];
 
 export const FailureKind = {
   Unsupported: "unsupported",
