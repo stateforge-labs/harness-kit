@@ -32,7 +32,6 @@ export const AgentMessage = {
   BadRecoveryPrompt: "the recovery prompt must be a non-empty string",
   BadStore: "the transcript store needs append, load and listSubkeys",
   BadHooks: "the hook target needs a pipeline",
-  BadMcpLimit: "the MCP output limit must be a positive integer",
   Cancelled: "the agent run was cancelled",
   TimedOut: "the agent run exceeded its time limit",
   IdleTimedOut: "the agent run produced no event within its idle limit",
@@ -60,7 +59,6 @@ export const AgentField = {
   RecoveryPrompt: "resume.recoveryPrompt",
   Store: "store",
   Hooks: "hooks",
-  McpOutputTokens: "limits.mcpOutputTokens",
 } as const;
 
 export const AbortReason = {

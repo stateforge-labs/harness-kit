@@ -40,7 +40,6 @@ policy turns built-in tools off, and strict MCP config, so only the endpoints in
 | `resume` | `{ sessionId, checkpoint?, recoveryPrompt? }`. See Resume |
 | `hooks` | `{ pipeline, socket }`. See Hooks |
 | `store` | a `TranscriptStore` the run mirrors its transcript to. See Store |
-| `limits` | `{ mcpOutputTokens? }`: a positive integer cap on the output of one MCP tool call |
 
 A run yields `AgentEvent` values: `started`, `session` (id and checkpoint), `turn`, `text`, `usage`, `tool`, `refused`, `output`,
 `recovered`, `unrecognised`, and last `finished`. Exactly one `finished` event is emitted and it is the last event. `run.settled` is a

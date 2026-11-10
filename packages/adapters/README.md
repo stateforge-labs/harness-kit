@@ -121,7 +121,7 @@ if (made.ok) {
   to the child environment, because a literal token lands in the child's argument list.
 - **Store and resume.** `start.store` mirrors the transcript to a store the caller owns; `start.resume` continues a session from the store alone
   and, with a `recoveryPrompt`, falls back to one fresh run when the session is gone.
-- **Limits.** `maxTurns` is required. `timeoutMs`, `idleTimeoutMs` and `signal` end a run; `start.limits.mcpOutputTokens` caps one MCP tool output.
+- **Limits.** `maxTurns` is required. `timeoutMs`, `idleTimeoutMs` and `signal` end a run.
 - **Cancel.** `run.cancel()` resolves only after the terminal `finished` event is emitted and the child process tree is gone (about 2 s on
   Claude). Exactly one `finished` event is emitted and it is last.
 - **Usage.** Raw token counts per model message. No cost is computed for an agent run.
