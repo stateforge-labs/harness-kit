@@ -23,7 +23,7 @@ describe("sdk query options", () => {
     expect(options.settingSources).toEqual([]);
     expect(options.executable).toBe("bun");
     expect(options.pathToClaudeCodeExecutable).toBe("/opt/claude");
-    expect(options.includePartialMessages).toBe(false);
+    expect(options.includePartialMessages).toBe(true);
     expect(options.persistSession).toBe(false);
     expect(options.abortController).toBe(abortController);
     expect(options.cwd).toBe(DIRS.cwd);

@@ -244,10 +244,28 @@ describe("sdk cancel", () => {
   });
 
   test("a result received before the abort wins over the cancel", async () => {
-    const fake = fakeQuery([INIT, ASSISTANT, RESULT]);
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const fake = fakeQuery(() => ({
+      [Symbol.asyncIterator]: () => {
+        const queue: unknown[] = [INIT, ASSISTANT, RESULT];
+        return {
+          next: async () => {
+            const head = queue.shift();
+            if (head !== undefined) {
+              return { done: false, value: head };
+            }
+            await gate;
+            return { done: true, value: undefined };
+          },
+        };
+      },
+    }));
     const run = claudeSdkEngine({ query: fake.query }).start(runInput());
-    const { end } = await collect(run);
+    await flush();
     run.cancel();
+    release();
+    const { end } = await collect(run);
     expect(end.ok).toBe(true);
   });
 
