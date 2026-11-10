@@ -178,21 +178,21 @@ A cell is `supported` only where a dated measurement exists. This is the record 
 `@anthropic-ai/claude-agent-sdk` 0.3.316 driving Claude Code 2.1.319, on Node 24.22 and Bun 1.4.4, with a closed environment, no settings
 sources, `tools: []` and strict MCP:
 
-| Cell | Measured by |
-| --- | --- |
-| `builtin-tools-off` | the init tool list was empty in five live runs |
-| `mcp-none`, `mcp-allowlist` | a live run with built-in tools off saw only the allowed endpoint's tools; an `allow` list denied another tool with no hook and the server received no call. `mcp-allowlist` is supported only with built-in tools off; the combination with built-in tools on is refused |
-| `closed-env` | the child's environment names were read from the process; a variable set only in the parent was absent |
-| `settings-sources` | with a user hook, a project hook and a project `CLAUDE.md` present, none ran and none was sent; with the sources enabled all ran |
-| `base-url` | requests reached a local listener at the injected base URL with the key in the vendor header |
-| `resume`, `resume-checkpoint` | a live run resumed from the store alone, with the local transcript removed, kept the session id and answered from the earlier turns |
-| `per-turn-usage` | live runs gave one usage event per model message, with cache reads growing across messages |
-| `structured-output` | a live run with an output schema produced an `output` event with the requested JSON |
-| `unknown-tool-detection` | a scripted model answer that called a tool absent from the init list produced one `refused` event with `source: "unknown-tool"` on both runtimes |
-| `session-store` | a live run mirrored 18 entries for one key; a failing store ended the run with `store-failed` |
-| `ephemeral` | runs with no store left no transcript file |
-| hook points | `pre-tool`, `post-tool`, `prompt-submit` and `stop` callbacks ran through a live `Pipeline`: a deny never reached the tool server and the model saw the reason. `session-start` never fired in four runs and is `emulated` |
-| cancel | a cancel 3.5 s into a slow scripted stream settled in 2.05 to 2.06 s on both runtimes, with the descendant gone |
+| Cell | Date | Measured by |
+| --- | --- | --- |
+| `builtin-tools-off` | 2026-11-09 | the init tool list was empty in five live runs |
+| `mcp-none`, `mcp-allowlist` | 2026-11-09 | a live run with built-in tools off saw only the allowed endpoint's tools; an `allow` list denied another tool with no hook and the server received no call. `mcp-allowlist` is supported only with built-in tools off; the combination with built-in tools on is refused |
+| `closed-env` | 2026-11-09 | the child's environment names were read from the process; a variable set only in the parent was absent |
+| `settings-sources` | 2026-11-09 | with a user hook, a project hook and a project `CLAUDE.md` present, none ran and none was sent; with the sources enabled all ran |
+| `base-url` | 2026-11-09 | requests reached a local listener at the injected base URL with the key in the vendor header |
+| `resume`, `resume-checkpoint` | 2026-11-09 | a live run resumed from the store alone, with the local transcript removed, kept the session id and answered from the earlier turns |
+| `per-turn-usage` | 2026-11-09 | live runs gave one usage event per model message, with cache reads growing across messages |
+| `structured-output` | 2026-11-09 | a live run with an output schema produced an `output` event with the requested JSON |
+| `unknown-tool-detection` | 2026-11-09 | a scripted model answer that called a tool absent from the init list produced one `refused` event with `source: "unknown-tool"` on both runtimes |
+| `session-store` | 2026-11-09 | a live run mirrored 18 entries for one key; a failing store ended the run with `store-failed` |
+| `ephemeral` | 2026-11-09 | runs with no store left no transcript file |
+| `pre-tool`, `post-tool`, `prompt-submit`, `stop` | 2026-11-09 | the callbacks ran through a live `Pipeline`: a deny never reached the tool server and the model saw the reason. `session-start` never fired in four runs and is `emulated` |
+| cancel | 2026-11-09 | a cancel 3.5 s into a slow scripted stream settled in 2.05 to 2.06 s on both runtimes, with the descendant gone |
 
 Not established, and therefore not claimed anywhere in the tables:
 
