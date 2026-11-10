@@ -5,6 +5,19 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ## Unreleased
 
+## harness-adapters 0.4.0
+
+### `@stateforge-labs/harness-adapters`
+
+- Added the agent facet: `runtime.agent(id, options)` returns an `Agent` whose `start` yields a stream of `AgentEvent` values and a `settled` result that never rejects. Agent runs use the vendor SDK engine only; a cli agent run is refused as unsupported before anything starts.
+- Added the Claude Agent SDK engine, with `@anthropic-ai/claude-agent-sdk` pinned at 0.3.316 as a dependency. It is loaded by a dynamic import at the first agent run, so importing the package or using the one-shot facet never loads it.
+- The credential is one api key or token plus a mandatory base URL; the child environment is closed and built only from what the consumer passes. The consumer supplies the working, home, config and tmp directories, and the library creates none of them.
+- Hooks: the consumer passes a `harness-hooks` pipeline, and the Claude engine calls it in process through SDK hook callbacks. A denied tool is also reported as a `refused` event. The session context is delivered at the first prompt, because the SDK does not fire SessionStart.
+- An MCP endpoint with a bearer is passed as a header that names an environment variable, so the token never reaches the child's argument list.
+- Cancel aborts the run and settles only after the child process tree is gone. Usage is raw per model message; the library computes no cost for agent runs.
+- `./testing` additions: `agentContract`, `fakeAgentEngine`, `fakeClaudeQuery` with `claudeMessages`, `fakeTranscriptStore` and a scripted Messages API.
+- The Claude `base-url` and `mcp-none` sdk cells are supported, and the Claude sdk cells for the agent features are supported.
+
 ## harness-adapters 0.2.0 - 2026-11-09
 
 ### `@stateforge-labs/harness-adapters`
