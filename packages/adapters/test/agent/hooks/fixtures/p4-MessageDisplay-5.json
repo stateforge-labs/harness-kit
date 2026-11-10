@@ -1,0 +1,12 @@
+{
+ "session_id": "00000000-0000-4000-8000-000000000000",
+ "transcript_path": "<HOME>/.claude/projects/<ENCODED-CWD>/00000000-0000-4000-8000-000000000000.jsonl",
+ "cwd": "<SCRATCH>/cwd",
+ "prompt_id": "00000000-0000-4000-8000-0000000000a3",
+ "hook_event_name": "MessageDisplay",
+ "turn_id": "0cea1267-fbc2-440d-9aa6-bc82f49fcfcf",
+ "message_id": "576d775a-be1d-4701-83bf-bd53ad422e42",
+ "index": 0,
+ "final": true,
+ "delta": "allowed-run"
+}

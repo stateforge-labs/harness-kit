@@ -1,0 +1,12 @@
+{
+ "session_id": "00000000-0000-4000-8000-000000000000",
+ "transcript_path": "<HOME>/.claude/projects/<ENCODED-CWD>/00000000-0000-4000-8000-000000000000.jsonl",
+ "cwd": "<SCRATCH>/cwd",
+ "prompt_id": "00000000-0000-4000-8000-0000000000a2",
+ "hook_event_name": "MessageDisplay",
+ "turn_id": "e5063515-77f9-442b-ad97-a96cbee56885",
+ "message_id": "d5231597-273e-4e06-b75b-757d4f473e26",
+ "index": 0,
+ "final": true,
+ "delta": "The Stop hook returned `probe-continue` as a blocking error from `<SCRATCH>/shim/harness-hooks-claude.sh`. It came in your message, so I'm treating it as your input. It doesn't name a task, and I have no pending work in this conversation.\n\nWhat would you like me to do? If the hook is meant to keep me working, tell me the task. I can also inspect that shim script to see what it does, if that helps."
+}

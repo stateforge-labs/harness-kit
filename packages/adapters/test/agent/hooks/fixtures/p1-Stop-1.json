@@ -1,0 +1,15 @@
+{
+ "session_id": "00000000-0000-4000-8000-000000000000",
+ "transcript_path": "<HOME>/.claude/projects/<ENCODED-CWD>/00000000-0000-4000-8000-000000000000.jsonl",
+ "cwd": "<SCRATCH>/cwd",
+ "prompt_id": "00000000-0000-4000-8000-0000000000a4",
+ "permission_mode": "default",
+ "effort": {
+  "level": "medium"
+ },
+ "hook_event_name": "Stop",
+ "stop_hook_active": false,
+ "last_assistant_message": "The Bash call did not run. I ran `echo hello` through the Bash tool, and a PreToolUse hook blocked it before the command executed. The hook returned the error `probe-deny` with the message `use nothing`. I didn't retry or try to route around the block, because a hook denial is a decision to respect.\n\nVerbatim `probe-` strings from my context:\n\n- From the SessionStart hook context: `probe-context`\n- From the PreToolUse hook error on the Bash call: `probe-deny`\n\nI can't say what `use nothing` means. If you want the echo to run anyway, tell me whether the hook should be bypassed or changed.",
+ "background_tasks": [],
+ "session_crons": []
+}

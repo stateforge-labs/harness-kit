@@ -1,0 +1,12 @@
+{
+ "session_id": "00000000-0000-4000-8000-000000000000",
+ "transcript_path": "<HOME>/.claude/projects/<ENCODED-CWD>/00000000-0000-4000-8000-000000000000.jsonl",
+ "cwd": "<SCRATCH>/cwd",
+ "prompt_id": "00000000-0000-4000-8000-0000000000a1",
+ "hook_event_name": "MessageDisplay",
+ "turn_id": "244a4226-e0c3-434a-9f91-dad0d3b01d04",
+ "message_id": "05c65930-91ea-43ce-bc60-1683263db32a",
+ "index": 0,
+ "final": true,
+ "delta": "The hook returned \"probe-continue\" but gave no instruction beyond that. The task is finished: `made-by-probe.txt` was created in the working directory and I replied `done`. I haven't taken any further action."
+}

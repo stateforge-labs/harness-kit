@@ -1,0 +1,15 @@
+{
+ "session_id": "00000000-0000-4000-8000-000000000000",
+ "transcript_path": "<HOME>/.claude/projects/<ENCODED-CWD>/00000000-0000-4000-8000-000000000000.jsonl",
+ "cwd": "<SCRATCH>/cwd",
+ "prompt_id": "00000000-0000-4000-8000-0000000000a2",
+ "permission_mode": "default",
+ "effort": {
+  "level": "medium"
+ },
+ "hook_event_name": "Stop",
+ "stop_hook_active": false,
+ "last_assistant_message": "ok\n\nThe only text I can see containing `probe-` is the bare line `probe-context`, which sits just before the `# Environment` section in the system-provided context. It has no hook label, so I can't tell which hook or event produced it.\n\nI also need to correct my previous message. I quoted a \"SessionStart hook\" block titled \"Delegation rules (harness-hooks server)\" and presented it as hook output. I can't find that text in my context, so I shouldn't have reported it. Please disregard it.",
+ "background_tasks": [],
+ "session_crons": []
+}

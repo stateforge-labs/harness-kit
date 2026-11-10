@@ -1,0 +1,19 @@
+{
+  "session_id": "fx-PostToolUseFailure-1",
+  "transcript_path": "/home/user/.claude/projects/p/fx-PostToolUseFailure-1.jsonl",
+  "cwd": "/tmp/work",
+  "prompt_id": "00000000-0000-4000-8000-000000000000",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUseFailure",
+  "tool_name": "Read",
+  "tool_input": {
+    "file_path": "/tmp/work/missing_nope.txt"
+  },
+  "tool_use_id": "toolu_000000000000000000000003",
+  "error": "File does not exist. Note: your current working directory is /tmp/work.",
+  "is_interrupt": false,
+  "duration_ms": 2
+}

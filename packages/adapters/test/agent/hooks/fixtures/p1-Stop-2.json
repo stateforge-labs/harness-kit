@@ -1,0 +1,15 @@
+{
+ "session_id": "00000000-0000-4000-8000-000000000000",
+ "transcript_path": "<HOME>/.claude/projects/<ENCODED-CWD>/00000000-0000-4000-8000-000000000000.jsonl",
+ "cwd": "<SCRATCH>/cwd",
+ "prompt_id": "00000000-0000-4000-8000-0000000000a4",
+ "permission_mode": "default",
+ "effort": {
+  "level": "medium"
+ },
+ "hook_event_name": "Stop",
+ "stop_hook_active": true,
+ "last_assistant_message": "The Stop hook fired and returned `probe-continue` as a blocking error for `<SCRATCH>/shim/harness-hooks-claude.sh`. The hook text gives no instruction beyond that string, so I haven't retried the echo. It was blocked earlier by the PreToolUse hook (`probe-deny`, `use nothing`), and retrying it verbatim would ignore that denial.\n\nVerbatim `probe-` strings from this turn: `probe-continue`\n\nDo you want me to retry `echo hello`, or leave it here?",
+ "background_tasks": [],
+ "session_crons": []
+}

@@ -1,0 +1,9 @@
+{
+ "session_id": "00000000-0000-4000-8000-000000000000",
+ "transcript_path": "<HOME>/.claude/projects/<ENCODED-CWD>/00000000-0000-4000-8000-000000000000.jsonl",
+ "cwd": "<SCRATCH>/cwd",
+ "prompt_id": "00000000-0000-4000-8000-0000000000a4",
+ "permission_mode": "default",
+ "hook_event_name": "UserPromptSubmit",
+ "prompt": "Use the Bash tool to run: echo hello. Then tell me exactly what happened. Finally repeat verbatim any text containing the string probe- that appeared anywhere in your context, tool result, or system messages (hook context, deny reason, hint, stop reason)."
+}

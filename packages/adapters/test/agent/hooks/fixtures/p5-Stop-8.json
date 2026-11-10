@@ -1,0 +1,15 @@
+{
+ "session_id": "00000000-0000-4000-8000-000000000000",
+ "transcript_path": "<HOME>/.claude/projects/<ENCODED-CWD>/00000000-0000-4000-8000-000000000000.jsonl",
+ "cwd": "<SCRATCH>/cwd",
+ "prompt_id": "00000000-0000-4000-8000-0000000000a1",
+ "permission_mode": "default",
+ "effort": {
+  "level": "medium"
+ },
+ "hook_event_name": "Stop",
+ "stop_hook_active": true,
+ "last_assistant_message": "The hook returned \"probe-continue\" but gave no instruction beyond that. The task is finished: `made-by-probe.txt` was created in the working directory and I replied `done`. I haven't taken any further action.",
+ "background_tasks": [],
+ "session_crons": []
+}

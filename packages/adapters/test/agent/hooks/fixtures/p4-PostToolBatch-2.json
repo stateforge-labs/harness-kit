@@ -1,0 +1,22 @@
+{
+ "session_id": "00000000-0000-4000-8000-000000000000",
+ "transcript_path": "<HOME>/.claude/projects/<ENCODED-CWD>/00000000-0000-4000-8000-000000000000.jsonl",
+ "cwd": "<SCRATCH>/cwd",
+ "prompt_id": "00000000-0000-4000-8000-0000000000a3",
+ "permission_mode": "default",
+ "effort": {
+  "level": "medium"
+ },
+ "hook_event_name": "PostToolBatch",
+ "tool_calls": [
+  {
+   "tool_name": "Bash",
+   "tool_input": {
+    "command": "echo allowed-run",
+    "description": "Print allowed-run text"
+   },
+   "tool_use_id": "toolu_000000000000000000000001",
+   "tool_response": "allowed-run"
+  }
+ ]
+}

@@ -1,0 +1,22 @@
+{
+ "session_id": "00000000-0000-4000-8000-000000000000",
+ "transcript_path": "<HOME>/.claude/projects/<ENCODED-CWD>/00000000-0000-4000-8000-000000000000.jsonl",
+ "cwd": "<SCRATCH>/cwd",
+ "prompt_id": "00000000-0000-4000-8000-0000000000a1",
+ "permission_mode": "default",
+ "effort": {
+  "level": "medium"
+ },
+ "hook_event_name": "PostToolBatch",
+ "tool_calls": [
+  {
+   "tool_name": "Bash",
+   "tool_input": {
+    "command": "touch made-by-probe.txt",
+    "description": "Create empty file made-by-probe.txt in working directory"
+   },
+   "tool_use_id": "toolu_000000000000000000000002",
+   "tool_response": "(Bash completed with no output)"
+  }
+ ]
+}
