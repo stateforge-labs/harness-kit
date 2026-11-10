@@ -1,7 +1,7 @@
 import type { ChildProcess } from "node:child_process";
 import type { AgentRunInput } from "../../agent/engine.ts";
 import type { ClaudeHookOption, HookObserver } from "../../agent/hooks/index.ts";
-import type { StoreEntry, TranscriptStore } from "../../agent/types.ts";
+import type { StoreEntry, StoreKey, TranscriptStore } from "../../agent/types.ts";
 import type { RunFailure } from "../../core/failure.ts";
 import { measuredValue } from "../../core/evidence.ts";
 import type { JsonObject } from "../../core/json.ts";
@@ -160,12 +160,6 @@ export function buildQueryOptions(input: AgentRunInput, ctx: BuildContext): Resu
   return ok(built);
 }
 
-interface StoreKey {
-  readonly projectKey: string;
-  readonly sessionId: string;
-  readonly subpath?: string;
-}
-
 function keyParts(key: unknown): StoreKey {
   const row = typeof key === "object" && key !== null ? (key as Record<string, unknown>) : {};
   const subpath = row["subpath"];
@@ -174,11 +168,6 @@ function keyParts(key: unknown): StoreKey {
     sessionId: typeof row["sessionId"] === "string" ? row["sessionId"] : "",
     ...(typeof subpath === "string" && subpath !== "" ? { subpath } : {}),
   };
-}
-
-export function storeKeyText(key: unknown): string {
-  const parts = keyParts(key);
-  return [parts.projectKey, parts.sessionId, ...(parts.subpath === undefined ? [] : [parts.subpath])].join(SdkStore.KeySeparator);
 }
 
 function toStoreEntry(entry: unknown): StoreEntry {
@@ -199,17 +188,12 @@ export function sessionStoreAdapter(store: TranscriptStore, onFailure: (reason: 
         throw error;
       });
   return {
-    append: (key, entries) => noted(() => store.append(storeKeyText(key), entries.map(toStoreEntry))),
+    append: (key, entries) => noted(() => store.append(keyParts(key), entries.map(toStoreEntry))),
     load: (key) =>
       noted(async () => {
-        const loaded = await store.load(storeKeyText(key));
+        const loaded = await store.load(keyParts(key));
         return loaded === null ? null : loaded.map((entry) => JSON.parse(entry.json) as unknown);
       }),
-    listSubkeys: (key) =>
-      noted(async () => {
-        const prefix = `${storeKeyText(key)}${SdkStore.KeySeparator}`;
-        const listed = await store.listSubkeys(storeKeyText(key));
-        return listed.map((subkey) => (subkey.startsWith(prefix) ? subkey.slice(prefix.length) : subkey));
-      }),
+    listSubkeys: (key) => noted(async () => [...(await store.listSubkeys(keyParts(key)))]),
   };
 }

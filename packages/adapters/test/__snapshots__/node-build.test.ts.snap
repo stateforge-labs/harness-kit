@@ -19,7 +19,7 @@ export { SpawnPurpose, type Cost, type CliPlan, type CommonOptions, type CwdSpec
 export type { HeadlessHandle } from "../driver/handle.ts";
 export type { Runtime } from "../driver/create-runtime.ts";
 export { AgentEventKind, AgentTree, AgentWhy, HookPoint } from "../agent/index.ts";
-export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEnd, AgentEngineImpl, AgentEngineRun, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentRunInput, AgentStart, ClosedEnv, HookTarget, StoreEntry, TranscriptStore, TurnUsage, } from "../agent/index.ts";
+export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEnd, AgentEngineImpl, AgentEngineRun, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentRunInput, AgentStart, ClosedEnv, HookTarget, StoreEntry, StoreKey, TranscriptStore, TurnUsage, } from "../agent/index.ts";
 export type { JsonObject, JsonValue } from "../core/json.ts";
 export * from "./experimental.ts";
 /** Creates a runtime over the three built-in harnesses. */
@@ -849,12 +849,12 @@ export declare function buildRuntime<H extends string>(drivers: Drivers<H>, conf
 // agent/index.d.ts
 export { AgentEventKind, AgentTree, AgentWhy, HookPoint } from "./constants.ts";
 export type { AgentEnd, AgentEngineImpl, AgentEngineRun, AgentRunInput } from "./engine.ts";
-export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentStart, ClosedEnv, HookTarget, StoreEntry, TranscriptStore, TurnUsage, } from "./types.ts";
+export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentStart, ClosedEnv, HookTarget, StoreEntry, StoreKey, TranscriptStore, TurnUsage, } from "./types.ts";
 
 // agent/index.d.ts
 export { AgentEventKind, AgentTree, AgentWhy, HookPoint } from "./constants.ts";
 export type { AgentEnd, AgentEngineImpl, AgentEngineRun, AgentRunInput } from "./engine.ts";
-export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentStart, ClosedEnv, HookTarget, StoreEntry, TranscriptStore, TurnUsage, } from "./types.ts";
+export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentStart, ClosedEnv, HookTarget, StoreEntry, StoreKey, TranscriptStore, TurnUsage, } from "./types.ts";
 
 // core/json.d.ts
 /** Any value that survives JSON.stringify and JSON.parse unchanged. */

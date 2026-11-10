@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AgentEngineRun, AgentRunInput } from "../../../src/agent/engine.ts";
-import type { AgentEvent, AgentOptions, AgentStart, TranscriptStore, StoreEntry } from "../../../src/agent/types.ts";
+import type { AgentEvent, AgentOptions, AgentStart, TranscriptStore, StoreEntry, StoreKey } from "../../../src/agent/types.ts";
 import type { ClaudeQueryFn, ClaudeQueryOptions, ClaudeQueryStream } from "../../../src/claude/engines/sdk.ts";
 import { TOOLS_OFF, type McpEndpoint } from "../../../src/core/policy.ts";
 import type { Clock } from "../../../src/core/io.ts";
@@ -152,22 +152,28 @@ export function kinds(events: readonly AgentEvent[]): string[] {
   return events.map((event) => event.kind);
 }
 
+function keyText(key: StoreKey): string {
+  return [key.projectKey, key.sessionId, ...(key.subpath === undefined ? [] : [key.subpath])].join("/");
+}
+
 export function memoryStore(): TranscriptStore & { readonly entries: Map<string, StoreEntry[]>; failure: Error | null } {
   const entries = new Map<string, StoreEntry[]>();
   const store = {
     entries,
     failure: null as Error | null,
-    async append(key: string, batch: readonly StoreEntry[]): Promise<void> {
+    async append(key: StoreKey, batch: readonly StoreEntry[]): Promise<void> {
       if (store.failure !== null) {
         throw store.failure;
       }
-      entries.set(key, [...(entries.get(key) ?? []), ...batch]);
+      const text = keyText(key);
+      entries.set(text, [...(entries.get(text) ?? []), ...batch]);
     },
-    async load(key: string): Promise<readonly StoreEntry[] | null> {
-      return entries.get(key) ?? null;
+    async load(key: StoreKey): Promise<readonly StoreEntry[] | null> {
+      return entries.get(keyText(key)) ?? null;
     },
-    async listSubkeys(key: string): Promise<readonly string[]> {
-      return [...entries.keys()].filter((candidate) => candidate.startsWith(`${key}/`));
+    async listSubkeys(key: StoreKey): Promise<readonly string[]> {
+      const prefix = `${keyText(key)}/`;
+      return [...entries.keys()].filter((candidate) => candidate.startsWith(prefix)).map((candidate) => candidate.slice(prefix.length));
     },
   };
   return store;

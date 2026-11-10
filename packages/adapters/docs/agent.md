@@ -136,7 +136,7 @@ model call.
 
 ## Store
 
-`start.store` is a `TranscriptStore`: `append(key, entries)`, `load(key)` and `listSubkeys(key)`. The key is `<project>/<session>`. The run
+`start.store` is a `TranscriptStore`: `append(key, entries)`, `load(key)` and `listSubkeys(key)`. The key is a `StoreKey` object, `{ projectKey, sessionId, subpath? }`, so a store never splits a joined string; `subpath` is set for a subagent transcript, and `listSubkeys` returns the subpaths below the key, relative to it. The run
 mirrors its transcript through `append`, and a resume loads the session from `load`, so a session can resume where the local transcript file
 does not exist. A rejection of `append` ends the run with `store-failed`, after the SDK has retried (measured: about 2.2 s). With a store,
 the run keeps a transcript; without one, an agent run leaves no transcript file in the config directory.

@@ -84,6 +84,7 @@ export type {
   ClosedEnv,
   HookTarget,
   StoreEntry,
+  StoreKey,
   TranscriptStore,
   TurnUsage,
 } from "../agent/index.ts";

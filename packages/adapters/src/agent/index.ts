@@ -14,6 +14,7 @@ export type {
   ClosedEnv,
   HookTarget,
   StoreEntry,
+  StoreKey,
   TranscriptStore,
   TurnUsage,
 } from "./types.ts";

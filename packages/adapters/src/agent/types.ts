@@ -52,11 +52,17 @@ export interface StoreEntry {
   readonly json: string;
 }
 
+export interface StoreKey {
+  readonly projectKey: string;
+  readonly sessionId: string;
+  readonly subpath?: string;
+}
+
 /** A consumer-owned mirror of the session transcript. A rejection ends the run with `store-failed`. */
 export interface TranscriptStore {
-  append(key: string, entries: readonly StoreEntry[]): Promise<void>;
-  load(key: string): Promise<readonly StoreEntry[] | null>;
-  listSubkeys(key: string): Promise<readonly string[]>;
+  append(key: StoreKey, entries: readonly StoreEntry[]): Promise<void>;
+  load(key: StoreKey): Promise<readonly StoreEntry[] | null>;
+  listSubkeys(key: StoreKey): Promise<readonly string[]>;
 }
 
 /** Where hook events go: the consumer's pipeline. */
