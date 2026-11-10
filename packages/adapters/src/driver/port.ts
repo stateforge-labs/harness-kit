@@ -11,6 +11,7 @@ import type { Cost, TokenUsage } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
+import type { AgentEngineImpl } from "../agent/engine.ts";
 import type { EngineImpl } from "./engine.ts";
 
 export type {
@@ -76,6 +77,7 @@ export interface RunFacet<I extends string> {
   readonly engines: readonly Engine[];
   readonly cli: EngineImpl<I>;
   readonly sdk?: EngineImpl<I>;
+  readonly agent?: AgentEngineImpl<I>;
 }
 
 export interface CredentialFacet<I extends string> {

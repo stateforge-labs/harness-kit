@@ -1,4 +1,6 @@
 import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import { agentOf } from "../agent/facet.ts";
+import type { Agent, AgentOptions } from "../agent/types.ts";
 import { type Capabilities, Engine } from "../core/capability.ts";
 import { type CredentialOf, type CredentialSpec, type PolicyNotice } from "../core/credential.ts";
 import type { RunFailure } from "../core/failure.ts";
@@ -35,6 +37,7 @@ export interface Runtime<H extends string = HarnessId> extends AsyncDisposable {
   driver(id: string): HarnessDriver | null;
   available(order: readonly H[], io: ProbeIo): Promise<readonly Availability[]>;
   headless<I extends H>(id: I, options: HeadlessOptions<I>): HeadlessHandle<I>;
+  agent<I extends H>(id: I, options: AgentOptions): Result<Agent, RunFailure>;
   credentialFrom<I extends H>(id: I, spec: CredentialSpec): Result<CredentialOf<I>, RunFailure>;
   policyNotice(id: H, mode: string): PolicyNotice | null;
   inspectCredentials(id: H): Promise<Result<CredentialInspection, RunFailure>>;
@@ -72,6 +75,7 @@ export function buildRuntime<H extends string>(drivers: Drivers<H>, config: Runt
     driver: (id: string) => lookupDriver(drivers, id),
     available: (order: readonly H[], io: ProbeIo) => available(ctx, drivers, order, io),
     headless: <I extends H>(id: I, options: HeadlessOptions<I>): HeadlessHandle<I> => makeHandle<I>(ctx, lookupDriver(drivers, id) as HarnessDriver<I> | null, id, options),
+    agent: <I extends H>(id: I, options: AgentOptions): Result<Agent, RunFailure> => agentOf(id, options),
     credentialFrom: <I extends H>(id: I, spec: CredentialSpec) => credentialFrom(drivers, id, spec) as Result<CredentialOf<I>, RunFailure>,
     policyNotice: (id: H, mode: string) => policyNotice(drivers, id, mode),
     inspectCredentials: (id: H) => inspectCredentials(ctx, drivers, id),

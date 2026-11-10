@@ -4,6 +4,8 @@ import * as runtime from "../src/runtime/index.ts";
 describe("the ./runtime value surface", () => {
   test("exports the constants, the result helpers, the secret helpers and createRuntime", () => {
     expect(Object.keys(runtime).sort()).toEqual([
+      "AgentEventKind",
+      "AgentWhy",
       "CapabilityName",
       "ConfinementAxis",
       "CredentialReason",
@@ -12,6 +14,7 @@ describe("the ./runtime value surface", () => {
       "EnvKind",
       "EvidenceKind",
       "Harness",
+      "HookPoint",
       "McpWhy",
       "RUN_FAILURE_KINDS",
       "SpawnPurpose",

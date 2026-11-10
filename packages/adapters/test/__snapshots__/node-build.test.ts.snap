@@ -18,6 +18,9 @@ export { CredentialReason, CredentialUnsupportedReason, RUN_FAILURE_KINDS, Unava
 export { SpawnPurpose, type Cost, type CliPlan, type CommonOptions, type CwdSpec, type Effort, type HeadlessOptions, type LibraryEvent, type Limits, type Plan, type RunEvent, type RunOutput, type RunRequest, type SdkPlan, type TokenUsage, } from "../core/run.ts";
 export type { HeadlessHandle } from "../driver/handle.ts";
 export type { Runtime } from "../driver/create-runtime.ts";
+export { AgentEventKind, AgentWhy, HookPoint } from "../agent/index.ts";
+export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEnd, AgentEngineImpl, AgentEngineRun, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentRunInput, AgentStart, ClosedEnv, HookTarget, StoreEntry, TranscriptStore, TurnUsage, } from "../agent/index.ts";
+export type { JsonObject, JsonValue } from "../core/json.ts";
 export * from "./experimental.ts";
 /** Creates a runtime over the three built-in harnesses. */
 export declare function createRuntime(config?: RuntimeConfig & {
@@ -29,6 +32,7 @@ export declare function createRuntime<H extends string>(config: RuntimeConfig<H>
 
 // driver/create-runtime.d.ts
 import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { Agent, AgentOptions } from "../agent/types.ts";
 import { type Capabilities, Engine } from "../core/capability.ts";
 import { type CredentialOf, type CredentialSpec, type PolicyNotice } from "../core/credential.ts";
 import type { RunFailure } from "../core/failure.ts";
@@ -61,6 +65,7 @@ export interface Runtime<H extends string = HarnessId> extends AsyncDisposable {
     driver(id: string): HarnessDriver | null;
     available(order: readonly H[], io: ProbeIo): Promise<readonly Availability[]>;
     headless<I extends H>(id: I, options: HeadlessOptions<I>): HeadlessHandle<I>;
+    agent<I extends H>(id: I, options: AgentOptions): Result<Agent, RunFailure>;
     credentialFrom<I extends H>(id: I, spec: CredentialSpec): Result<CredentialOf<I>, RunFailure>;
     policyNotice(id: H, mode: string): PolicyNotice | null;
     inspectCredentials(id: H): Promise<Result<CredentialInspection, RunFailure>>;
@@ -88,6 +93,7 @@ import type { Cost, TokenUsage } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
+import type { AgentEngineImpl } from "../agent/engine.ts";
 import type { EngineImpl } from "./engine.ts";
 export type { AfterContext, BinaryFacts, CleanupContext, CliEngine, CliEngineParts, CliRunInput, EngineDescription, EngineEnd, EngineEvent, EngineHost, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper, } from "./engine.ts";
 export type { ProcessExit, ResolvedOptions } from "../core/raw-run.ts";
@@ -130,6 +136,7 @@ export interface RunFacet<I extends string> {
     readonly engines: readonly Engine[];
     readonly cli: EngineImpl<I>;
     readonly sdk?: EngineImpl<I>;
+    readonly agent?: AgentEngineImpl<I>;
 }
 export interface CredentialFacet<I extends string> {
     readonly modes: readonly string[];
@@ -148,6 +155,7 @@ export interface HarnessDriver<I extends string = HarnessId> {
 
 // driver/ports.d.ts
 import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { AgentEngineImpl } from "../agent/engine.ts";
 import type { Clock, RuntimeFs } from "../core/io.ts";
 import type { Result } from "../core/result.ts";
 import type { LibraryEvent } from "../core/run.ts";
@@ -186,6 +194,9 @@ export interface RuntimeConfig<H extends string = HarnessId> {
     readonly onEvent?: (event: LibraryEvent) => void;
     readonly drivers?: Drivers<H>;
     readonly allowedModes?: readonly string[];
+    readonly agentEngines?: Partial<{
+        readonly [K in H]: AgentEngineImpl<K>;
+    }>;
 }
 
 // core/capability.d.ts
@@ -788,6 +799,7 @@ export declare function makeHandle<I extends string>(ctx: RuntimeContext, driver
 
 // driver/create-runtime.d.ts
 import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { Agent, AgentOptions } from "../agent/types.ts";
 import { type Capabilities, Engine } from "../core/capability.ts";
 import { type CredentialOf, type CredentialSpec, type PolicyNotice } from "../core/credential.ts";
 import type { RunFailure } from "../core/failure.ts";
@@ -820,6 +832,7 @@ export interface Runtime<H extends string = HarnessId> extends AsyncDisposable {
     driver(id: string): HarnessDriver | null;
     available(order: readonly H[], io: ProbeIo): Promise<readonly Availability[]>;
     headless<I extends H>(id: I, options: HeadlessOptions<I>): HeadlessHandle<I>;
+    agent<I extends H>(id: I, options: AgentOptions): Result<Agent, RunFailure>;
     credentialFrom<I extends H>(id: I, spec: CredentialSpec): Result<CredentialOf<I>, RunFailure>;
     policyNotice(id: H, mode: string): PolicyNotice | null;
     inspectCredentials(id: H): Promise<Result<CredentialInspection, RunFailure>>;
@@ -832,6 +845,26 @@ export interface Runtime<H extends string = HarnessId> extends AsyncDisposable {
 }
 export declare function contextOf<H extends string>(config: RuntimeConfig<H>): RuntimeContext;
 export declare function buildRuntime<H extends string>(drivers: Drivers<H>, config: RuntimeConfig<H>): Runtime<H>;
+
+// agent/index.d.ts
+export { AgentEventKind, AgentWhy, HookPoint } from "./constants.ts";
+export type { AgentEnd, AgentEngineImpl, AgentEngineRun, AgentRunInput } from "./engine.ts";
+export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentStart, ClosedEnv, HookTarget, StoreEntry, TranscriptStore, TurnUsage, } from "./types.ts";
+
+// agent/index.d.ts
+export { AgentEventKind, AgentWhy, HookPoint } from "./constants.ts";
+export type { AgentEnd, AgentEngineImpl, AgentEngineRun, AgentRunInput } from "./engine.ts";
+export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentStart, ClosedEnv, HookTarget, StoreEntry, TranscriptStore, TurnUsage, } from "./types.ts";
+
+// core/json.d.ts
+/** Any value that survives JSON.stringify and JSON.parse unchanged. */
+export type JsonValue = string | number | boolean | null | readonly JsonValue[] | {
+    readonly [key: string]: JsonValue;
+};
+/** A JSON object. */
+export type JsonObject = {
+    readonly [key: string]: JsonValue;
+};
 
 // runtime/experimental.d.ts
 export type { CredentialFacet, Drivers, HarnessDriver, RunFacet } from "../driver/port.ts";
@@ -862,6 +895,7 @@ import type { Cost, TokenUsage } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
+import type { AgentEngineImpl } from "../agent/engine.ts";
 import type { EngineImpl } from "./engine.ts";
 export type { AfterContext, BinaryFacts, CleanupContext, CliEngine, CliEngineParts, CliRunInput, EngineDescription, EngineEnd, EngineEvent, EngineHost, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper, } from "./engine.ts";
 export type { ProcessExit, ResolvedOptions } from "../core/raw-run.ts";
@@ -904,6 +938,7 @@ export interface RunFacet<I extends string> {
     readonly engines: readonly Engine[];
     readonly cli: EngineImpl<I>;
     readonly sdk?: EngineImpl<I>;
+    readonly agent?: AgentEngineImpl<I>;
 }
 export interface CredentialFacet<I extends string> {
     readonly modes: readonly string[];
@@ -922,6 +957,7 @@ export interface HarnessDriver<I extends string = HarnessId> {
 
 // driver/ports.d.ts
 import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { AgentEngineImpl } from "../agent/engine.ts";
 import type { Clock, RuntimeFs } from "../core/io.ts";
 import type { Result } from "../core/result.ts";
 import type { LibraryEvent } from "../core/run.ts";
@@ -960,10 +996,14 @@ export interface RuntimeConfig<H extends string = HarnessId> {
     readonly onEvent?: (event: LibraryEvent) => void;
     readonly drivers?: Drivers<H>;
     readonly allowedModes?: readonly string[];
+    readonly agentEngines?: Partial<{
+        readonly [K in H]: AgentEngineImpl<K>;
+    }>;
 }
 
 // driver/create-runtime.d.ts
 import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { Agent, AgentOptions } from "../agent/types.ts";
 import { type Capabilities, Engine } from "../core/capability.ts";
 import { type CredentialOf, type CredentialSpec, type PolicyNotice } from "../core/credential.ts";
 import type { RunFailure } from "../core/failure.ts";
@@ -996,6 +1036,7 @@ export interface Runtime<H extends string = HarnessId> extends AsyncDisposable {
     driver(id: string): HarnessDriver | null;
     available(order: readonly H[], io: ProbeIo): Promise<readonly Availability[]>;
     headless<I extends H>(id: I, options: HeadlessOptions<I>): HeadlessHandle<I>;
+    agent<I extends H>(id: I, options: AgentOptions): Result<Agent, RunFailure>;
     credentialFrom<I extends H>(id: I, spec: CredentialSpec): Result<CredentialOf<I>, RunFailure>;
     policyNotice(id: H, mode: string): PolicyNotice | null;
     inspectCredentials(id: H): Promise<Result<CredentialInspection, RunFailure>>;
@@ -1068,6 +1109,7 @@ import type { Cost, TokenUsage } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
+import type { AgentEngineImpl } from "../agent/engine.ts";
 import type { EngineImpl } from "./engine.ts";
 export type { AfterContext, BinaryFacts, CleanupContext, CliEngine, CliEngineParts, CliRunInput, EngineDescription, EngineEnd, EngineEvent, EngineHost, EngineImpl, EngineIo, EngineRun, EngineRunInput, Sleeper, } from "./engine.ts";
 export type { ProcessExit, ResolvedOptions } from "../core/raw-run.ts";
@@ -1110,6 +1152,7 @@ export interface RunFacet<I extends string> {
     readonly engines: readonly Engine[];
     readonly cli: EngineImpl<I>;
     readonly sdk?: EngineImpl<I>;
+    readonly agent?: AgentEngineImpl<I>;
 }
 export interface CredentialFacet<I extends string> {
     readonly modes: readonly string[];

@@ -65,6 +65,29 @@ export {
 } from "../core/run.ts";
 export type { HeadlessHandle } from "../driver/handle.ts";
 export type { Runtime } from "../driver/create-runtime.ts";
+export { AgentEventKind, AgentWhy, HookPoint } from "../agent/index.ts";
+export type {
+  Agent,
+  AgentBinary,
+  AgentCredential,
+  AgentDirs,
+  AgentEnd,
+  AgentEngineImpl,
+  AgentEngineRun,
+  AgentEvent,
+  AgentOptions,
+  AgentOutput,
+  AgentResume,
+  AgentRun,
+  AgentRunInput,
+  AgentStart,
+  ClosedEnv,
+  HookTarget,
+  StoreEntry,
+  TranscriptStore,
+  TurnUsage,
+} from "../agent/index.ts";
+export type { JsonObject, JsonValue } from "../core/json.ts";
 export * from "./experimental.ts";
 
 function snapshotDrivers<H extends string>(drivers: Drivers<H>): Drivers<H> {

@@ -1,4 +1,5 @@
 import type { HarnessId } from "@stateforge-labs/harness-hooks";
+import type { AgentEngineImpl } from "../agent/engine.ts";
 import type { Clock, RuntimeFs } from "../core/io.ts";
 import type { Result } from "../core/result.ts";
 import type { LibraryEvent } from "../core/run.ts";
@@ -43,4 +44,5 @@ export interface RuntimeConfig<H extends string = HarnessId> {
   readonly onEvent?: (event: LibraryEvent) => void;
   readonly drivers?: Drivers<H>;
   readonly allowedModes?: readonly string[];
+  readonly agentEngines?: Partial<{ readonly [K in H]: AgentEngineImpl<K> }>;
 }
