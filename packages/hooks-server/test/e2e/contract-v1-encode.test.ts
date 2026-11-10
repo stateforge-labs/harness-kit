@@ -135,8 +135,10 @@ for (const harness of ["claude", "codex"] as const) {
       expect(await answer(S["v1-allow"]!, harness, "SessionStart")).toEqual(await answer(S.baseline!, harness, "SessionStart"));
     });
 
-    test("PostToolUse: every field is not encoded (v1-everything -> {})", async () => {
-      expect(await answer(S["v1-everything"]!, harness, "PostToolUse")).toEqual({});
+    test("PostToolUse: follows the per-harness context rule (v1-everything)", async () => {
+      expect(await answer(S["v1-everything"]!, harness, "PostToolUse")).toEqual(
+        harness === "claude" ? { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: "V1-CONTEXT" } } : {},
+      );
     });
 
     test("UserPromptSubmit: follows the per-harness context rule (v1-everything)", async () => {
