@@ -1,7 +1,9 @@
 import { Harness } from "@stateforge-labs/harness-hooks";
 import type { AgentEngineImpl, AgentEngineRun, AgentEnd, AgentRunInput } from "../../agent/engine.ts";
+import { AgentTree } from "../../agent/constants.ts";
 import type { AgentEvent, HookTarget } from "../../agent/types.ts";
 import { Engine } from "../../core/capability.ts";
+import type { Clock } from "../../core/io.ts";
 import { UnavailableReason, type RunFailure } from "../../core/failure.ts";
 import { FAILURE_TAIL_BYTES } from "../../core/engine-constants.ts";
 import { tailBytes } from "../../core/limits.ts";
@@ -11,7 +13,7 @@ import { EnvVar } from "../../env.ts";
 import { createSdkDecoder, errorText } from "./sdk-events.ts";
 import { buildQueryOptions, sessionStoreAdapter, type ClaudeHookOption, type ClaudeQueryOptions, type HookObserver } from "./sdk-options.ts";
 import { defaultTreeDeps, processTree, type ProcessTree } from "./sdk-process.ts";
-import { CLAUDE_SDK_VERSION, SdkHooks, SdkMatch, SdkMcp, SdkMessage, SdkPlanFacts } from "./sdk-constants.ts";
+import { CLAUDE_SDK_VERSION, SdkHooks, SdkMatch, SdkMcp, SdkMessage, SdkPlanFacts, SdkProcess } from "./sdk-constants.ts";
 
 export { CLAUDE_SDK_VERSION };
 export type { ClaudeHookOption, ClaudeQueryOptions, HookObserver } from "./sdk-options.ts";
@@ -151,6 +153,43 @@ function closeStream(stream: ClaudeQueryStream): Promise<void> {
     .then(undefined, () => undefined);
 }
 
+interface Grace {
+  readonly expired: Promise<typeof SdkProcess.Expired>;
+  stop(): void;
+}
+
+function graceAfterAbort(signal: AbortSignal, clock: Clock, ms: number): Grace {
+  let stopTimer: () => void = () => undefined;
+  let stopListening: () => void = () => undefined;
+  const expired = new Promise<typeof SdkProcess.Expired>((resolve) => {
+    const arm = (): void => {
+      stopListening();
+      stopTimer = clock.after(ms, () => resolve(SdkProcess.Expired));
+    };
+    if (signal.aborted) {
+      arm();
+      return;
+    }
+    signal.addEventListener("abort", arm, { once: true });
+    stopListening = () => signal.removeEventListener("abort", arm);
+  });
+  return {
+    expired,
+    stop() {
+      stopListening();
+      stopTimer();
+    },
+  };
+}
+
+function bounded(work: Promise<void>, clock: Clock, ms: number): Promise<void> {
+  let stopTimer: () => void = () => undefined;
+  const limit = new Promise<void>((resolve) => {
+    stopTimer = clock.after(ms, resolve);
+  });
+  return Promise.race([work, limit]).then(() => stopTimer());
+}
+
 function resolveHooks(seam: ClaudeSdkSeam, target: HookTarget | undefined, observer: HookObserver): Result<ClaudeHookOption | null, RunFailure> {
   if (target === undefined) {
     return ok(null);
@@ -170,12 +209,16 @@ function thrownFailure(input: AgentRunInput, message: string, stderrTail: string
   return { kind: "exit", message: SdkMessage.StreamFailed, code: null, signal: null, stderrTail: input.redact(tailBytes(detail, FAILURE_TAIL_BYTES)) };
 }
 
-async function execute(seam: ClaudeSdkSeam, input: AgentRunInput, abort: AbortController, channel: Channel<AgentEvent>): Promise<Result<AgentEnd, RunFailure>> {
+interface Progress {
+  tree: AgentTree;
+}
+
+async function execute(seam: ClaudeSdkSeam, input: AgentRunInput, abort: AbortController, channel: Channel<AgentEvent>, progress: Progress): Promise<Result<AgentEnd, RunFailure>> {
   channel.push({ kind: "started", engine: Engine.Sdk });
   if (abort.signal.aborted) {
     return fail(cancelled());
   }
-  const tree = seam.query === undefined ? processTree(defaultTreeDeps()) : (seam.tree?.() ?? null);
+  const tree = seam.query === undefined ? processTree(defaultTreeDeps(input.clock)) : (seam.tree?.() ?? null);
   let storeReason: string | null = null;
   const store = input.start.store === undefined ? null : sessionStoreAdapter(input.start.store, (reason) => {
     storeReason ??= reason;
@@ -204,8 +247,13 @@ async function execute(seam: ClaudeSdkSeam, input: AgentRunInput, abort: AbortCo
   const decoder = createSdkDecoder({ redact: input.redact, resumeSessionId: input.start.resume?.sessionId ?? null });
   const iterator = stream[Symbol.asyncIterator]();
   let error: { readonly value: unknown } | null = null;
+  const grace = graceAfterAbort(abort.signal, input.clock, SdkProcess.KillAfterMs);
   for (;;) {
-    const step = await nextStep(iterator);
+    const step = await Promise.race([nextStep(iterator), grace.expired]);
+    if (step === SdkProcess.Expired) {
+      await tree?.kill();
+      break;
+    }
     if (step.threw) {
       error = { value: step.error };
       break;
@@ -228,8 +276,9 @@ async function execute(seam: ClaudeSdkSeam, input: AgentRunInput, abort: AbortCo
       channel.push(event);
     }
   }
-  await closeStream(stream);
-  await tree?.reap();
+  grace.stop();
+  await bounded(closeStream(stream), input.clock, SdkProcess.GiveUpMs);
+  progress.tree = (await tree?.reap()) ?? AgentTree.Gone;
   const stderrTail = tree?.stderrTail() ?? "";
   const mirrored = storeReason ?? decoder.storeError();
   if (mirrored !== null) {
@@ -255,7 +304,7 @@ async function execute(seam: ClaudeSdkSeam, input: AgentRunInput, abort: AbortCo
 }
 
 function plan(input: AgentRunInput, seam: ClaudeSdkSeam): Result<SdkPlan, RunFailure> {
-  const built = buildQueryOptions(input, { abortController: new AbortController(), hooks: input.start.hooks === undefined ? null : {}, store: input.start.store === undefined ? null : sessionStoreAdapter(input.start.store, () => undefined), spawn: seam.query === undefined ? processTree(defaultTreeDeps()).spawn : null });
+  const built = buildQueryOptions(input, { abortController: new AbortController(), hooks: input.start.hooks === undefined ? null : {}, store: input.start.store === undefined ? null : sessionStoreAdapter(input.start.store, () => undefined), spawn: seam.query === undefined ? processTree(defaultTreeDeps(input.clock)).spawn : null });
   if (!built.ok) {
     return fail(built.failure);
   }
@@ -288,12 +337,13 @@ export function claudeSdkEngine(seam: ClaudeSdkSeam = {}): AgentEngineImpl<"clau
       } else {
         input.signal.addEventListener("abort", link, { once: true });
       }
-      const done = guarded(() => execute(seam, input, abort, channel)).then((result) => {
+      const progress: Progress = { tree: AgentTree.Gone };
+      const done = guarded(() => execute(seam, input, abort, channel, progress)).then((result) => {
         input.signal.removeEventListener("abort", link);
         channel.close();
         return result;
       });
-      return { events: channel.iterable, cancel: link, done };
+      return { events: channel.iterable, cancel: link, done, tree: () => progress.tree };
     },
   };
 }

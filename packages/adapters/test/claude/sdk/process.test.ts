@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import type { ChildProcess } from "node:child_process";
 import { defaultTreeDeps, processTree } from "../../../src/claude/engines/sdk-process.ts";
+import { nodeClock } from "../../../src/driver/node-defaults.ts";
+import { fakeClock } from "../../../src/testing/fake-clock.ts";
 
 const PARENT_SCRIPT = `
 const { spawn } = require("node:child_process");
@@ -36,7 +38,7 @@ function grandchildPid(child: ChildProcess): Promise<number> {
   });
 }
 
-const FAST = { ...defaultTreeDeps(), killAfterMs: 200, giveUpMs: 4000 };
+const FAST = { ...defaultTreeDeps(nodeClock), killAfterMs: 200, giveUpMs: 4000 };
 
 describe("sdk process tree", () => {
   test("after the leader is stopped the reap waits for the descendants and kills what is left", async () => {
@@ -47,7 +49,7 @@ describe("sdk process tree", () => {
     const pid = await grandchildPid(child);
     expect(alive(pid)).toBe(true);
     abort.abort();
-    await tree.reap();
+    expect(await tree.reap()).toBe("gone");
     expect(alive(pid)).toBe(false);
     expect(child.exitCode !== null || child.signalCode !== null).toBe(true);
     expect(tree.stderrTail()).toContain("parent-stderr");
@@ -70,8 +72,31 @@ describe("sdk process tree", () => {
     const tree = processTree({ ...FAST, platform: "win32" });
     const child = tree.spawn({ command: process.execPath, args: ["-e", "process.exit(0)"], env: { PATH: process.env["PATH"] }, signal: new AbortController().signal });
     await new Promise((resolve) => emitter(child).once("exit", resolve));
-    await tree.reap();
+    expect(await tree.reap()).toBe("unconfirmed");
   });
+
+  test("a reap that runs out of time on the injected clock says unconfirmed, and a kill then clears the tree", async () => {
+    const clock = fakeClock();
+    const tree = processTree({ platform: process.platform, clock, killAfterMs: 100_000, giveUpMs: 1000 });
+    const child = tree.spawn({ command: process.execPath, args: ["-e", "setInterval(() => {}, 1000)"], env: { PATH: process.env["PATH"] }, signal: new AbortController().signal });
+    emitter(child).on("error", () => undefined);
+    const pid = child.pid as number;
+    const reaping = tree.reap();
+    for (let step = 0; step < 15; step += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      clock.advance(100);
+    }
+    expect(await reaping).toBe("unconfirmed");
+    expect(alive(pid)).toBe(true);
+    await tree.kill();
+    const second = tree.reap();
+    for (let step = 0; step < 40 && alive(pid); step += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      clock.advance(50);
+    }
+    expect(await second).toBe("gone");
+    expect(alive(pid)).toBe(false);
+  }, 20_000);
 
   test("the stderr tail is bounded", async () => {
     const tree = processTree(FAST);

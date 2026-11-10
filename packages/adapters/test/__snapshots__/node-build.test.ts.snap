@@ -18,7 +18,7 @@ export { CredentialReason, CredentialUnsupportedReason, RUN_FAILURE_KINDS, Unava
 export { SpawnPurpose, type Cost, type CliPlan, type CommonOptions, type CwdSpec, type Effort, type HeadlessOptions, type LibraryEvent, type Limits, type Plan, type RunEvent, type RunOutput, type RunRequest, type SdkPlan, type TokenUsage, } from "../core/run.ts";
 export type { HeadlessHandle } from "../driver/handle.ts";
 export type { Runtime } from "../driver/create-runtime.ts";
-export { AgentEventKind, AgentWhy, HookPoint } from "../agent/index.ts";
+export { AgentEventKind, AgentTree, AgentWhy, HookPoint } from "../agent/index.ts";
 export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEnd, AgentEngineImpl, AgentEngineRun, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentRunInput, AgentStart, ClosedEnv, HookTarget, StoreEntry, TranscriptStore, TurnUsage, } from "../agent/index.ts";
 export type { JsonObject, JsonValue } from "../core/json.ts";
 export * from "./experimental.ts";
@@ -847,12 +847,12 @@ export declare function contextOf<H extends string>(config: RuntimeConfig<H>): R
 export declare function buildRuntime<H extends string>(drivers: Drivers<H>, config: RuntimeConfig<H>): Runtime<H>;
 
 // agent/index.d.ts
-export { AgentEventKind, AgentWhy, HookPoint } from "./constants.ts";
+export { AgentEventKind, AgentTree, AgentWhy, HookPoint } from "./constants.ts";
 export type { AgentEnd, AgentEngineImpl, AgentEngineRun, AgentRunInput } from "./engine.ts";
 export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentStart, ClosedEnv, HookTarget, StoreEntry, TranscriptStore, TurnUsage, } from "./types.ts";
 
 // agent/index.d.ts
-export { AgentEventKind, AgentWhy, HookPoint } from "./constants.ts";
+export { AgentEventKind, AgentTree, AgentWhy, HookPoint } from "./constants.ts";
 export type { AgentEnd, AgentEngineImpl, AgentEngineRun, AgentRunInput } from "./engine.ts";
 export type { Agent, AgentBinary, AgentCredential, AgentDirs, AgentEvent, AgentOptions, AgentOutput, AgentResume, AgentRun, AgentStart, ClosedEnv, HookTarget, StoreEntry, TranscriptStore, TurnUsage, } from "./types.ts";
 
@@ -1293,16 +1293,18 @@ export declare function fakeClock(start?: number): Clock & {
 };
 
 // testing/fake-agent-engine.d.ts
+import type { AgentTree } from "../agent/constants.ts";
 import type { AgentEngineImpl, AgentRunInput } from "../agent/engine.ts";
 import type { AgentEvent, AgentOutput } from "../agent/types.ts";
 import { type RunFailure } from "../core/failure.ts";
 import { type Result } from "../core/result.ts";
-/** One scripted engine run: the events to replay, how it ends, an optional pause before each event and an optional extra wait, after the run was cancelled, before \`done\` settles. */
+/** One scripted engine run: the events to replay, how it ends, an optional pause before each event and an optional extra wait, after the run was cancelled, before \`done\` settles, and the state of the child process tree to report. */
 export interface FakeAgentScript {
     readonly events: readonly AgentEvent[];
     readonly result?: Result<AgentOutput, RunFailure>;
     readonly delayMs?: number;
     readonly settleDelayMs?: number;
+    readonly tree?: AgentTree;
 }
 /** An agent engine that replays scripts and records every run input it was given. */
 export type FakeAgentEngine<I extends string> = AgentEngineImpl<I> & {

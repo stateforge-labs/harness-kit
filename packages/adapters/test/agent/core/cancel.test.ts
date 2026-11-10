@@ -48,6 +48,28 @@ describe("cancel", () => {
     expect(failureOf(await run.settled).kind).toBe("cancelled");
   });
 
+  test("the finished event says gone when the engine confirmed the tree, and unconfirmed when it gave up", async () => {
+    for (const tree of ["gone", "unconfirmed"] as const) {
+      const r = rig([{ hang: true, tree }]);
+      const run = agentOf(r).start(startOf());
+      await tick();
+      await run.cancel();
+      const events = await collect(run.events);
+      expect(failureOf(finishedOf(events)).kind).toBe("cancelled");
+      expect(events.at(-1)).toMatchObject({ kind: "finished", tree });
+    }
+  });
+
+  test("an unconfirmed tree on the first attempt stays unconfirmed after a recovery", async () => {
+    const r = rig([
+      { events: [{ kind: "started", engine: "sdk" }], result: { ok: false, failure: { kind: "session-not-found", message: "gone", sessionId: "s" } }, tree: "unconfirmed" },
+      {},
+    ]);
+    const run = agentOf(r).start(startOf({ resume: { sessionId: "s" as never, recoveryPrompt: "again" } }));
+    expect((await run.settled).ok).toBe(true);
+    expect((await collect(run.events)).at(-1)).toMatchObject({ kind: "finished", tree: "unconfirmed" });
+  });
+
   test("a second cancel is a no-op that resolves", async () => {
     const r = rig([{ hang: true }]);
     const run = agentOf(r).start(startOf());

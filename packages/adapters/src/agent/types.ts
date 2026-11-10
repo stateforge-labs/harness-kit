@@ -7,7 +7,7 @@ import type { Result } from "../core/result.ts";
 import type { Effort, RunEvent } from "../core/run.ts";
 import type { Secret } from "../core/secret.ts";
 import type { SessionId } from "../core/session.ts";
-import type { HookPoint } from "./constants.ts";
+import type { AgentTree, HookPoint } from "./constants.ts";
 
 /** The one credential an agent run accepts: an injected api key and the base URL it is valid for. */
 export interface AgentCredential {
@@ -106,11 +106,11 @@ export interface AgentOutput {
   readonly model: string | null;
 }
 
-/** An event of an agent run. `finished` is last and unique. */
+/** An event of an agent run. `finished` is last and unique; its `tree` is `unconfirmed` when the child process tree could not be confirmed gone before the engine gave up waiting. */
 export type AgentEvent =
   | Exclude<RunEvent, { readonly kind: "finished" }>
   | { readonly kind: "recovered"; readonly reason: "session-not-found" }
-  | { readonly kind: "finished"; readonly result: Result<AgentOutput, RunFailure> };
+  | { readonly kind: "finished"; readonly result: Result<AgentOutput, RunFailure>; readonly tree: AgentTree };
 
 /** A running agent: its events, its settled result (never rejects) and a cancel that resolves after the terminal event. */
 export interface AgentRun {

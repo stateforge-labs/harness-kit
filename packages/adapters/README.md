@@ -124,8 +124,10 @@ if (made.ok) {
 - **Store and resume.** `start.store` mirrors the transcript to a store the caller owns; `start.resume` continues a session from the store alone
   and, with a `recoveryPrompt`, falls back to one fresh run when the session is gone.
 - **Limits.** `maxTurns` is required. `timeoutMs`, `idleTimeoutMs` and `signal` end a run.
-- **Cancel.** `run.cancel()` resolves only after the terminal `finished` event is emitted and the child process tree is gone (about 2 s on
-  Claude). Exactly one `finished` event is emitted and it is last.
+- **Cancel.** `run.cancel()` always resolves, and only after the terminal `finished` event is emitted. The Claude engine waits at most 2.5 s for
+  the stream to end, then sends `SIGKILL` to the child's process group, and gives up on confirming the tree after a bounded wait. `finished.tree`
+  is `"gone"` when no process of the group was alive at the end and `"unconfirmed"` when the engine gave up. Exactly one `finished` event is
+  emitted and it is last.
 - **Usage.** Raw token counts per model message. No cost is computed for an agent run.
 
 The full reference, with what was measured for each capability cell, is in

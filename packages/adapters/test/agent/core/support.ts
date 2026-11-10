@@ -40,6 +40,7 @@ export type Script = {
   readonly hold?: boolean;
   readonly throwAfter?: boolean;
   readonly describe?: Result<never, RunFailure>;
+  readonly tree?: "gone" | "unconfirmed";
 };
 
 export interface ScriptedEngine extends AgentEngineImpl<typeof ID> {
@@ -119,6 +120,7 @@ export function scriptedEngine(scripts: readonly Script[]): ScriptedEngine {
           release();
         },
         done,
+        tree: () => script.tree ?? "gone",
       };
       return run;
     },

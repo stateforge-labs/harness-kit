@@ -47,7 +47,7 @@ describe("the fold to settled", () => {
   });
 
   test("a finished event from the engine is dropped; the facet adds its own", async () => {
-    const rogue: AgentEvent = { kind: "finished", result: ok(endOf().output) };
+    const rogue: AgentEvent = { kind: "finished", result: ok(endOf().output), tree: "gone" };
     const r = rig([{ events: [rogue, { kind: "text", text: "x" }], result: fail({ kind: "no-output", message: "none" }) }]);
     const events = await collect(agentOf(r).start(startOf()).events);
     expect(events.map((e) => e.kind)).toEqual(["text", "finished"]);

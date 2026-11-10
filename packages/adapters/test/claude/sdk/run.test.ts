@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import type { AgentRunInput } from "../../../src/agent/engine.ts";
 import { claudeSdkEngine, type ClaudeQueryOptions } from "../../../src/claude/engines/sdk.ts";
+import type { ClaudeQueryFn } from "../../../src/claude/engines/sdk.ts";
 import { TOOLS_OFF } from "../../../src/core/policy.ts";
+import { fakeClock } from "../../../src/testing/fake-clock.ts";
 import { ASSISTANT, BASIC, INIT, KEY, RESULT, SESSION, collect, endpoint, fakeQuery, kinds, memoryStore, never, runInput } from "./support.ts";
 
 const ABORT_MESSAGE = "Claude Code process aborted by user";
@@ -30,6 +32,8 @@ function aborting(prefix: readonly unknown[], gone: { done: boolean }) {
     },
   });
 }
+
+const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 5));
 
 function failureOf(end: { readonly ok: boolean; readonly failure?: { readonly kind: string } }): string | null {
   return end.ok ? null : (end.failure?.kind ?? null);
@@ -134,10 +138,12 @@ describe("sdk cancel", () => {
       spawn: () => {
         throw new Error("unused");
       },
+      kill: async () => undefined,
       reap: async () => {
         order.push(gone.done ? "reaped-after-stream" : "reaped-early");
         await new Promise((resolve) => setTimeout(resolve, 20));
         order.push("tree-gone");
+        return "gone" as const;
       },
       stderrTail: () => "tail",
     };
@@ -156,6 +162,55 @@ describe("sdk cancel", () => {
     await reading;
     expect(failureOf(end)).toBe("cancelled");
     expect(order).toEqual(["reaped-after-stream", "tree-gone", "settled"]);
+  });
+
+  test("a stream that never ends after the abort is abandoned at the deadline on the injected clock", async () => {
+    const clock = fakeClock();
+    const calls: string[] = [];
+    const tree = { spawn: () => { throw new Error("unused"); }, kill: async () => void calls.push("kill"), reap: async () => (calls.push("reap"), "gone" as const), stderrTail: () => "" };
+    const fake = fakeQuery(() => never());
+    const run = claudeSdkEngine({ query: fake.query, tree: () => tree }).start(runInput({ clock }));
+    let settled = false;
+    void run.done.then(() => (settled = true));
+    await flush();
+    run.cancel();
+    await flush();
+    clock.advance(2499);
+    await flush();
+    expect(settled).toBe(false);
+    expect(calls).toEqual([]);
+    clock.advance(1);
+    const end = await run.done;
+    expect(failureOf(end)).toBe("cancelled");
+    expect(calls).toEqual(["kill", "reap"]);
+    expect(run.tree?.()).toBe("gone");
+    expect(fake.closed.count).toBe(1);
+  });
+
+  test("a stream whose close never returns is given up on at the give-up time", async () => {
+    const clock = fakeClock();
+    const query: ClaudeQueryFn = () => ({ [Symbol.asyncIterator]: () => never()[Symbol.asyncIterator](), close: () => new Promise<void>(() => undefined) });
+    const run = claudeSdkEngine({ query }).start(runInput({ clock }));
+    await flush();
+    run.cancel();
+    await flush();
+    clock.advance(2500);
+    await flush();
+    clock.advance(5999);
+    await flush();
+    let settled = false;
+    void run.done.then(() => (settled = true));
+    await flush();
+    expect(settled).toBe(false);
+    clock.advance(1);
+    expect(failureOf(await run.done)).toBe("cancelled");
+  });
+
+  test("a tree that could not be confirmed gone is reported on the run", async () => {
+    const tree = { spawn: () => { throw new Error("unused"); }, kill: async () => undefined, reap: async () => "unconfirmed" as const, stderrTail: () => "" };
+    const run = claudeSdkEngine({ query: fakeQuery(BASIC).query, tree: () => tree }).start(runInput());
+    expect((await run.done).ok).toBe(true);
+    expect(run.tree?.()).toBe("unconfirmed");
   });
 
   test("an aborted input signal cancels the run", async () => {

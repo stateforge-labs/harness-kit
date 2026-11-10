@@ -4,9 +4,11 @@ import type { AgentEngineRun, AgentRunInput } from "../../../src/agent/engine.ts
 import type { AgentEvent, AgentOptions, AgentStart, TranscriptStore, StoreEntry } from "../../../src/agent/types.ts";
 import type { ClaudeQueryFn, ClaudeQueryOptions, ClaudeQueryStream } from "../../../src/claude/engines/sdk.ts";
 import { TOOLS_OFF, type McpEndpoint } from "../../../src/core/policy.ts";
+import type { Clock } from "../../../src/core/io.ts";
 import { redactor } from "../../../src/core/redact.ts";
 import { secret } from "../../../src/core/secret.ts";
 import { asSessionId } from "../../../src/core/session.ts";
+import { fakeClock } from "../../../src/testing/fake-clock.ts";
 import { adaptersFixtures } from "../../support/fixtures.ts";
 
 export const KEY = "sk-test-KEY-5d1c";
@@ -106,6 +108,7 @@ export interface InputParts {
   readonly start?: Partial<AgentStart>;
   readonly env?: Record<string, string>;
   readonly signal?: AbortSignal;
+  readonly clock?: Clock;
   readonly secrets?: readonly string[];
 }
 
@@ -119,6 +122,7 @@ export function runInput(parts: InputParts = {}): AgentRunInput {
     confinement: [],
     runId: "run-1",
     signal: parts.signal ?? new AbortController().signal,
+    clock: parts.clock ?? fakeClock(),
     redact: redactor(secrets),
   };
 }

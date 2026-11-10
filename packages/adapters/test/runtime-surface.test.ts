@@ -5,6 +5,7 @@ describe("the ./runtime value surface", () => {
   test("exports the constants, the result helpers, the secret helpers and createRuntime", () => {
     expect(Object.keys(runtime).sort()).toEqual([
       "AgentEventKind",
+      "AgentTree",
       "AgentWhy",
       "CapabilityName",
       "ConfinementAxis",

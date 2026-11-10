@@ -5,6 +5,7 @@ import { Engine } from "../../../../src/core/capability.ts";
 import type { RunFailure } from "../../../../src/core/failure.ts";
 import { fail, ok, type Result } from "../../../../src/core/result.ts";
 import { reveal } from "../../../../src/core/secret.ts";
+import { nodeClock } from "../../../../src/driver/node-defaults.ts";
 import type { Runtime } from "../../../../src/driver/create-runtime.ts";
 import type { EnvSource } from "../../../../src/env.ts";
 
@@ -74,13 +75,13 @@ function inputFor(options: AgentOptions, start: AgentStart, signal: AbortSignal,
   }
   env["ANTHROPIC_API_KEY"] = reveal(options.credential.key);
   env["ANTHROPIC_BASE_URL"] = options.credential.baseUrl;
-  return { options, start, env, secrets: [reveal(options.credential.key)], confinement: [], runId: "reference-run", signal, redact: (text) => text };
+  return { options, start, env, secrets: [reveal(options.credential.key)], confinement: [], runId: "reference-run", signal, clock: nodeClock, redact: (text) => text };
 }
 
 function refused(failure: RunFailure): AgentRun {
   const buffer = newBuffer();
   const result: Result<AgentOutput, RunFailure> = fail(failure);
-  buffer.push({ kind: "finished", result });
+  buffer.push({ kind: "finished", result, tree: "gone" });
   buffer.end();
   return { events: buffer.iterate(), settled: Promise.resolve(result), cancel: () => Promise.resolve() };
 }
@@ -125,14 +126,14 @@ function begin(engine: AgentEngineImpl<string>, options: AgentOptions, start: Ag
     const result = await work();
     if (defects.has("settled-before-terminal")) {
       setTimeout(() => {
-        buffer.push({ kind: "finished", result });
+        buffer.push({ kind: "finished", result, tree: "gone" });
         buffer.end();
       }, 30);
       return result;
     }
     if (defects.has("leak-key")) buffer.push({ kind: "unrecognised", payload: { key: reveal(options.credential.key) } });
-    buffer.push({ kind: "finished", result });
-    if (defects.has("double-finished")) buffer.push({ kind: "finished", result });
+    buffer.push({ kind: "finished", result, tree: "gone" });
+    if (defects.has("double-finished")) buffer.push({ kind: "finished", result, tree: "gone" });
     if (defects.has("event-after-finished")) buffer.push({ kind: "text", text: "late" });
     buffer.end();
     return result;

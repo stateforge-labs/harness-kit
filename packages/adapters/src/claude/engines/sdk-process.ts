@@ -1,18 +1,20 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import { AgentTree } from "../../agent/constants.ts";
+import type { Clock } from "../../core/io.ts";
 import { tailBytes } from "../../core/limits.ts";
 import type { ClaudeSpawnRequest } from "./sdk-options.ts";
 import { SdkProcess } from "./sdk-constants.ts";
 
 export interface ProcessTree {
   readonly spawn: (request: ClaudeSpawnRequest) => ChildProcess;
-  reap(): Promise<void>;
+  kill(): Promise<void>;
+  reap(): Promise<AgentTree>;
   stderrTail(): string;
 }
 
 export interface ProcessTreeDeps {
   readonly platform: string;
-  readonly sleep: (ms: number) => Promise<void>;
-  readonly now: () => number;
+  readonly clock: Clock;
   readonly killAfterMs: number;
   readonly giveUpMs: number;
 }
@@ -34,20 +36,27 @@ function signal(pid: number, name: NodeJS.Signals): Promise<void> {
     .then(undefined, () => undefined);
 }
 
-export function defaultTreeDeps(): ProcessTreeDeps {
-  return {
-    platform: process.platform,
-    sleep: (ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
-    now: () => Date.now(),
-    killAfterMs: SdkProcess.KillAfterMs,
-    giveUpMs: SdkProcess.GiveUpMs,
-  };
+function pause(clock: Clock, ms: number): Promise<void> {
+  return new Promise<void>((resolve) => {
+    clock.after(ms, resolve);
+  });
+}
+
+export function defaultTreeDeps(clock: Clock): ProcessTreeDeps {
+  return { platform: process.platform, clock, killAfterMs: SdkProcess.KillAfterMs, giveUpMs: SdkProcess.GiveUpMs };
 }
 
 export function processTree(deps: ProcessTreeDeps): ProcessTree {
   let leader: ChildProcess | null = null;
   let tail = "";
+  let killed = false;
   const grouped = deps.platform !== SdkProcess.WindowsPlatform;
+  const kill = async (pid: number): Promise<void> => {
+    if (!killed) {
+      killed = true;
+      await signal(pid, SdkProcess.Signal.Kill);
+    }
+  };
   return {
     spawn(request) {
       const child = spawn(request.command, request.args, {
@@ -64,24 +73,32 @@ export function processTree(deps: ProcessTreeDeps): ProcessTree {
       });
       return child;
     },
+    async kill() {
+      const pid = leader?.pid;
+      if (pid !== undefined && grouped) {
+        await kill(pid);
+      }
+    },
     async reap() {
       const pid = leader?.pid;
-      if (pid === undefined || !grouped) {
-        return;
+      if (pid === undefined) {
+        return AgentTree.Gone;
       }
-      const started = deps.now();
-      let killed = false;
+      if (!grouped) {
+        return AgentTree.Unconfirmed;
+      }
+      const started = deps.clock.now();
       while (await alive(pid)) {
-        const waited = deps.now() - started;
+        const waited = deps.clock.now() - started;
         if (waited >= deps.giveUpMs) {
-          return;
+          return AgentTree.Unconfirmed;
         }
-        if (!killed && waited >= deps.killAfterMs) {
-          killed = true;
-          await signal(pid, SdkProcess.Signal.Kill);
+        if (waited >= deps.killAfterMs) {
+          await kill(pid);
         }
-        await deps.sleep(SdkProcess.PollMs);
+        await pause(deps.clock, SdkProcess.PollMs);
       }
+      return AgentTree.Gone;
     },
     stderrTail: () => tail,
   };

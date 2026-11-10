@@ -151,4 +151,5 @@ export const SdkProcess = {
   ExitEvent: "exit",
   DataEvent: "data",
   Signal: { Kill: "SIGKILL", Probe: 0 },
+  Expired: "expired",
 } as const;

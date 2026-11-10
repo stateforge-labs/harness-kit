@@ -65,7 +65,7 @@ export {
 } from "../core/run.ts";
 export type { HeadlessHandle } from "../driver/handle.ts";
 export type { Runtime } from "../driver/create-runtime.ts";
-export { AgentEventKind, AgentWhy, HookPoint } from "../agent/index.ts";
+export { AgentEventKind, AgentTree, AgentWhy, HookPoint } from "../agent/index.ts";
 export type {
   Agent,
   AgentBinary,

@@ -5,7 +5,7 @@ import { captureThrow, guardSync, settle } from "../driver/execute.ts";
 import { abortedFailure, closedFailure, unknownFailure } from "../driver/finish.ts";
 import type { Drivers, HarnessDriver } from "../driver/port.ts";
 import { lookupDriver } from "../driver/runtime-ops.ts";
-import { AbortReason, AgentEventKind, AgentLabel, AgentMessage, RECOVERY_RUN_SUFFIX, SESSION_NOT_FOUND } from "./constants.ts";
+import { AbortReason, AgentEventKind, AgentTree, AgentLabel, AgentMessage, RECOVERY_RUN_SUFFIX, SESSION_NOT_FOUND } from "./constants.ts";
 import type { AgentEngineImpl, AgentEngineRun, AgentRunInput } from "./engine.ts";
 import { channel, drain, internalFailure, merge, newSeen, observe, scrub } from "./fold.ts";
 import { type AgentPrepared, checkDirs, checkStart, prepareAgent } from "./prepare.ts";
@@ -42,6 +42,7 @@ function launch<I extends string>(ctx: RuntimeContext, prepared: AgentPrepared<I
   let reason: AbortReason | null = null;
   let live: AgentEngineRun | null = null;
   let finished = false;
+  let tree: AgentTree = AgentTree.Gone;
   let stopIdle: () => void = noop;
   let stopTimeout: () => void = noop;
   const detach: (() => void)[] = [];
@@ -78,6 +79,7 @@ function launch<I extends string>(ctx: RuntimeContext, prepared: AgentPrepared<I
     confinement: prepared.confinement,
     runId,
     signal: control.signal,
+    clock: ctx.clock,
     redact: prepared.redact,
   });
 
@@ -115,6 +117,10 @@ function launch<I extends string>(ctx: RuntimeContext, prepared: AgentPrepared<I
     };
     const drained = await drain(run, onEvent);
     live = null;
+    const state = captureThrow(() => run.tree?.());
+    if (state.ok && state.value === AgentTree.Unconfirmed) {
+      tree = AgentTree.Unconfirmed;
+    }
     stopIdle();
     const end = drained.end;
     const result: Outcome = drained.threw || end === null ? fail(internalFailure()) : end.ok ? ok(merge(seen, end.value.output)) : fail(end.failure);
@@ -167,7 +173,7 @@ function launch<I extends string>(ctx: RuntimeContext, prepared: AgentPrepared<I
     stopIdle();
     stopTimeout();
     detach.forEach((undo) => undo());
-    out.push({ kind: "finished", result: final });
+    out.push({ kind: "finished", result: final, tree });
     out.close();
     resolveSettled(final);
   };

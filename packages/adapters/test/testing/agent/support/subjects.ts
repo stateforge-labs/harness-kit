@@ -4,6 +4,7 @@ import { TOOLS_OFF } from "../../../../src/core/policy.ts";
 import { fail } from "../../../../src/core/result.ts";
 import { secret } from "../../../../src/core/secret.ts";
 import { asSessionId, type SessionId } from "../../../../src/core/session.ts";
+import { nodeClock } from "../../../../src/driver/node-defaults.ts";
 import type { EnvSource } from "../../../../src/env.ts";
 import { agentContract, fakeAgentEngine, type AgentContractSubject, type FakeAgentEngine, type FakeAgentScript } from "../../../../src/testing/index.ts";
 import { type Defect, referenceRuntime } from "./reference-runtime.ts";
@@ -105,6 +106,7 @@ export function runInput(signal: AbortSignal = new AbortController().signal, env
     confinement: [],
     runId: "run-1",
     signal,
+    clock: nodeClock,
     redact: (text) => text,
   };
 }

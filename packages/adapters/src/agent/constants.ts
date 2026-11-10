@@ -3,6 +3,9 @@ import { emulated, supported, unmeasuredSupport, type Support } from "../core/ca
 
 export const AgentEventKind = { Recovered: "recovered" } as const;
 
+export const AgentTree = { Gone: "gone", Unconfirmed: "unconfirmed" } as const;
+export type AgentTree = (typeof AgentTree)[keyof typeof AgentTree];
+
 export const HookPoint = { PreTool: "pre-tool", PostTool: "post-tool", Stop: "stop", SessionStart: "session-start", PromptSubmit: "prompt-submit" } as const;
 export type HookPoint = (typeof HookPoint)[keyof typeof HookPoint];
 

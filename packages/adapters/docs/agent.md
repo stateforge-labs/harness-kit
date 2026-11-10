@@ -64,11 +64,23 @@ A usage event is emitted when the next message starts, or at the end of the run,
 ## Cancel
 
 `run.cancel()` aborts the run and returns a promise that settles only after the run has ended: the `finished` event is emitted (with a
-`cancelled` failure) and the child process tree is gone. The promise never rejects, and a second call resolves too. A cancel after the run
-finished changes nothing.
+`cancelled` failure) and the engine has finished its wait on the child process tree. The promise never rejects, and a second call resolves
+too. A cancel after the run finished changes nothing.
 
-The wait is real: on the Claude engine it was measured at about 2.0 s from `abort()` to the iterator ending, with every descendant gone by
-2.4 s. A consumer that needs its own deadline races `cancel()` against a timer.
+What is guaranteed, on the Claude engine, measured on the runtime clock the runtime was created with:
+
+- `cancel()` always resolves. After the abort the engine waits at most 2.5 s for the SDK stream to end. If it has not ended, the engine
+  sends `SIGKILL` to the child's process group and stops reading the stream.
+- Closing the stream is given at most 6 s. Then the engine polls the process group for at most 6 s, sending `SIGKILL` once if the group is
+  still alive 2.5 s into the poll. In the worst case `cancel()` resolves about 14.5 s after the abort.
+- The `finished` event carries `tree`. `"gone"` means the process group had no live process when the engine stopped polling. `"unconfirmed"`
+  means the engine gave up first, or the platform has no process groups (Windows): the run settled, but a process of the tree may remain.
+  `tree` is on the `finished` event of every run, not only a cancelled one.
+- Not guaranteed: a descendant that left the process group (for example by starting a new session) is not seen, and `"gone"` says nothing
+  about it.
+
+In the measured runs the stream ended about 2.0 s after `abort()` with every descendant gone by 2.4 s. A consumer that needs a shorter
+deadline races `cancel()` against a timer.
 
 ## Hooks
 

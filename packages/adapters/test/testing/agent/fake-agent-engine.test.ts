@@ -33,7 +33,7 @@ describe("fakeAgentEngine", () => {
   });
 
   test("never emits finished, even when the script carries one", async () => {
-    const finished: AgentEvent = { kind: "finished", result: fail({ kind: "no-output", message: "x" }) };
+    const finished: AgentEvent = { kind: "finished", result: fail({ kind: "no-output", message: "x" }), tree: "gone" };
     const engine = fakeAgentEngine("claude", [{ events: [{ kind: "started", engine: "sdk" }, finished] }]);
     const run = engine.start(runInput());
     expect((await collect(run.events)).map((event) => event.kind)).toEqual(["started"]);

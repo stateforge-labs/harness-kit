@@ -1,3 +1,4 @@
+import type { AgentTree } from "../agent/constants.ts";
 import type { AgentEnd, AgentEngineImpl, AgentEngineRun, AgentRunInput } from "../agent/engine.ts";
 import type { AgentEvent, AgentOutput, TurnUsage } from "../agent/types.ts";
 import { Engine } from "../core/capability.ts";
@@ -8,12 +9,13 @@ import type { SdkPlan } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
 import { FakeAgentText, TerminalKind } from "./agent-constants.ts";
 
-/** One scripted engine run: the events to replay, how it ends, an optional pause before each event and an optional extra wait, after the run was cancelled, before `done` settles. */
+/** One scripted engine run: the events to replay, how it ends, an optional pause before each event and an optional extra wait, after the run was cancelled, before `done` settles, and the state of the child process tree to report. */
 export interface FakeAgentScript {
   readonly events: readonly AgentEvent[];
   readonly result?: Result<AgentOutput, RunFailure>;
   readonly delayMs?: number;
   readonly settleDelayMs?: number;
+  readonly tree?: AgentTree;
 }
 
 /** An agent engine that replays scripts and records every run input it was given. */
@@ -158,7 +160,7 @@ function runOf(script: FakeAgentScript | undefined, input: AgentRunInput): Agent
     }
     return end;
   });
-  return { events: out.iterable, cancel: stop, done };
+  return { events: out.iterable, cancel: stop, done, tree: () => script?.tree ?? "gone" };
 }
 
 function planOf(harness: string, input: AgentRunInput): SdkPlan {
