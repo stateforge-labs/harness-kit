@@ -59,10 +59,9 @@ export interface TranscriptStore {
   listSubkeys(key: string): Promise<readonly string[]>;
 }
 
-/** Where hook events go: the consumer's pipeline, and the socket of an endpoint the consumer runs. */
+/** Where hook events go: the consumer's pipeline. */
 export interface HookTarget {
   readonly pipeline: Pipeline;
-  readonly socket: { readonly path: string; readonly shimDir: string } | null;
 }
 
 /** Resume an earlier session; a session that is gone gets exactly one fresh run when `recoveryPrompt` is set. */

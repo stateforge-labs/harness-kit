@@ -8,6 +8,8 @@ import { builtinDrivers } from "../src/drivers.ts";
 
 const README = readFileSync(fileURLToPath(new URL("../README.md", import.meta.url)), "utf8");
 const QUICKSTART = readFileSync(fileURLToPath(new URL("../examples/quickstart.ts", import.meta.url)), "utf8");
+const AGENT_QUICKSTART = readFileSync(fileURLToPath(new URL("../examples/agent/quickstart.ts", import.meta.url)), "utf8");
+const AGENT_RUNTIME_IMPORT = '"../../src/runtime/index.ts"';
 const RUNTIME_IMPORT = '"../src/runtime/index.ts"';
 const PUBLISHED_IMPORT = '"@stateforge-labs/harness-adapters/runtime"';
 const COLUMNS: readonly (readonly [string, HarnessId])[] = [
@@ -89,6 +91,11 @@ describe("README", () => {
   test("the Quick start block is the examples file with the published import", () => {
     const expected = QUICKSTART.trim().replace(RUNTIME_IMPORT, PUBLISHED_IMPORT);
     expect(firstTsBlock(section(README, "Quick start")).trim()).toBe(expected);
+  });
+
+  test("the Agent runs block is examples/agent/quickstart.ts with the published import", () => {
+    const expected = AGENT_QUICKSTART.trim().replace(AGENT_RUNTIME_IMPORT, PUBLISHED_IMPORT);
+    expect(firstTsBlock(section(README, "Agent runs")).trim()).toBe(expected);
   });
 
   test("every required section heading exists", () => {

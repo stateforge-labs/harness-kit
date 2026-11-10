@@ -91,25 +91,53 @@ returns `plan(...)`, to see the invocation without running it, and `stream(...)`
 `runtime.agent(id, options)` returns an `Agent` whose `start(...)` runs the harness through its vendor SDK and returns a run: a stream of
 events and a `settled` result that never rejects. This release has the Claude Agent SDK engine (`@anthropic-ai/claude-agent-sdk`, pinned
 exactly at 0.3.316, loaded by a dynamic import at the first run, so importing the package never loads it). A CLI agent run is refused as
-`unsupported` before anything starts.
+`unsupported` before anything starts. The program below reads `ANTHROPIC_API_KEY` (and optionally `ANTHROPIC_BASE_URL`) from its own environment
+and prints the answer; the library never reads a credential from the environment on its own.
 
 ```ts
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createRuntime, Harness, secret, TOOLS_OFF } from "@stateforge-labs/harness-adapters/runtime";
 
-await using runtime = createRuntime();
-const made = runtime.agent(Harness.Claude, {
-  credential: { mode: "api-key", key: secret(apiKey), baseUrl: "https://api.anthropic.com" },
-  dirs: { cwd, home, configDir, tmpDir },
-  tools: TOOLS_OFF,
-  env: { kind: "closed", set: { PATH: "/usr/bin" } },
-});
-if (made.ok) {
-  const run = made.value.start({ instructions: "Answer in one sentence.", prompt: "What is a monad?", maxTurns: 3 });
-  for await (const event of run.events) {
-    if (event.kind === "text") process.stdout.write(event.text);
+const QUESTION = "What is a monad, in one sentence?";
+
+async function main(): Promise<number> {
+  const root = await mkdtemp(join(tmpdir(), "agent-quickstart-"));
+  try {
+    const dirs = { cwd: join(root, "cwd"), home: join(root, "home"), configDir: join(root, "config"), tmpDir: join(root, "tmp") };
+    for (const dir of Object.values(dirs)) {
+      await mkdir(dir);
+    }
+    await using runtime = createRuntime();
+    const made = runtime.agent(Harness.Claude, {
+      credential: { mode: "api-key", key: secret(process.env["ANTHROPIC_API_KEY"] ?? ""), baseUrl: process.env["ANTHROPIC_BASE_URL"] ?? "https://api.anthropic.com" },
+      dirs,
+      tools: TOOLS_OFF,
+      env: { kind: "closed", set: { PATH: process.env["PATH"] ?? "" } },
+    });
+    if (!made.ok) {
+      console.error(`${made.failure.kind}: ${made.failure.message}`);
+      return 1;
+    }
+    const run = made.value.start({ instructions: "Answer in one short sentence.", prompt: QUESTION, maxTurns: 3 });
+    for await (const event of run.events) {
+      if (event.kind === "text") {
+        process.stdout.write(event.text);
+      }
+    }
+    const result = await run.settled;
+    if (!result.ok) {
+      console.error(`${result.failure.kind}: ${result.failure.message}`);
+      return 1;
+    }
+    return 0;
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
-  const result = await run.settled;
 }
+
+process.exitCode = await main();
 ```
 
 - **Credential and environment.** One injected key and a mandatory base URL. The child environment is closed and built only from what the

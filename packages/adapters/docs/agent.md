@@ -8,7 +8,7 @@ This release has one SDK engine: Claude, through `@anthropic-ai/claude-agent-sdk
 dynamic import inside the first `start`, so importing the package, or using the one-shot `headless` facet, never loads it. For any other
 harness `runtime.agent` returns `unsupported` unless the consumer injects an engine with `createRuntime({ agentEngines })`.
 
-Runnable examples: [`examples/agent/`](../examples/agent). The shape of every type is in the declarations that the `runtime` subpath ships.
+Runnable examples: [`examples/agent/`](../examples/agent) holds `quickstart.ts` (the README program), `ask.ts` (a hook pipeline), `bearer-and-cancel.ts` and `test-with-fakes.ts`. The shape of every type is in the declarations that the `runtime` subpath ships.
 
 ## Options
 
@@ -38,13 +38,28 @@ policy turns built-in tools off, and strict MCP config, so only the endpoints in
 | `model`, `effort` | optional |
 | `outputSchema` | a JSON schema object. The structured result arrives as an `output` event and in `AgentOutput.output` |
 | `resume` | `{ sessionId, checkpoint?, recoveryPrompt? }`. See Resume |
-| `hooks` | `{ pipeline, socket }`. See Hooks |
+| `hooks` | `{ pipeline }`, a `harness-hooks` `Pipeline`. See Hooks |
 | `store` | a `TranscriptStore` the run mirrors its transcript to. See Store |
 
-A run yields `AgentEvent` values: `started`, `session` (id and checkpoint), `turn`, `text`, `usage`, `tool`, `refused`, `output`,
-`recovered`, `unrecognised`, and last `finished`. Exactly one `finished` event is emitted and it is the last event. `run.settled` is a
-promise that never rejects; it resolves to the same `Result<AgentOutput, RunFailure>` the `finished` event carries, after that event is
-emitted.
+A run yields `AgentEvent` values:
+
+| Event | Fields | Emitted when |
+| --- | --- | --- |
+| `started` | `engine` (`"sdk"`) | the engine begins; first event of a run |
+| `session` | `id`, `checkpoint` | the vendor session id is known, and again when the checkpoint moves. `checkpoint` is the uuid of the last assistant message, or `null` |
+| `turn` | `n` | a model message begins; `n` counts from 1 |
+| `text` | `text` | the model produced text; secrets are redacted |
+| `usage` | `turn`, `model`, `input`, `cacheWrite`, `cacheRead`, `output` | the raw token counts of one model message. See Usage |
+| `tool` | `id`, `name`, `class`, `target` | the model called a tool. `target` is the file path, notebook path, path or pattern argument, or `null` |
+| `refused` | `id`, `tool`, `source`, `reason`, `text` | a hook denied the tool (`source: "hook"`, `tool` is the bare tool name), or the model called a tool absent from the child's tool list (`source: "unknown-tool"`) |
+| `output` | `value` | the structured result of a run that asked for an `outputSchema` |
+| `recovered` | `reason` (`"session-not-found"`) | a resume missed and the run starts again as a fresh session with the `recoveryPrompt`. See Resume and recovery |
+| `unrecognised` | `payload` | the SDK sent a message the decoder does not know; the payload is redacted |
+| `finished` | `result`, `tree` | the run ended; last and unique. `result` is the `Result<AgentOutput, RunFailure>`; `tree` is `"gone"` or `"unconfirmed"`. See Cancel |
+
+The `AgentEvent` type also admits `compacted`; no shipped agent engine emits it. Exactly one `finished` event is emitted and it is the last
+event. `run.settled` is a promise that never rejects; it resolves to the same `Result<AgentOutput, RunFailure>` the `finished` event carries,
+after that event is emitted. It carries no `tree`; read that from the `finished` event.
 
 ```ts
 for await (const event of run.events) {
@@ -89,8 +104,6 @@ Hooks are the consumer's: it passes a [`harness-hooks`](https://github.com/state
 - Under the Claude SDK the engine registers SDK hook callbacks that call `handle(adapter, payload, pipeline)` in the same process and return
   the encoded body. The library builds no layer and opens no port. A deny from the pipeline also becomes a `refused` event with
   `source: "hook"` and the bare tool name.
-- `start.hooks.socket` (`{ path, shimDir }`, or `null`) names the Unix socket of an endpoint the consumer runs, for an engine of a harness whose
-  hooks are commands. The Claude engine uses the in-process callbacks and ignores it. The library never opens a port or a socket.
 - The SDK never fires `SessionStart`. Context a pipeline would give at session start is delivered with the first `UserPromptSubmit`.
 
 `agent.hooks` is a table, per hook point (`pre-tool`, `post-tool`, `stop`, `session-start`, `prompt-submit`), of the support state for the

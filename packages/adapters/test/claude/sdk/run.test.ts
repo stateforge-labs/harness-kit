@@ -374,7 +374,7 @@ describe("sdk transcript store", () => {
 });
 
 describe("sdk hooks", () => {
-  const target = { pipeline: {} as never, socket: null };
+  const target = { pipeline: {} as never };
 
   test("a run with a hook target and no wiring installed fails closed", async () => {
     const fake = fakeQuery(BASIC);

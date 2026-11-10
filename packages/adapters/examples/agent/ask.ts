@@ -26,7 +26,7 @@ export async function ask(input: AskInput): Promise<AgentOutput | RunFailure> {
     instructions: "Answer in one short sentence.",
     prompt: input.question,
     maxTurns: 3,
-    hooks: { pipeline, socket: null },
+    hooks: { pipeline },
   });
   for await (const event of run.events) {
     if (event.kind === "refused") {

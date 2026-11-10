@@ -10,19 +10,18 @@ const CONTEXT = "session context";
 
 const SCRIPT = `
 import { Kind, Pipeline, once, toolAllowlist } from "${HARNESS_HOOKS}";
-import { claudeHookCallbacks, socketWiring } from "${HOOKS}";
+import { claudeHookCallbacks } from "${HOOKS}";
 const pipeline = new Pipeline().use(
   toolAllowlist({ allow: ["Read"], deny: { reason: "${DENY_REASON}" } }),
   once(() => "${CONTEXT}", { kinds: [Kind.SessionStart] }),
 );
 const refused = [];
-const option = claudeHookCallbacks({ pipeline, socket: null }, { refused: (r) => refused.push(r), context: () => {} });
+const option = claudeHookCallbacks({ pipeline }, { refused: (r) => refused.push(r), context: () => {} });
 const signal = new AbortController().signal;
 const base = { session_id: "s", transcript_path: "/t.jsonl", cwd: "/w" };
 const pre = await option.PreToolUse[0].hooks[0]({ ...base, hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: {}, tool_use_id: "u1" }, "u1", { signal });
 const prompt = await option.UserPromptSubmit[0].hooks[0]({ ...base, hook_event_name: "UserPromptSubmit", prompt: "hi" }, undefined, { signal });
-const wiring = socketWiring("codex", { pipeline, socket: { path: "/s.sock", shimDir: "/shims" } }, { cwd: "/w", home: "/h", configDir: "/c", tmpDir: "/t" });
-console.log(JSON.stringify({ pre, prompt, refused: refused.length, wired: wiring.ok && wiring.value.files.length }));
+console.log(JSON.stringify({ pre, prompt, refused: refused.length }));
 `;
 
 async function run(argv: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
@@ -37,7 +36,6 @@ const EXPECTED = {
   pre: { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: DENY_REASON } },
   prompt: { hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: CONTEXT } },
   refused: 1,
-  wired: 2,
 };
 
 describe("the hooks wiring runs the same on both runtimes", () => {

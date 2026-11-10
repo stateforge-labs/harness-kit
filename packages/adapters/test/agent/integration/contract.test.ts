@@ -49,7 +49,7 @@ function runtimeOf(engine: AgentEngineImpl<"claude">, source?: EnvSource, withDe
         return built;
       }
       const agent = built.value;
-      return { ok: true, value: { ...agent, start: (start) => agent.start({ ...start, hooks: { pipeline, socket: null } }) } };
+      return { ok: true, value: { ...agent, start: (start) => agent.start({ ...start, hooks: { pipeline } }) } };
     },
   };
 }
