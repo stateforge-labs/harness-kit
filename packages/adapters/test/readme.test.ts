@@ -17,6 +17,8 @@ const COLUMNS: readonly (readonly [string, HarnessId])[] = [
 ];
 const CELLS_START = "<!-- cells:start -->";
 const CELLS_END = "<!-- cells:end -->";
+const SDK_CELLS_START = "<!-- sdk-cells:start -->";
+const SDK_CELLS_END = "<!-- sdk-cells:end -->";
 
 function supportText(support: Support): string {
   switch (support.state) {
@@ -31,12 +33,12 @@ function supportText(support: Support): string {
   }
 }
 
-function renderCells(): string {
+function renderCells(engine: Engine = Engine.Cli): string {
   const drivers = builtinDrivers();
   const header = `| Capability | ${COLUMNS.map(([label]) => label).join(" | ")} |`;
   const rule = `| --- | ${COLUMNS.map(() => "---").join(" | ")} |`;
   const rows = (Object.values(CapabilityName) as CapabilityName[]).map((name) => {
-    const cells = COLUMNS.map(([, id]) => supportText(drivers[id].capabilities[name][Engine.Cli]));
+    const cells = COLUMNS.map(([, id]) => supportText(drivers[id].capabilities[name][engine]));
     return `| \`${name}\` | ${cells.join(" | ")} |`;
   });
   return [header, rule, ...rows].join("\n");
@@ -72,6 +74,7 @@ function firstTsBlock(text: string): string {
 const REQUIRED_HEADINGS = [
   "Credentials and policy",
   "Quick start",
+  "Agent runs",
   "Tool and env policy",
   "Differences per harness",
   "Errors",
@@ -103,5 +106,16 @@ describe("README", () => {
 
   test("the cell table equals the render from the built-in drivers", () => {
     expect(between(README, CELLS_START, CELLS_END)).toBe(renderCells());
+  });
+
+  test("the sdk cell table equals the render from the built-in drivers", () => {
+    expect(between(README, SDK_CELLS_START, SDK_CELLS_END)).toBe(renderCells(Engine.Sdk));
+  });
+
+  test("the agent doc records the evidence date and what was not established", () => {
+    const doc = readFileSync(fileURLToPath(new URL("../docs/agent.md", import.meta.url)), "utf8");
+    expect(doc).toContain("2026-11-09");
+    expect(doc).toContain("Not established");
+    expect(doc).toContain("StructuredOutput");
   });
 });

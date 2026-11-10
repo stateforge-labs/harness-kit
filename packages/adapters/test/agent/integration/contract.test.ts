@@ -140,7 +140,7 @@ describe("the exported contract suite against the real facet", () => {
       engine: fakeAgentEngine("claude", []),
       cancel: {
         runtime: () => {
-          cancelEngine = fakeAgentEngine("claude", [{ events: normalEvents(), delayMs: 40 }]);
+          cancelEngine = fakeAgentEngine("claude", [{ events: normalEvents(), delayMs: 40, settleDelayMs: 60 }]);
           return runtimeOf(cancelEngine);
         },
         inputs: () => cancelEngine.starts,

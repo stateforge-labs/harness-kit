@@ -8,11 +8,12 @@ import type { SdkPlan } from "../core/run.ts";
 import type { SessionId } from "../core/session.ts";
 import { FakeAgentText, TerminalKind } from "./agent-constants.ts";
 
-/** One scripted engine run: the events to replay, how it ends and an optional pause before each event. */
+/** One scripted engine run: the events to replay, how it ends, an optional pause before each event and an optional extra wait, after the run was cancelled, before `done` settles. */
 export interface FakeAgentScript {
   readonly events: readonly AgentEvent[];
   readonly result?: Result<AgentOutput, RunFailure>;
   readonly delayMs?: number;
+  readonly settleDelayMs?: number;
 }
 
 /** An agent engine that replays scripts and records every run input it was given. */
@@ -149,9 +150,12 @@ function runOf(script: FakeAgentScript | undefined, input: AgentRunInput): Agent
     }
     return endOf(script, emitted);
   };
-  const done = pump().then((end) => {
+  const done = pump().then(async (end) => {
     input.signal.removeEventListener("abort", stop);
     out.end();
+    if (own.signal.aborted && script?.settleDelayMs !== undefined && script.settleDelayMs > 0) {
+      await new Promise<void>((resolve) => setTimeout(resolve, script.settleDelayMs));
+    }
     return end;
   });
   return { events: out.iterable, cancel: stop, done };

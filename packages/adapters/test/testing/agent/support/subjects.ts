@@ -71,7 +71,7 @@ export function subjectOf(parts: SubjectParts = {}): AgentContractSubject {
     return { runtime: base.runtime, options: OPTIONS, id: "claude" };
   }
   const deny = tracked(parts.deny ?? (() => [{ events: denyEvents() }]), defects);
-  const cancel = tracked(parts.cancel ?? (() => [{ events: normalEvents(), delayMs: 40 }]), defects);
+  const cancel = tracked(parts.cancel ?? (() => [{ events: normalEvents(), delayMs: 40, settleDelayMs: 60 }]), defects);
   const resume = tracked(
     parts.resume ??
       (() => [

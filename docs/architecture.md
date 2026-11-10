@@ -300,6 +300,32 @@ Each module is a subpath export, so a consumer that imports only one harness nev
 
 The runtime (`@stateforge-labs/harness-adapters/runtime`) starts every harness process through an injected `ProcessRunner`, set by `RuntimeConfig.spawn`. The default, `nodeRunner` in `packages/adapters/src/driver/node-defaults.ts`, starts each process detached in its own process group, so a timeout or abort signals the whole group. Tests inject `fakeProcessRunner` instead, which replays scripted output without starting a process, so the driver logic runs with no harness installed.
 
+### The agent facet (`packages/adapters/src/agent/`)
+
+`runtime.agent(id, options)` builds an `Agent` for one harness; its runs go through the vendor SDK engine of that harness, never the CLI engine.
+
+```text
+runtime.agent(id, options)
+  prepare.ts   checks options once: credential, closed env, directories, tools, capability cells; builds the child env and the redaction set
+  facet.ts     launch(): timeouts, abort sources, the single terminal event, settled, recovery of a missing session, cancel
+  fold.ts      the event channel, engine settling and redaction of the terminal result
+  engine.ts    the seam an SDK engine implements (AgentEngineImpl)
+  hooks/       the hook callbacks that call harness-hooks handle() in process; the emulated session-start; the command-hook wiring
+claude/engines/sdk.ts   the Claude engine: lazy dynamic import of the vendor SDK, process spawner, process-tree reap, store adapter, decoder
+```
+
+- **One boundary to the vendor SDK.** Only `src/claude/engines/sdk.ts` names the SDK package, and only inside a dynamic `import()` in the engine's `start`. The
+  boundary check fails any other file that names an SDK package and any built declaration that does.
+- **Closed by construction.** The child environment is built from the credential, the caller's `env.set`, the bearer slots, `HOME` and `TMPDIR`; the SDK
+  is given no settings sources, no built-in tools when the policy turns them off, and strict MCP config. Directories come from the caller; none is created.
+- **One terminal event.** `launch()` pushes `finished` exactly once, then resolves `settled`; `cancel()` resolves after that and after the engine's `done`,
+  which on the Claude engine settles only once the child process tree is gone.
+- **Hooks are the caller's.** The caller passes a `harness-hooks` `Pipeline`; the engine calls `handle(adapter, payload, pipeline)` from the SDK hook
+  callbacks. The library builds no layer and opens no port.
+- **Capability cells carry the measurements.** The Claude SDK column is `supported` where a dated measurement exists; the record is in
+  [`packages/adapters/docs/agent.md`](../packages/adapters/docs/agent.md). Any other harness's hook points are `unmeasured`.
+- **Tests.** `./testing` ships `fakeAgentEngine`, `fakeClaudeQuery` and `agentContract`; the same contract runs against the fake engine and the real facet over a scripted SDK stream.
+
 ## Configuration (`packages/hooks/src/env.ts`)
 
 Every environment variable is named, defaulted and parsed in one module, `packages/hooks/src/env.ts` (`EnvVar`, `EnvDefault`, `FailMode`),

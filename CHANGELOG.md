@@ -16,7 +16,9 @@ and the project uses [Semantic Versioning](https://semver.org).
 - An MCP endpoint with a bearer is passed as a header that names an environment variable, so the token never reaches the child's argument list.
 - Cancel aborts the run and settles only after the child process tree is gone. Usage is raw per model message; the library computes no cost for agent runs.
 - `./testing` additions: `agentContract`, `fakeAgentEngine`, `fakeClaudeQuery` with `claudeMessages`, `fakeTranscriptStore` and a scripted Messages API.
-- The Claude `base-url` and `mcp-none` sdk cells are supported, and the Claude sdk cells for the agent features are supported.
+- The Claude `base-url` and `mcp-none` sdk cells are supported, and the Claude sdk cells for the agent features are supported, each backed by a dated measurement recorded in `docs/agent.md`, which also lists what was not established. The Codex hook points under the SDK are unmeasured.
+- Documentation: `docs/agent.md`, `examples/agent/`, an "Agent runs" section and an SDK cell table in the README, and the agent facet in the architecture page.
+- `FakeAgentScript.settleDelayMs` holds the end of a cancelled fake run open. The agent contract's cancel check no longer waits a tick, so a `cancel()` that resolves before the terminal event fails it.
 
 ## harness-adapters 0.2.0 - 2026-11-09
 

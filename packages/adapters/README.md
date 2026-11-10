@@ -1,7 +1,8 @@
 # @stateforge-labs/harness-adapters
 
 Harness knowledge that is not a hook, for Claude Code, Codex and OpenCode: transcript and store readers, in-flight and background
-detection, CLI invocation, usage and context windows, tool facts, TUI screen chrome and a headless runtime that runs each harness's CLI.
+detection, CLI invocation, usage and context windows, tool facts, TUI screen chrome, a headless runtime that runs each harness's CLI and an
+agent facet that runs a harness through its vendor SDK.
 One module per harness. It is built on
 [`@stateforge-labs/harness-hooks`](https://github.com/stateforge-labs/harness-kit/blob/main/packages/hooks/README.md), which holds the hook
 events, the closed value sets and the schemas.
@@ -38,9 +39,9 @@ Pass an explicit object to test a module without touching the real environment.
 | `@stateforge-labs/harness-adapters/opencode` | the OpenCode module | 0.x, stable within 0.x |
 | `@stateforge-labs/harness-adapters/opencode/store` | the OpenCode store reader. It imports `node:sqlite`, which prints an `ExperimentalWarning` on Node 22 (checked on 22.23); the other subpaths never load it | 0.x, stable within 0.x |
 | `@stateforge-labs/harness-adapters/tui` | the TUI screen chrome | 0.x, stable within 0.x |
-| `@stateforge-labs/harness-adapters/runtime` | `createRuntime`, `Harness`, credentials, policy, results and failures | 0.x, stable within 0.x |
+| `@stateforge-labs/harness-adapters/runtime` | `createRuntime`, `Harness`, credentials, policy, results, failures and the agent types | 0.x, stable within 0.x |
 | `@stateforge-labs/harness-adapters/engine` | the CLI engine contract for building a harness driver | experimental |
-| `@stateforge-labs/harness-adapters/testing` | `fakeRuntime`, `fakeProcessRunner`, `fakeFs`, `fakeClock` and the driver contract checks | 0.x, stable within 0.x |
+| `@stateforge-labs/harness-adapters/testing` | `fakeRuntime`, `fakeProcessRunner`, `fakeFs`, `fakeClock`, the driver contract checks, and for the agent facet `fakeAgentEngine`, `fakeClaudeQuery`, `claudeMessages`, `fakeTranscriptStore`, `scriptedMessagesApi` and `agentContract` | 0.x, stable within 0.x |
 
 ## Credentials and policy
 
@@ -85,6 +86,50 @@ process.exitCode = await main();
 `run` returns a `Result`: `{ ok: true, value }` or `{ ok: false, failure }`. Branch on `failure.kind` (see Errors). `headless(...)` also
 returns `plan(...)`, to see the invocation without running it, and `stream(...)`, which yields events as the run progresses.
 
+## Agent runs
+
+`runtime.agent(id, options)` returns an `Agent` whose `start(...)` runs the harness through its vendor SDK and returns a run: a stream of
+events and a `settled` result that never rejects. This release has the Claude Agent SDK engine (`@anthropic-ai/claude-agent-sdk`, pinned
+exactly at 0.3.316, loaded by a dynamic import at the first run, so importing the package never loads it). A CLI agent run is refused as
+`unsupported` before anything starts.
+
+```ts
+import { createRuntime, Harness, secret, TOOLS_OFF } from "@stateforge-labs/harness-adapters/runtime";
+
+await using runtime = createRuntime();
+const made = runtime.agent(Harness.Claude, {
+  credential: { mode: "api-key", key: secret(apiKey), baseUrl: "https://api.anthropic.com" },
+  dirs: { cwd, home, configDir, tmpDir },
+  tools: TOOLS_OFF,
+  env: { kind: "closed", set: { PATH: "/usr/bin" } },
+});
+if (made.ok) {
+  const run = made.value.start({ instructions: "Answer in one sentence.", prompt: "What is a monad?", maxTurns: 3 });
+  for await (const event of run.events) {
+    if (event.kind === "text") process.stdout.write(event.text);
+  }
+  const result = await run.settled;
+}
+```
+
+- **Credential and environment.** One injected key and a mandatory base URL. The child environment is closed and built only from what the
+  caller passes. The caller supplies the working, home, config and tmp directories, which must exist; the library creates none of them. Nothing
+  is read from the ambient environment or from user settings.
+- **Hooks.** The caller passes a `harness-hooks` `Pipeline` in `start.hooks`. For Claude the engine calls it in process through SDK hook
+  callbacks; a deny also becomes a `refused` event. The SDK never fires `SessionStart`, so session context arrives with the first prompt.
+- **MCP with a bearer.** Pass the token as the endpoint's `bearer`. The library writes the header as `Bearer ${VAR}` and gives the value only
+  to the child environment, because a literal token lands in the child's argument list.
+- **Store and resume.** `start.store` mirrors the transcript to a store the caller owns; `start.resume` continues a session from the store alone
+  and, with a `recoveryPrompt`, falls back to one fresh run when the session is gone.
+- **Limits.** `maxTurns` is required. `timeoutMs`, `idleTimeoutMs` and `signal` end a run; `start.limits.mcpOutputTokens` caps one MCP tool output.
+- **Cancel.** `run.cancel()` resolves only after the terminal `finished` event is emitted and the child process tree is gone (about 2 s on
+  Claude). Exactly one `finished` event is emitted and it is last.
+- **Usage.** Raw token counts per model message. No cost is computed for an agent run.
+
+The full reference, with what was measured for each capability cell, is in
+[docs/agent.md](https://github.com/stateforge-labs/harness-kit/blob/main/packages/adapters/docs/agent.md); runnable examples are in
+[examples/agent](https://github.com/stateforge-labs/harness-kit/tree/main/packages/adapters/examples/agent).
+
 ## Tool and env policy
 
 `ToolPolicy` controls what the harness may use during a run: `builtins` (`"off"` or `"harness-default"`), `mcp` (an allowlist
@@ -101,9 +146,13 @@ names in a `credential-plan` event.
 
 ## Differences per harness
 
-The table is rendered from the capabilities each driver declares. A cell is the support state for the CLI engine: `supported`, `emulated`
-(with how), `unsupported` (with the reason) or `unmeasured` (with the question still open). The SDK engine is not built in this release, so
-its cells read `unsupported: not-implemented`.
+The tables are rendered from the capabilities each driver declares. A cell is the support state: `supported`, `emulated` (with how),
+`unsupported` (with the reason) or `unmeasured` (with the question still open). Each capability has one cell per engine. The first table is the CLI
+engine; on it, a cell for an agent-only capability reads `unsupported: not-implemented`. The second table is the SDK engine, the one an agent run uses.
+A Claude SDK cell is `supported` only where a dated measurement exists; [docs/agent.md](https://github.com/stateforge-labs/harness-kit/blob/main/packages/adapters/docs/agent.md#capability-cells-and-what-was-measured)
+lists the measurements (2026-11-09) and what was not established.
+
+CLI engine:
 
 <!-- cells:start -->
 | Capability | Claude | Codex | OpenCode |
@@ -125,6 +174,29 @@ its cells read `unsupported: not-implemented`.
 | `unknown-tool-detection` | unsupported: not-implemented | unmeasured: has this harness been measured for the agent facet? | unmeasured: has this harness been measured for the agent facet? |
 | `session-store` | unsupported: not-implemented | unmeasured: has this harness been measured for the agent facet? | unmeasured: has this harness been measured for the agent facet? |
 <!-- cells:end -->
+
+SDK engine:
+
+<!-- sdk-cells:start -->
+| Capability | Claude | Codex | OpenCode |
+| --- | --- | --- | --- |
+| `effort` | unsupported: not-implemented | unsupported: not-implemented | unsupported: not-implemented |
+| `structured-output` | supported | unmeasured: has this harness been measured for the agent facet? | unmeasured: has this harness been measured for the agent facet? |
+| `sessions-delete` | unsupported: not-implemented | unsupported: not-implemented | unsupported: not-implemented |
+| `ephemeral` | supported | unsupported: harness-limit | unmeasured: has this harness been measured for the agent facet? |
+| `cost` | unsupported: not-implemented | unsupported: not-implemented | unsupported: not-implemented |
+| `settings-sources` | supported | unsupported: not-implemented | unmeasured: has this harness been measured for the agent facet? |
+| `builtin-tools-off` | supported | unsupported: not-implemented | unmeasured: has this harness been measured for the agent facet? |
+| `mcp-none` | supported | unsupported: not-implemented | unsupported: not-implemented |
+| `mcp-allowlist` | supported | unsupported: not-implemented | unmeasured: has this harness been measured for the agent facet? |
+| `closed-env` | supported | unmeasured: does a closed environment keep a Codex SDK run working? | unmeasured: has this harness been measured for the agent facet? |
+| `base-url` | supported | unsupported: not-implemented | unsupported: not-implemented |
+| `resume` | supported | unmeasured: has this harness been measured for the agent facet? | unmeasured: has this harness been measured for the agent facet? |
+| `resume-checkpoint` | supported | unmeasured: has this harness been measured for the agent facet? | unmeasured: has this harness been measured for the agent facet? |
+| `per-turn-usage` | supported | unsupported: not-implemented | unmeasured: has this harness been measured for the agent facet? |
+| `unknown-tool-detection` | supported | unmeasured: one exec tool nests the other tools; can an unknown tool be told apart? | unmeasured: has this harness been measured for the agent facet? |
+| `session-store` | supported | unsupported: harness-limit | unsupported: harness-limit |
+<!-- sdk-cells:end -->
 
 ## Errors
 
@@ -148,14 +220,15 @@ not recognise.
 | `too-large` | an input (`instructions`, `input` or `environment`) is over its limit; shorten it and compare `limitBytes` with `actualBytes` | CLI engine |
 | `output-too-large` | the output is over the stdout limit; ask for a shorter answer | CLI engine |
 | `unsupported` | the chosen engine cannot enforce a capability the call requires (see `capability`, `why`); change the policy or the engine | CLI engine, runtime |
-| `cancelled` | reserved for a cancellation that is not an abort; no producer in this release | none yet |
-| `max-turns` | reserved for a turn limit; no producer in this release | none yet |
-| `no-output` | reserved for a run that finished without output; no producer in this release | none yet |
-| `store-failed` | reserved for a session store failure; no producer in this release | none yet |
-| `session-not-found` | reserved for a resume of an unknown session; no producer in this release | none yet |
+| `cancelled` | the caller called `cancel()` on an agent run; not a failure to retry | agent facet |
+| `max-turns` | an agent run reached `maxTurns` without ending; raise the limit or narrow the task | agent facet |
+| `no-output` | an agent run ended without a result, or without the structured output that was asked for | agent facet |
+| `store-failed` | the transcript store rejected an append; `reason` is the store's redacted message | agent facet |
+| `session-not-found` | the session to resume does not exist and no `recoveryPrompt` was given | agent facet |
 
-The CLI engine emits the first sixteen kinds. The last five are part of the type and have no producer today; a consumer should handle
-them.
+The CLI engine emits the first sixteen kinds. The last five are emitted by the agent facet; a consumer of the CLI engine should still handle
+them. The agent facet also emits `invalid-config`, `unsupported`, `credential`, `timeout`, `aborted` and `unavailable`; see
+[docs/agent.md](https://github.com/stateforge-labs/harness-kit/blob/main/packages/adapters/docs/agent.md#failures).
 
 ## Lifecycle
 

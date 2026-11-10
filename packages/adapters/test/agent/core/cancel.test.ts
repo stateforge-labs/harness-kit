@@ -28,6 +28,26 @@ describe("cancel", () => {
     expect(failureOf(finishedOf(await collect(run.events))).kind).toBe("cancelled");
   });
 
+  test("cancel stays pending until the engine has settled", async () => {
+    const r = rig([{ hang: true, hold: true }]);
+    const run = agentOf(r).start(startOf());
+    await tick();
+    const seen = collect(run.events);
+    let resolved = false;
+    const cancelled = run.cancel().then(() => {
+      resolved = true;
+    });
+    await tick();
+    await tick();
+    expect(r.engine.cancels).toEqual([0]);
+    expect(resolved).toBe(false);
+    r.engine.releaseDone();
+    await cancelled;
+    expect(resolved).toBe(true);
+    expect(failureOf(finishedOf(await seen)).kind).toBe("cancelled");
+    expect(failureOf(await run.settled).kind).toBe("cancelled");
+  });
+
   test("a second cancel is a no-op that resolves", async () => {
     const r = rig([{ hang: true }]);
     const run = agentOf(r).start(startOf());

@@ -101,6 +101,6 @@ export const HOOK_SUPPORT_UNKNOWN: Readonly<Record<HookPoint, Support>> = allPoi
 
 export const HOOK_SUPPORT: Readonly<Record<string, Readonly<Record<HookPoint, Support>>>> = {
   [Harness.Claude]: { ...allPoints(supported), [HookPoint.SessionStart]: emulated(CLAUDE_SESSION_START_HOW) },
-  [Harness.Codex]: allPoints(supported),
+  [Harness.Codex]: HOOK_SUPPORT_UNKNOWN,
   [Harness.OpenCode]: HOOK_SUPPORT_UNKNOWN,
 };

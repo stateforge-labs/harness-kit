@@ -37,6 +37,7 @@ export type Script = {
   readonly events?: readonly AgentEvent[];
   readonly result?: Result<AgentEnd, RunFailure>;
   readonly hang?: boolean;
+  readonly hold?: boolean;
   readonly throwAfter?: boolean;
   readonly describe?: Result<never, RunFailure>;
 };
@@ -44,11 +45,16 @@ export type Script = {
 export interface ScriptedEngine extends AgentEngineImpl<typeof ID> {
   readonly starts: AgentRunInput[];
   readonly cancels: number[];
+  releaseDone(): void;
 }
 
 export function scriptedEngine(scripts: readonly Script[]): ScriptedEngine {
   const starts: AgentRunInput[] = [];
   const cancels: number[] = [];
+  let releaseHold: () => void = () => {};
+  const holdGate = new Promise<void>((resolve) => {
+    releaseHold = resolve;
+  });
   let describeFailure: Result<never, RunFailure> | undefined;
   for (const script of scripts) {
     describeFailure ??= script.describe;
@@ -57,6 +63,7 @@ export function scriptedEngine(scripts: readonly Script[]): ScriptedEngine {
     harness: ID,
     starts,
     cancels,
+    releaseDone: () => releaseHold(),
     describe(input) {
       if (describeFailure !== undefined) {
         return describeFailure;
@@ -95,6 +102,9 @@ export function scriptedEngine(scripts: readonly Script[]): ScriptedEngine {
       const done = (async (): Promise<Result<AgentEnd, RunFailure>> => {
         if (script.hang === true) {
           await gate;
+        }
+        if (script.hold === true) {
+          await holdGate;
         }
         if (cancelled) {
           return fail({ kind: "cancelled", message: "engine cancelled" });

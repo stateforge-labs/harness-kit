@@ -184,7 +184,6 @@ async function observe(spec: Observation): Promise<Observed> {
         Promise.resolve().then(() => run.cancel()),
         spec.deadlineMs,
       );
-      await tick();
       cancel = { endedBefore, resolved: cancelled.tag === "value", terminalSeen: events.some(isTerminal) };
     } else {
       cancel = { endedBefore, resolved: false, terminalSeen: true };

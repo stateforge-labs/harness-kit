@@ -1297,11 +1297,12 @@ import type { AgentEngineImpl, AgentRunInput } from "../agent/engine.ts";
 import type { AgentEvent, AgentOutput } from "../agent/types.ts";
 import { type RunFailure } from "../core/failure.ts";
 import { type Result } from "../core/result.ts";
-/** One scripted engine run: the events to replay, how it ends and an optional pause before each event. */
+/** One scripted engine run: the events to replay, how it ends, an optional pause before each event and an optional extra wait, after the run was cancelled, before \`done\` settles. */
 export interface FakeAgentScript {
     readonly events: readonly AgentEvent[];
     readonly result?: Result<AgentOutput, RunFailure>;
     readonly delayMs?: number;
+    readonly settleDelayMs?: number;
 }
 /** An agent engine that replays scripts and records every run input it was given. */
 export type FakeAgentEngine<I extends string> = AgentEngineImpl<I> & {
