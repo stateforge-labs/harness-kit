@@ -5,6 +5,12 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ## Unreleased
 
+### harness-hooks 0.3.1
+
+#### `@stateforge-labs/harness-hooks`
+
+- The Claude encoder carries context on PostToolUse and PostToolUseFailure.
+
 ### harness-adapters 0.4.0
 
 #### `@stateforge-labs/harness-adapters`
@@ -20,6 +26,13 @@ and the project uses [Semantic Versioning](https://semver.org).
 - The Claude `base-url` and `mcp-none` sdk cells are supported, and the Claude sdk cells for the agent features are supported, each backed by a dated measurement recorded in `docs/agent.md`, which also lists what was not established. The Codex hook points under the SDK are unmeasured.
 - Documentation: `docs/agent.md` (events, options, resume, store, hooks, cancel guarantees and the dated measured cells), `examples/agent/` with a runnable quick start the README repeats, an "Agent runs" section and an SDK cell table in the README, and the agent facet in the architecture page.
 - `FakeAgentScript.tree` sets the process tree state a fake run reports. `FakeAgentScript.settleDelayMs` holds the end of a cancelled fake run open. The agent contract's cancel check no longer waits a tick, so a `cancel()` that resolves before the terminal event fails it.
+- The transcript store is flushed eagerly.
+- StructuredOutput is allowed when an output schema is set.
+- `limits.mcpOutputTokens` is applied to the Claude child.
+- The transcript store takes a structured key.
+- Usage is flushed when a run ends early.
+- A result produced before an abort is kept.
+- harness-hooks is pinned exactly.
 
 ## harness-adapters 0.2.0 - 2026-11-09
 

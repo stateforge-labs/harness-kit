@@ -25,7 +25,7 @@ Runnable examples: [`examples/agent/`](../examples/agent) holds `quickstart.ts` 
 | `signal` | an `AbortSignal`. Aborting it ends the run with `aborted` |
 
 The Claude child runs with no settings sources (user, project and local settings and `CLAUDE.md` are not loaded), `tools: []` when the
-policy turns built-in tools off, and strict MCP config, so only the endpoints in `tools.mcp` exist.
+policy turns built-in tools off, and strict MCP config, so only the endpoints in `tools.mcp` exist. `limits.mcpOutputTokens` caps MCP tool output for Claude.
 
 ## Starting a run
 
@@ -74,13 +74,13 @@ A `usage` event is the raw token count of one model message: `turn`, `model`, `i
 `AgentOutput.usage` lists them. The library computes no cost for an agent run; prices are the consumer's. `AgentOutput.turns` is the
 vendor's turn count and can differ from the number of usage entries.
 
-A usage event is emitted when the next message starts, or at the end of the run, so it can arrive after the text of its own message.
+A usage event is emitted when the next message starts, or at the end of the run, so it can arrive after the text of its own message. An early end still reports the usage of completed messages.
 
 ## Cancel
 
 `run.cancel()` aborts the run and returns a promise that settles only after the run has ended: the `finished` event is emitted (with a
 `cancelled` failure) and the engine has finished its wait on the child process tree. The promise never rejects, and a second call resolves
-too. A cancel after the run finished changes nothing.
+too. A cancel after the run finished changes nothing. A result produced before the cancel is kept.
 
 What is guaranteed, on the Claude engine, measured on the runtime clock the runtime was created with:
 
