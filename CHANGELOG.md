@@ -15,6 +15,7 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ### `@stateforge-labs/harness-adapters`
 
+- Usage output tokens are the cumulative count from the message stream, not the count at message start.
 - Added the agent facet: `runtime.agent(id, options)` returns an `Agent` whose `start` yields a stream of `AgentEvent` values and a `settled` result that never rejects. Agent runs use the vendor SDK engine only; a cli agent run is refused as unsupported before anything starts.
 - Added the Claude Agent SDK engine, with `@anthropic-ai/claude-agent-sdk` pinned at 0.3.316 as a dependency. It is loaded by a dynamic import at the first agent run, so importing the package or using the one-shot facet never loads it.
 - The credential is one api key or token plus a mandatory base URL; the child environment is closed and built only from what the consumer passes. The consumer supplies the working, home, config and tmp directories, and the library creates none of them.

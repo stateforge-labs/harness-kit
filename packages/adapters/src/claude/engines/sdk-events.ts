@@ -8,7 +8,7 @@ import { arr, count, num, obj, str, type Row } from "../../core/rows.ts";
 import { asSessionId, type SessionId } from "../../core/session.ts";
 import { ClaudeBlockType, ClaudeModel } from "../constants.ts";
 import { claudeToolClass, claudeToolTarget } from "../tools.ts";
-import { SDK_STRUCTURED_OUTPUT_TOOL, SdkField, SdkMatch, SdkMessage, SdkReason, SdkStatus, SdkSubtype, SdkType, SdkUsageField } from "./sdk-constants.ts";
+import { SDK_STRUCTURED_OUTPUT_TOOL, SdkField, SdkMatch, SdkMessage, SdkReason, SdkStatus, SdkStreamType, SdkSubtype, SdkType, SdkUsageField } from "./sdk-constants.ts";
 
 export type SdkFinal =
   | { readonly ok: true; readonly text: string; readonly output: JsonValue | null; readonly turns: number }
@@ -40,6 +40,35 @@ interface Pending {
   readonly cacheWrite: number;
   readonly cacheRead: number;
   readonly output: number;
+}
+
+interface Counts {
+  readonly input: number;
+  readonly cacheWrite: number;
+  readonly cacheRead: number;
+  readonly output: number;
+}
+
+interface Streamed extends Counts {
+  readonly id: string;
+}
+
+function countsOf(raw: Row): Counts {
+  return {
+    input: count(raw[SdkUsageField.Input]),
+    cacheWrite: count(raw[SdkUsageField.CacheWrite]),
+    cacheRead: count(raw[SdkUsageField.CacheRead]),
+    output: count(raw[SdkUsageField.Output]),
+  };
+}
+
+function peak(left: Counts, right: Counts): Counts {
+  return {
+    input: Math.max(left.input, right.input),
+    cacheWrite: Math.max(left.cacheWrite, right.cacheWrite),
+    cacheRead: Math.max(left.cacheRead, right.cacheRead),
+    output: Math.max(left.output, right.output),
+  };
 }
 
 function textOf(row: Row, redact: (text: string) => string): string {
@@ -94,6 +123,7 @@ export function createSdkDecoder(input: SdkDecoderInput): SdkDecoder {
   let seen = false;
   let turn = 0;
   let pending: Pending | null = null;
+  let streamed: Streamed | null = null;
   let final: SdkFinal | null = null;
   let mirror: string | null = null;
   const warned = new Set<string>();
@@ -174,14 +204,12 @@ export function createSdkDecoder(input: SdkDecoderInput): SdkDecoder {
         events.push({ kind: "turn", n: turn });
       }
     }
+    const own = countsOf(raw);
     pending = {
       id,
       turn: fresh ? turn : (pending?.turn ?? turn),
       model: messageModel,
-      input: count(raw[SdkUsageField.Input]),
-      cacheWrite: count(raw[SdkUsageField.CacheWrite]),
-      cacheRead: count(raw[SdkUsageField.CacheRead]),
-      output: count(raw[SdkUsageField.Output]),
+      ...(streamed !== null && streamed.id === id ? peak(own, streamed) : own),
     };
     events.push(...blocks(row, top));
     if (top) {
@@ -192,6 +220,27 @@ export function createSdkDecoder(input: SdkDecoderInput): SdkDecoder {
     }
     events.push(...sessionEvent());
     return events;
+  }
+
+  function streamEvent(row: Row): void {
+    if (row[SdkField.Parent] !== null && row[SdkField.Parent] !== undefined) {
+      return;
+    }
+    const event = obj(row[SdkField.Event]);
+    const type = str(event[SdkField.Type]);
+    if (type === SdkStreamType.MessageStart) {
+      const message = obj(event[SdkField.Message]);
+      streamed = { id: str(message[SdkField.Id]) ?? "", ...countsOf(obj(message[SdkField.Usage])) };
+      return;
+    }
+    const delta = event[SdkField.Usage];
+    if (type === SdkStreamType.MessageDelta && streamed !== null && typeof delta === "object" && delta !== null) {
+      const next: Streamed = { id: streamed.id, ...peak(streamed, countsOf(obj(delta))) };
+      streamed = next;
+      if (pending !== null && pending.id === next.id) {
+        pending = { ...pending, ...peak(pending, next) };
+      }
+    }
   }
 
   function system(row: Row): AgentEvent[] {
@@ -233,6 +282,10 @@ export function createSdkDecoder(input: SdkDecoderInput): SdkDecoder {
       }
       if (type === SdkType.Result) {
         return result(row);
+      }
+      if (type === SdkType.StreamEvent) {
+        streamEvent(row);
+        return [];
       }
       if (type === SdkType.User || type === SdkType.RateLimit) {
         return [];

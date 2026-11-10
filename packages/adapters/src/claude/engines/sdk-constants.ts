@@ -57,6 +57,7 @@ export const SdkType = {
   Assistant: "assistant",
   Result: "result",
   RateLimit: "rate_limit_event",
+  StreamEvent: "stream_event",
 } as const;
 
 export const SdkSubtype = {
@@ -90,7 +91,10 @@ export const SdkField = {
   NumTurns: "num_turns",
   StructuredOutput: "structured_output",
   ApiErrorStatus: "api_error_status",
+  Event: "event",
 } as const;
+
+export const SdkStreamType = { MessageStart: "message_start", MessageDelta: "message_delta" } as const;
 
 export const SdkUsageField = {
   Input: "input_tokens",

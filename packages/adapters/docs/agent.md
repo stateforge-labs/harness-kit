@@ -72,7 +72,7 @@ const result = await run.settled;
 
 A `usage` event is the raw token count of one model message: `turn`, `model`, `input`, `cacheWrite`, `cacheRead`, `output`.
 `AgentOutput.usage` lists them. The library computes no cost for an agent run; prices are the consumer's. `AgentOutput.turns` is the
-vendor's turn count and can differ from the number of usage entries.
+vendor's turn count and can differ from the number of usage entries. Output tokens are the cumulative count from the message stream, not the count at message start.
 
 A usage event is emitted when the next message starts, or at the end of the run, so it can arrive after the text of its own message. An early end still reports the usage of completed messages.
 

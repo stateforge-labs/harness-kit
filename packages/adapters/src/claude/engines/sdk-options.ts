@@ -151,7 +151,7 @@ export function buildQueryOptions(input: AgentRunInput, ctx: BuildContext): Resu
     ...(start.resume !== undefined ? { resume: start.resume.sessionId } : {}),
     ...(start.resume?.checkpoint !== undefined ? { resumeSessionAt: start.resume.checkpoint } : {}),
     persistSession: ctx.store !== null,
-    includePartialMessages: false,
+    includePartialMessages: true,
     ...(ctx.hooks !== null ? { hooks: ctx.hooks } : {}),
     ...(ctx.store !== null ? { sessionStore: ctx.store, sessionStoreFlush: SdkStore.FlushEager } : {}),
     ...(restricted ? { permissionMode: SdkPermissionMode.DontAsk, allowedTools: [...allowedTools(endpoints.value), ...(start.outputSchema !== undefined ? [SdkOutput.StructuredTool] : [])] } : {}),
