@@ -5,15 +5,15 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ## Unreleased
 
-### harness-hooks 0.3.1
+## harness-hooks 0.3.1 - 2026-11-09
 
-#### `@stateforge-labs/harness-hooks`
+### `@stateforge-labs/harness-hooks`
 
 - The Claude encoder carries context on PostToolUse and PostToolUseFailure.
 
-### harness-adapters 0.4.0
+## harness-adapters 0.4.0 - 2026-11-09
 
-#### `@stateforge-labs/harness-adapters`
+### `@stateforge-labs/harness-adapters`
 
 - Added the agent facet: `runtime.agent(id, options)` returns an `Agent` whose `start` yields a stream of `AgentEvent` values and a `settled` result that never rejects. Agent runs use the vendor SDK engine only; a cli agent run is refused as unsupported before anything starts.
 - Added the Claude Agent SDK engine, with `@anthropic-ai/claude-agent-sdk` pinned at 0.3.316 as a dependency. It is loaded by a dynamic import at the first agent run, so importing the package or using the one-shot facet never loads it.
