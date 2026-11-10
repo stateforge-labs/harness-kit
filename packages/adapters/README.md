@@ -119,6 +119,8 @@ if (made.ok) {
   callbacks; a deny also becomes a `refused` event. The SDK never fires `SessionStart`, so session context arrives with the first prompt.
 - **MCP with a bearer.** Pass the token as the endpoint's `bearer`. The library writes the header as `Bearer ${VAR}` and gives the value only
   to the child environment, because a literal token lands in the child's argument list.
+- **MCP allow list.** An endpoint's `allow` list is enforced with `builtins: "off"`. With built-in tools on, `runtime.agent(...)` refuses it as
+  `invalid-config` on `tools.builtins`.
 - **Store and resume.** `start.store` mirrors the transcript to a store the caller owns; `start.resume` continues a session from the store alone
   and, with a `recoveryPrompt`, falls back to one fresh run when the session is gone.
 - **Limits.** `maxTurns` is required. `timeoutMs`, `idleTimeoutMs` and `signal` end a run.

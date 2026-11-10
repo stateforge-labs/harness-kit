@@ -54,6 +54,16 @@ describe("refusals by value before any spawn", () => {
     }
   });
 
+  test("an endpoint allow list with built-in tools on is invalid-config on tools.builtins", () => {
+    const endpoint = { name: "docs", url: "http://127.0.0.1:1/mcp", bearer: null, allow: ["search"] };
+    const on = refused({ ...options, tools: { ...TOOLS_OFF, builtins: "harness-default", mcp: [endpoint] } });
+    expect(!on.ok && on.failure.kind === "invalid-config" && on.failure.field === "tools.builtins").toBe(true);
+    const off = refused({ ...options, tools: { ...TOOLS_OFF, mcp: [endpoint] } });
+    expect(off.ok).toBe(true);
+    const open = refused({ ...options, tools: { ...TOOLS_OFF, builtins: "harness-default", mcp: [{ ...endpoint, allow: [] }] } });
+    expect(open.ok).toBe(true);
+  });
+
   test("a relative directory is invalid-config on that directory", () => {
     const result = refused({ ...options, dirs: { ...DIRS, home: "home" } });
     expect(!result.ok && result.failure.kind === "invalid-config" && result.failure.field === "dirs.home").toBe(true);

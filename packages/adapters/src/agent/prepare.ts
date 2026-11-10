@@ -5,7 +5,7 @@ import type { CredentialOf } from "../core/credential.ts";
 import { EngineMessage } from "../core/engine-constants.ts";
 import { MeasuredState, measuredValue } from "../core/evidence.ts";
 import { CredentialUnsupportedReason, type RunFailure } from "../core/failure.ts";
-import { type ConfinementCell, confine, EnvKind, type McpEndpoint, resolveTools, type EnvPolicy } from "../core/policy.ts";
+import { type ConfinementCell, confine, EnvKind, type McpEndpoint, resolveTools, ToolSetting, type EnvPolicy } from "../core/policy.ts";
 import { redactor } from "../core/redact.ts";
 import { fail, ok, type Result } from "../core/result.ts";
 import type { RuntimeFs } from "../core/io.ts";
@@ -55,6 +55,10 @@ function isObject(value: unknown): value is Readonly<Record<string, unknown>> {
 
 function isPositiveInteger(value: unknown): boolean {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+function hasAllowList(endpoint: unknown): boolean {
+  return isObject(endpoint) && Array.isArray(endpoint["allow"]) && endpoint["allow"].length > 0;
 }
 
 function isText(value: unknown): value is string {
@@ -118,6 +122,9 @@ function shapeGate(options: AgentOptions): RunFailure | null {
   const tools: unknown = options.tools;
   if (!isObject(tools) || !Array.isArray(tools["mcp"])) {
     return invalid(AgentMessage.NeedsEndpointList, AgentField.Mcp);
+  }
+  if (tools["builtins"] !== ToolSetting.Off && tools["mcp"].some(hasAllowList)) {
+    return invalid(AgentMessage.AllowNeedsBuiltinsOff, AgentField.Builtins);
   }
   if (options.timeoutMs !== undefined && !isPositiveInteger(options.timeoutMs)) {
     return invalid(AgentMessage.BadTimeout, AgentField.TimeoutMs);

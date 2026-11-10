@@ -99,7 +99,8 @@ child's argument list: that was measured in 113 of 120 samples of the child's co
 The token stays readable to the same user from the child's environment.
 
 An endpoint with `allow: [...]` only exposes those tools; the others are denied by permission without a hook. That denial produces no
-`refused` event.
+`refused` event. The allow list is enforced only with `builtins: "off"`: an endpoint with a non-empty `allow` combined with any other `builtins`
+value is refused by `runtime.agent(...)` as `invalid-config` on `tools.builtins`, before anything starts.
 
 ## Resume and recovery
 
@@ -163,7 +164,7 @@ sources, `tools: []` and strict MCP:
 | Cell | Measured by |
 | --- | --- |
 | `builtin-tools-off` | the init tool list was empty in five live runs |
-| `mcp-none`, `mcp-allowlist` | a live run saw only the allowed endpoint's tools; an `allow` list denied another tool with no hook and the server received no call |
+| `mcp-none`, `mcp-allowlist` | a live run with built-in tools off saw only the allowed endpoint's tools; an `allow` list denied another tool with no hook and the server received no call. `mcp-allowlist` is supported only with built-in tools off; the combination with built-in tools on is refused |
 | `closed-env` | the child's environment names were read from the process; a variable set only in the parent was absent |
 | `settings-sources` | with a user hook, a project hook and a project `CLAUDE.md` present, none ran and none was sent; with the sources enabled all ran |
 | `base-url` | requests reached a local listener at the injected base URL with the key in the vendor header |
