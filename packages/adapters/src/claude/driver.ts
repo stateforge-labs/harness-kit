@@ -6,6 +6,7 @@ import type { HarnessDriver } from "../driver/port.ts";
 import { CLAUDE_CAPABILITIES } from "./capabilities.ts";
 import { claudeCredentialPlan, credentialFromClaude } from "./credentials.ts";
 import { claudeCli } from "./engines/cli.ts";
+import { claudeSdkEngine } from "./engines/sdk.ts";
 import { inspectClaude } from "./inspect.ts";
 import { claudePolicyNotice } from "./policy-notice.ts";
 import { CLAUDE_PROFILE } from "./profile.ts";
@@ -21,5 +22,5 @@ export const CLAUDE_DRIVER: HarnessDriver<"claude"> = deepFreeze({
     policyNotice: claudePolicyNotice,
     inspect: inspectClaude,
   },
-  run: { engines: [Engine.Cli], cli: claudeCli },
+  run: { engines: [Engine.Cli], cli: claudeCli, agent: claudeSdkEngine() },
 });

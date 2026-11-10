@@ -45,13 +45,21 @@ describe("capability tables", () => {
     });
 
     test(`${harness} mcp-allowlist is an engine limit on the cli`, () => {
-      expect(harness === "claude" ? table["mcp-allowlist"] : table["mcp-allowlist"].cli).toEqual(harness === "claude" ? cell(ENGINE_LIMIT) : ENGINE_LIMIT);
+      expect(harness === "claude" ? table["mcp-allowlist"] : table["mcp-allowlist"].cli).toEqual(harness === "claude" ? cell(ENGINE_LIMIT, supported) : ENGINE_LIMIT);
     });
 
-    test(`${harness} has no usable sdk cell yet`, () => {
+    test(`${harness} has no sdk engine built outside the agent cells`, () => {
+      const agent: readonly string[] = AGENT_CELLS;
+      for (const name of CAPABILITY_NAMES.filter((candidate) => !agent.includes(candidate))) {
+        expect(table[name as keyof Capabilities].sdk).toEqual(SDK_NOT_BUILT);
+      }
+    });
+
+    test(`${harness} has a usable sdk cell only where an agent engine exists`, () => {
+      const agent: readonly string[] = AGENT_CELLS;
       for (const name of CAPABILITY_NAMES) {
-        const sdk = table[name as keyof Capabilities].sdk;
-        expect(harness === "claude" ? sdk : isUsable(sdk)).toEqual(harness === "claude" ? SDK_NOT_BUILT : false);
+        const usable = isUsable(table[name as keyof Capabilities].sdk);
+        expect(usable && (harness !== "claude" || !agent.includes(name))).toBe(false);
       }
     });
   }

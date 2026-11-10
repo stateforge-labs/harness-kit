@@ -1,4 +1,4 @@
-import { type Capabilities, CapabilityName, Engine, isUsable, type Support, SupportState, UnsupportedReason } from "../core/capability.ts";
+import { AGENT_CELLS, type Capabilities, CapabilityName, Engine, isUsable, type Support, SupportState, UnsupportedReason } from "../core/capability.ts";
 import { EvidenceKind, MeasuredState } from "../core/evidence.ts";
 import type { Profile } from "../core/profile.ts";
 import { ContractText, FactField, PROFILE_FIELDS } from "./contract-constants.ts";
@@ -72,8 +72,13 @@ export function capabilityProblems(caps: Capabilities): string[] {
   return Object.values(CapabilityName).flatMap((name) => Object.values(Engine).flatMap((engine) => cellProblems(`${name}.${engine}`, cellOf(caps, name, engine))));
 }
 
-export function sdkColumnProblems(caps: Capabilities): string[] {
+const AGENT_CELL_NAMES: readonly CapabilityName[] = AGENT_CELLS;
+
+export function sdkColumnProblems(caps: Capabilities, agentEngine = false): string[] {
   return Object.values(CapabilityName).flatMap((name) => {
+    if (agentEngine && AGENT_CELL_NAMES.includes(name)) {
+      return [];
+    }
     const support = cellOf(caps, name, Engine.Sdk);
     return support !== undefined && isUsable(support) ? [`${name}.${Engine.Sdk}: ${ContractText.SdkUsable}`] : [];
   });

@@ -23,6 +23,9 @@ const CONSUMER_NAME = /\b(tab-recap|herdr|hc)\b/i;
 const CONSOLE_USE = /\bconsole\./;
 const STDIO_WRITE = /\bprocess\.(stdout|stderr)\b/;
 const SDK_NAME = /@anthropic-ai\/|@openai\/codex|@opencode-ai\//;
+const SDK_ENTRY_FILE = "src/claude/engines/sdk.ts";
+const SDK_ENTRY_SPECIFIER = "@anthropic-ai/claude-agent-sdk";
+const SDK_ENTRY_CALL = `import("${SDK_ENTRY_SPECIFIER}")`;
 
 function packageOf(spec: string): string {
   return spec.startsWith("@") ? spec.split("/").slice(0, 2).join("/") : (spec.split("/")[0] ?? spec);
@@ -35,11 +38,12 @@ export function isAllowedBareImport(spec: string): boolean {
 
 export function sourceViolations(rel: string, pkgRel: string, src: string, bareSpecs: readonly string[]): string[] {
   const out: string[] = [];
-  for (const spec of bareSpecs) if (!isAllowedBareImport(spec)) out.push(`${rel}: third-party import not allowed in adapters: ${spec}`);
+  const entry = pkgRel === SDK_ENTRY_FILE;
+  for (const spec of bareSpecs) if (!isAllowedBareImport(spec) && !(entry && spec === SDK_ENTRY_SPECIFIER)) out.push(`${rel}: third-party import not allowed in adapters: ${spec}`);
   if (CONSOLE_USE.test(src)) out.push(`${rel}: console use in library src`);
   if (STDIO_WRITE.test(src)) out.push(`${rel}: direct stdout or stderr write in library src`);
   if (CONSUMER_NAME.test(src)) out.push(`${rel}: consumer name in library src`);
-  if (SDK_NAME.test(src)) out.push(`${rel}: SDK package name in library src`);
+  if (SDK_NAME.test(entry ? src.split(SDK_ENTRY_CALL).join("") : src)) out.push(`${rel}: SDK package name in library src`);
   if (CATCH_USE.test(src) && !CATCH_ALLOWED.has(pkgRel)) out.push(`${rel}: try/catch outside the allowlist`);
   for (const v of stripNonComments(src).violations) out.push(`${rel}:${v.line}: comment not allowed: ${v.text}`);
   return out;

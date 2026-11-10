@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { CLAUDE_CAPABILITIES } from "../../src/claude/capabilities.ts";
-import { CapabilityName, cell, SDK_NOT_BUILT, supported, unsupported, UnsupportedReason, type Capabilities } from "../../src/core/capability.ts";
+import { AGENT_CELLS, CapabilityName, cell, SDK_NOT_BUILT, supported, unsupported, UnsupportedReason, type Capabilities } from "../../src/core/capability.ts";
 
 const NOT_IMPLEMENTED = unsupported(UnsupportedReason.NotImplemented);
 
@@ -30,14 +30,15 @@ describe("claude capabilities", () => {
     });
   }
 
-  test("the sdk column is not built for every cell", () => {
+  test("the sdk column is supported for the agent cells and not built for the rest", () => {
+    const agent: readonly string[] = AGENT_CELLS;
     for (const name of Object.values(CapabilityName)) {
-      expect(CLAUDE_CAPABILITIES[name].sdk).toEqual(SDK_NOT_BUILT);
+      expect(CLAUDE_CAPABILITIES[name].sdk).toEqual(agent.includes(name) ? supported : SDK_NOT_BUILT);
     }
   });
 
   test("the table covers exactly the contract names", () => {
     expect(Object.keys(CLAUDE_CAPABILITIES).sort()).toEqual(Object.keys(EXPECTED_CLI).sort());
-    expect(CLAUDE_CAPABILITIES[CapabilityName.McpAllowlist]).toEqual(cell(unsupported(UnsupportedReason.EngineLimit)));
+    expect(CLAUDE_CAPABILITIES[CapabilityName.McpAllowlist]).toEqual(cell(unsupported(UnsupportedReason.EngineLimit), supported));
   });
 });

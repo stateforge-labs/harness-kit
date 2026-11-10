@@ -34,7 +34,7 @@ export function driverContract<I extends string>(driver: HarnessDriver<I>, fixtu
   return [
     runCheck(ContractCheckName.ProfileEvidence, () => profileEvidenceProblems(driver.profile)),
     runCheck(ContractCheckName.CapabilityCells, () => capabilityProblems(driver.capabilities)),
-    runCheck(ContractCheckName.SdkColumn, () => sdkColumnProblems(driver.capabilities)),
+    runCheck(ContractCheckName.SdkColumn, () => sdkColumnProblems(driver.capabilities, driver.run.agent !== undefined)),
     runCheck(ContractCheckName.SupportBehaviour, () => supportProblems(driver, fixtures)),
     runCheck(ContractCheckName.Gating, () => gatingProblems(driver, fixtures)),
     runCheck(ContractCheckName.CredentialGarbage, () => credentialProblems(driver)),
