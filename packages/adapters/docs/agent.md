@@ -158,13 +158,18 @@ before they leave the run.
 - `fakeTranscriptStore()` is an in-memory store; `scriptedMessagesApi()` is a local Messages API for runs that go through a real child.
 - `agentContract(subject)` runs the checks every agent engine must pass against a runtime of the consumer's wiring: one terminal event and it
   is last; `settled` never rejects and equals the terminal result; a cancel resolves only after the terminal event and ends as `cancelled`;
-  `maxTurns` is required; a CLI agent run is refused before anything starts; no secret reaches an event; the child environment is closed;
+  `maxTurns` is required; a CLI agent run is refused before anything starts; no secret reaches an event, even when the engine echoes it; the child environment is closed;
   a deny becomes a `refused` event; usage is raw per message and carries no price; session events carry id and checkpoint; a resume miss
   recovers only with a recovery prompt.
 
   The cancel check runs `cancel()` and looks for the terminal event the moment it resolves, with no wait. The `cancel` scenario of the
   subject must therefore wire an engine whose end takes time after the abort (with `fakeAgentEngine`, a script with `settleDelayMs`), so that a
   `cancel()` that resolves before the terminal event is caught.
+
+  The secret check is not passive. The subject's `echo` scenario wires an engine that repeats every value the suite hands it, once in a
+  `text` event and once as the target of a `tool` event, and the check fails unless the library's `[redacted]` marker replaced the values in
+  both and no value appears anywhere in the run. A facet whose redaction is removed fails it. A subject without an `echo` scenario fails the
+  check and says so.
 
 ## Capability cells and what was measured
 

@@ -1182,7 +1182,7 @@ export { fakeAgentEngine, type FakeAgentEngine, type FakeAgentScript } from "./f
 export { claudeMessages, fakeClaudeQuery, type FakeClaudeMessages, type FakeClaudeQuery, type FakeClaudeQueryBehaviour, type FakeClaudeQueryCall, type FakeClaudeQueryFn, type FakeClaudeQueryOptions, type FakeClaudeQueryStream, } from "./fake-claude-query.ts";
 export { fakeTranscriptStore, type FakeTranscriptStore } from "./fake-transcript-store.ts";
 export { messagesTextStream, messagesToolUseStream, scriptedMessagesApi, type ScriptedMessagesApi, type ScriptedRequest, type ScriptedUsage } from "./scripted-messages-api.ts";
-export { agentContract, type AgentContractDeny, type AgentContractScenario, type AgentContractSubject, type AgentRuntime } from "./agent-contract.ts";
+export { agentContract, type AgentContractDeny, type AgentContractEcho, type AgentContractScenario, type AgentContractSubject, type AgentRuntime } from "./agent-contract.ts";
 export { AgentContractCheck } from "./agent-constants.ts";
 
 // testing/fake-runtime.d.ts
@@ -1425,6 +1425,11 @@ export interface AgentContractScenario {
 export interface AgentContractDeny extends AgentContractScenario {
     readonly tool: string;
 }
+/** A scenario whose engine echoes every value \`runtime\` is given, once in a \`text\` event and once as the target of a \`tool\` event. */
+export interface AgentContractEcho {
+    readonly runtime: (values: readonly string[]) => AgentRuntime;
+    readonly inputs?: () => readonly AgentRunInput[];
+}
 /** What the agent contract runs against. \`runtime\`, \`options\` and \`id\` are enough for the plain checks; the rest wires the checks that must see the engine or make it behave in one specific way. A check whose wiring is missing fails and says what to supply. */
 export interface AgentContractSubject {
     readonly runtime: (source?: EnvSource) => AgentRuntime;
@@ -1435,9 +1440,10 @@ export interface AgentContractSubject {
     readonly cancel?: AgentContractScenario;
     readonly deny?: AgentContractDeny;
     readonly resumeMiss?: AgentContractScenario;
+    readonly echo?: AgentContractEcho;
     readonly deadlineMs?: number;
 }
-/** The checks every agent engine must pass, run through \`subject.runtime()\`: exactly one terminal event and it is last; \`settled\` never rejects and equals the terminal result; cancel ends as cancelled; \`maxTurns\` is required; a cli agent run is refused before anything starts; no secret reaches events, failures or a description; the child env is closed; a deny becomes a refused event with the bare tool name; usage is raw per message and priceless; session events carry id and checkpoint; a resume miss recovers only with a recovery prompt. The same suite runs against the fake engine and against a real one. */
+/** The checks every agent engine must pass, run through \`subject.runtime()\`: exactly one terminal event and it is last; \`settled\` never rejects and equals the terminal result; cancel ends as cancelled; \`maxTurns\` is required; a cli agent run is refused before anything starts; no secret reaches events, failures or a description, including when the engine echoes the secrets in a text and a tool event; the child env is closed; a deny becomes a refused event with the bare tool name; usage is raw per message and priceless; session events carry id and checkpoint; a resume miss recovers only with a recovery prompt. The same suite runs against the fake engine and against a real one. */
 export declare function agentContract(subject: AgentContractSubject): Promise<readonly ContractCheck[]>;
 
 // testing/agent-constants.d.ts
@@ -1622,6 +1628,8 @@ export declare const AgentContractText: {
     readonly FreshResume: "the fresh run still carries the resume";
     readonly RecoveryFailed: "the recovered run did not end ok";
     readonly WrongSessionId: "session-not-found names another session";
+    readonly NoEchoText: "the echo run produced no text event holding the redaction marker: the subject did not echo the secrets, or the marker is missing";
+    readonly NoEchoTool: "the echo run produced no tool event holding the redaction marker: the subject did not echo the secrets, or the marker is missing";
 };
 export declare const ContractSubject: {
     readonly Instructions: "contract instructions";

@@ -39,6 +39,17 @@ export function denyEvents(tool: string = DENIED_TOOL, source: "hook" | "unknown
   ];
 }
 
+export function echoEvents(values: readonly string[]): AgentEvent[] {
+  return [
+    { kind: "started", engine: "sdk" },
+    { kind: "session", id: SESSION, checkpoint: "checkpoint-1" },
+    { kind: "turn", n: 1 },
+    { kind: "text", text: `the key is ${values.join(" and ")}` },
+    { kind: "tool", id: "tool-echo", name: "Bash", class: "shell", target: `echo ${values.join(" ")}` },
+    { kind: "usage", turn: 1, model: "model-a", input: 2, cacheWrite: 100, cacheRead: 0, output: 4 },
+  ];
+}
+
 export interface Tracked {
   readonly runtime: (source?: EnvSource) => ReturnType<typeof referenceRuntime>;
   readonly inputs: () => readonly AgentRunInput[];
@@ -50,6 +61,17 @@ export function tracked(scripts: () => readonly FakeAgentScript[], defects: Read
     runtime(source) {
       latest = fakeAgentEngine("claude", scripts());
       return referenceRuntime(latest, defects, source ?? {});
+    },
+    inputs: () => latest?.starts ?? [],
+  };
+}
+
+export function trackedEcho(defects: ReadonlySet<Defect>): { readonly runtime: (values: readonly string[]) => ReturnType<typeof referenceRuntime>; readonly inputs: () => readonly AgentRunInput[] } {
+  let latest: FakeAgentEngine<string> | null = null;
+  return {
+    runtime(values) {
+      latest = fakeAgentEngine("claude", [{ events: echoEvents(values) }]);
+      return referenceRuntime(latest, defects, {});
     },
     inputs: () => latest?.starts ?? [],
   };
@@ -73,6 +95,7 @@ export function subjectOf(parts: SubjectParts = {}): AgentContractSubject {
   }
   const deny = tracked(parts.deny ?? (() => [{ events: denyEvents() }]), defects);
   const cancel = tracked(parts.cancel ?? (() => [{ events: normalEvents(), delayMs: 40, settleDelayMs: 60 }]), defects);
+  const echo = trackedEcho(defects);
   const resume = tracked(
     parts.resume ??
       (() => [
@@ -90,6 +113,7 @@ export function subjectOf(parts: SubjectParts = {}): AgentContractSubject {
     cancel: { runtime: cancel.runtime, inputs: cancel.inputs },
     deny: { runtime: deny.runtime, inputs: deny.inputs, tool: DENIED_TOOL },
     resumeMiss: { runtime: resume.runtime, inputs: resume.inputs },
+    echo: { runtime: echo.runtime, inputs: echo.inputs },
   };
 }
 

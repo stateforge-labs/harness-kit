@@ -10,7 +10,7 @@ import { secret } from "../../../src/core/secret.ts";
 import { createRuntime } from "../../../src/runtime/index.ts";
 import { agentContract, AgentContractCheck, claudeMessages, fakeAgentEngine, fakeClaudeQuery, fakeFs, type AgentContractSubject, type AgentRuntime, type FakeClaudeMessages, type FakeClaudeQueryBehaviour, type FakeClaudeQueryCall } from "../../../src/testing/index.ts";
 import { fixture } from "../hooks/support.ts";
-import { DENIED_TOOL, denyEvents, normalEvents } from "../../testing/agent/support/subjects.ts";
+import { DENIED_TOOL, denyEvents, echoEvents, normalEvents } from "../../testing/agent/support/subjects.ts";
 import { fail } from "../../../src/core/result.ts";
 import type { EnvSource } from "../../../src/env.ts";
 
@@ -71,6 +71,15 @@ function denyMessages(): readonly unknown[] {
   return [claudeMessages.init(), claudeMessages.hookCall("PreToolUse", { ...fixture("p5-PreToolUse-3.json"), tool_name: DENIED_TOOL }, "toolu-1"), ...baseMessages().slice(1)];
 }
 
+function echoMessages(values: readonly string[]): readonly unknown[] {
+  return [
+    claudeMessages.init(),
+    withId(claudeMessages.assistantText(`the key is ${values.join(" and ")}`, { input: 2, output: 4 }), "msg-1", "00000000-0000-4000-8000-0000000000b1"),
+    withId(claudeMessages.assistantToolUse("Read", { file_path: `/w/${values.join("-")}` }, { input: 3, output: 5 }), "msg-2", "00000000-0000-4000-8000-0000000000b2"),
+    claudeMessages.resultSuccess("done"),
+  ];
+}
+
 function resumeMessages(call: FakeClaudeQueryCall): readonly unknown[] {
   return call.index === 0 ? [claudeMessages.throwError("No conversation found with session ID: contract-resume-session")] : baseMessages();
 }
@@ -84,6 +93,7 @@ function claudeSubject(): AgentContractSubject {
   let cancel = seam(baseMessages(), { holdOpen: true });
   let deny = seam(denyMessages());
   let resume = seam(resumeMessages);
+  let echo = seam(echoMessages([]));
   return {
     runtime: (source) => {
       base = seam(baseMessages());
@@ -115,6 +125,13 @@ function claudeSubject(): AgentContractSubject {
       },
       inputs: () => resume.starts,
     },
+    echo: {
+      runtime: (values) => {
+        echo = seam(echoMessages(values));
+        return runtimeOf(echo);
+      },
+      inputs: () => echo.starts,
+    },
   };
 }
 
@@ -132,6 +149,7 @@ describe("the exported contract suite against the real facet", () => {
     let denyEngine = fakeAgentEngine("claude", []);
     let cancelEngine = fakeAgentEngine("claude", []);
     let resumeEngine = fakeAgentEngine("claude", []);
+    let echoEngine = fakeAgentEngine("claude", []);
     const subject: AgentContractSubject = {
       runtime: through(() => [{ events: normalEvents() }]),
       options: OPTIONS,
@@ -159,6 +177,13 @@ describe("the exported contract suite against the real facet", () => {
           return runtimeOf(resumeEngine);
         },
         inputs: () => resumeEngine.starts,
+      },
+      echo: {
+        runtime: (values) => {
+          echoEngine = fakeAgentEngine("claude", [{ events: echoEvents(values) }]);
+          return runtimeOf(echoEngine);
+        },
+        inputs: () => echoEngine.starts,
       },
     };
     const checks = await agentContract(subject);

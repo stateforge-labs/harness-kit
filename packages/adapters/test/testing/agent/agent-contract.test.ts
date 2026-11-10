@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { AgentContractCheck, agentContract, fakeAgentEngine, type FakeAgentScript } from "../../../src/testing/index.ts";
 import { fail, ok } from "../../../src/core/result.ts";
 import type { AgentEvent, AgentOutput } from "../../../src/agent/types.ts";
-import type { Defect } from "./support/reference-runtime.ts";
+import { type Defect, referenceRuntime } from "./support/reference-runtime.ts";
 import { DENIED_TOOL, denyEvents, failing, normalEvents, subjectOf } from "./support/subjects.ts";
 
 const ALL = Object.values(AgentContractCheck);
@@ -17,7 +17,7 @@ describe("agentContract on a faithful facet over the fake engine", () => {
   test("a subject with only runtime, options and id fails the checks that need wiring and says what to supply", async () => {
     const checks = await agentContract(subjectOf({ bare: true }));
     const byName = new Map(checks.map((check) => [check.name, check]));
-    for (const name of [AgentContractCheck.CancelCancelled, AgentContractCheck.DenyRefused, AgentContractCheck.ResumeMissRecovered, AgentContractCheck.ResumeMissRefused]) {
+    for (const name of [AgentContractCheck.CancelCancelled, AgentContractCheck.DenyRefused, AgentContractCheck.NoSecretLeak, AgentContractCheck.ResumeMissRecovered, AgentContractCheck.ResumeMissRefused]) {
       expect(byName.get(name)?.ok).toBe(false);
       expect(byName.get(name)?.detail).toContain("supplies no scenario");
     }
@@ -36,6 +36,7 @@ const DEFECTS: readonly (readonly [Defect, string[]])[] = [
   ["settled-differs", [AgentContractCheck.SettledNeverRejects]],
   ["settled-before-terminal", [AgentContractCheck.SettledNeverRejects]],
   ["leak-key", [AgentContractCheck.NoSecretLeak]],
+  ["no-redaction", [AgentContractCheck.NoSecretLeak]],
   ["inherits-ambient", [AgentContractCheck.ClosedEnv]],
   ["cancel-early", [AgentContractCheck.CancelCancelled]],
   ["cancel-wrong-kind", [AgentContractCheck.CancelCancelled]],
@@ -94,6 +95,14 @@ const SCRIPTS: readonly (readonly [string, FakeAgentScript[], string])[] = [
     AgentContractCheck.SessionEvent,
   ],
 ];
+
+describe("the echo scenario", () => {
+  test("a subject whose echo emits nothing fails the secret check because no echo was seen", async () => {
+    const engine = fakeAgentEngine("claude", [{ events: normalEvents() }]);
+    const quiet = { ...subjectOf(), echo: { runtime: () => referenceRuntime(engine, new Set(), {}) } };
+    expect(await failing(quiet)).toEqual([AgentContractCheck.NoSecretLeak]);
+  });
+});
 
 describe("each check fails when the engine breaks its rule", () => {
   for (const [name, scripts, expected] of SCRIPTS) {

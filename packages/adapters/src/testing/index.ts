@@ -17,5 +17,5 @@ export {
 } from "./fake-claude-query.ts";
 export { fakeTranscriptStore, type FakeTranscriptStore } from "./fake-transcript-store.ts";
 export { messagesTextStream, messagesToolUseStream, scriptedMessagesApi, type ScriptedMessagesApi, type ScriptedRequest, type ScriptedUsage } from "./scripted-messages-api.ts";
-export { agentContract, type AgentContractDeny, type AgentContractScenario, type AgentContractSubject, type AgentRuntime } from "./agent-contract.ts";
+export { agentContract, type AgentContractDeny, type AgentContractEcho, type AgentContractScenario, type AgentContractSubject, type AgentRuntime } from "./agent-contract.ts";
 export { AgentContractCheck } from "./agent-constants.ts";

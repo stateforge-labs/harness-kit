@@ -187,6 +187,8 @@ export const AgentContractText = {
   FreshResume: "the fresh run still carries the resume",
   RecoveryFailed: "the recovered run did not end ok",
   WrongSessionId: "session-not-found names another session",
+  NoEchoText: "the echo run produced no text event holding the redaction marker: the subject did not echo the secrets, or the marker is missing",
+  NoEchoTool: "the echo run produced no tool event holding the redaction marker: the subject did not echo the secrets, or the marker is missing",
 } as const;
 
 export const ContractSubject = {

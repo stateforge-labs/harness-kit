@@ -4,7 +4,8 @@ import type { Agent, AgentEvent, AgentOptions, AgentOutput, AgentRun, AgentStart
 import { Engine } from "../../../../src/core/capability.ts";
 import type { RunFailure } from "../../../../src/core/failure.ts";
 import { fail, ok, type Result } from "../../../../src/core/result.ts";
-import { reveal } from "../../../../src/core/secret.ts";
+import { redactor, redactValue } from "../../../../src/core/redact.ts";
+import { isSecret, reveal } from "../../../../src/core/secret.ts";
 import { nodeClock } from "../../../../src/driver/node-defaults.ts";
 import type { Runtime } from "../../../../src/driver/create-runtime.ts";
 import type { EnvSource } from "../../../../src/env.ts";
@@ -17,6 +18,7 @@ export type Defect =
   | "settled-differs"
   | "settled-before-terminal"
   | "leak-key"
+  | "no-redaction"
   | "inherits-ambient"
   | "cancel-early"
   | "cancel-wrong-kind"
@@ -90,6 +92,9 @@ function begin(engine: AgentEngineImpl<string>, options: AgentOptions, start: Ag
   const buffer = newBuffer();
   const abort = new AbortController();
   let current: AgentEngineRun | null = null;
+  const secrets = [reveal(options.credential.key), ...Object.values(options.env.set).filter(isSecret).map(reveal)];
+  const redact = redactor(secrets);
+  const scrubbed = <T>(value: T): T => (defects.has("no-redaction") ? value : (redactValue(value, redact) as T));
   const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
   const work = async (): Promise<Result<AgentOutput, RunFailure>> => {
@@ -100,7 +105,7 @@ function begin(engine: AgentEngineImpl<string>, options: AgentOptions, start: Ag
       const pump = (async () => {
         for await (const event of live.events) {
           if (event.kind === "started" && defects.has("no-started")) continue;
-          buffer.push(event);
+          buffer.push(scrubbed(event));
         }
       })();
       const end = await live.done;
@@ -123,7 +128,7 @@ function begin(engine: AgentEngineImpl<string>, options: AgentOptions, start: Ag
   };
 
   const settledOut = (async (): Promise<Result<AgentOutput, RunFailure>> => {
-    const result = await work();
+    const result = scrubbed(await work());
     if (defects.has("settled-before-terminal")) {
       setTimeout(() => {
         buffer.push({ kind: "finished", result, tree: "gone" });

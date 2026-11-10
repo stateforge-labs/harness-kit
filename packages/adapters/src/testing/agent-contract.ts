@@ -3,6 +3,7 @@ import { AgentWhy } from "../agent/constants.ts";
 import type { Agent, AgentEvent, AgentOptions, AgentOutput, AgentRun, AgentStart } from "../agent/types.ts";
 import { ENGINE_CAPABILITY } from "../core/capability.ts";
 import type { RunFailure } from "../core/failure.ts";
+import { REDACTED } from "../core/redact.ts";
 import type { Result } from "../core/result.ts";
 import { secret } from "../core/secret.ts";
 import { asSessionId, type SessionId } from "../core/session.ts";
@@ -39,6 +40,12 @@ export interface AgentContractDeny extends AgentContractScenario {
   readonly tool: string;
 }
 
+/** A scenario whose engine echoes every value `runtime` is given, once in a `text` event and once as the target of a `tool` event. */
+export interface AgentContractEcho {
+  readonly runtime: (values: readonly string[]) => AgentRuntime;
+  readonly inputs?: () => readonly AgentRunInput[];
+}
+
 /** What the agent contract runs against. `runtime`, `options` and `id` are enough for the plain checks; the rest wires the checks that must see the engine or make it behave in one specific way. A check whose wiring is missing fails and says what to supply. */
 export interface AgentContractSubject {
   readonly runtime: (source?: EnvSource) => AgentRuntime;
@@ -49,8 +56,11 @@ export interface AgentContractSubject {
   readonly cancel?: AgentContractScenario;
   readonly deny?: AgentContractDeny;
   readonly resumeMiss?: AgentContractScenario;
+  readonly echo?: AgentContractEcho;
   readonly deadlineMs?: number;
 }
+
+const ECHO_VALUES: readonly string[] = [ContractSubject.SecretKey, ContractSubject.SecretEnvValue];
 
 type Timed<T> = { readonly tag: "value"; readonly value: T } | { readonly tag: "timeout" };
 type Outcome = Result<AgentOutput, RunFailure>;
@@ -299,6 +309,7 @@ interface Wiring {
   readonly deny: Lookup | null;
   readonly recovered: Lookup | null;
   readonly refused: Lookup | null;
+  readonly echo: Lookup | null;
 }
 
 function wire(subject: AgentContractSubject): Wiring {
@@ -322,11 +333,12 @@ function wire(subject: AgentContractSubject): Wiring {
     deny: scenario("deny", subject.deny, baseStart()),
     recovered: scenario("resume-recovered", subject.resumeMiss, resume(ContractSubject.RecoveryPrompt)),
     refused: scenario("resume-refused", subject.resumeMiss, resume(undefined)),
+    echo: subject.echo === undefined ? null : make("echo", () => (subject.echo as AgentContractEcho).runtime(ECHO_VALUES), subject.echo.inputs, secrets, baseStart()),
   };
 }
 
 async function everyRun(wiring: Wiring): Promise<readonly Observed[]> {
-  const lookups = [wiring.base, ...wiring.badTurns, wiring.cli, wiring.cancel, wiring.deny, wiring.recovered, wiring.refused].filter((found): found is Lookup => found !== null);
+  const lookups = [wiring.base, ...wiring.badTurns, wiring.cli, wiring.cancel, wiring.deny, wiring.recovered, wiring.refused, wiring.echo].filter((found): found is Lookup => found !== null);
   const out: Observed[] = [];
   for (const lookup of lookups) {
     out.push(await lookup());
@@ -423,6 +435,19 @@ function leakProblems(observed: readonly Observed[], values: readonly string[]):
         break;
       }
     }
+  }
+  return out;
+}
+
+function echoProblems(observed: Observed): readonly string[] {
+  const out: string[] = [];
+  const texts = observed.events.filter((event) => event.kind === "text");
+  if (!texts.some((event) => event.text.includes(REDACTED))) {
+    out.push(AgentContractText.NoEchoText);
+  }
+  const tools = observed.events.filter((event) => event.kind === "tool");
+  if (!tools.some((event) => jsonOf(event).includes(REDACTED))) {
+    out.push(AgentContractText.NoEchoTool);
   }
   return out;
 }
@@ -640,7 +665,7 @@ async function judged(name: AgentContractCheck, work: () => Promise<readonly str
   return { name, ok: problems.length === 0, detail: problems.length === 0 ? AgentContractText.Pass : problems.join(AgentContractText.Separator) };
 }
 
-/** The checks every agent engine must pass, run through `subject.runtime()`: exactly one terminal event and it is last; `settled` never rejects and equals the terminal result; cancel ends as cancelled; `maxTurns` is required; a cli agent run is refused before anything starts; no secret reaches events, failures or a description; the child env is closed; a deny becomes a refused event with the bare tool name; usage is raw per message and priceless; session events carry id and checkpoint; a resume miss recovers only with a recovery prompt. The same suite runs against the fake engine and against a real one. */
+/** The checks every agent engine must pass, run through `subject.runtime()`: exactly one terminal event and it is last; `settled` never rejects and equals the terminal result; cancel ends as cancelled; `maxTurns` is required; a cli agent run is refused before anything starts; no secret reaches events, failures or a description, including when the engine echoes the secrets in a text and a tool event; the child env is closed; a deny becomes a refused event with the bare tool name; usage is raw per message and priceless; session events carry id and checkpoint; a resume miss recovers only with a recovery prompt. The same suite runs against the fake engine and against a real one. */
 export async function agentContract(subject: AgentContractSubject): Promise<readonly ContractCheck[]> {
   const wiring = wire(subject);
   const runs = (): Promise<readonly Observed[]> => everyRun(wiring);
@@ -672,7 +697,12 @@ export async function agentContract(subject: AgentContractSubject): Promise<read
     }),
   );
   checks.push(await judged(AgentContractCheck.CliEngineUnsupported, async () => cliProblems(await wiring.cli())));
-  checks.push(await judged(AgentContractCheck.NoSecretLeak, async () => leakProblems(await runs(), [ContractSubject.SecretKey, ContractSubject.SecretEnvValue])));
+  checks.push(
+    await judged(AgentContractCheck.NoSecretLeak, async () => [
+      ...leakProblems(await runs(), ECHO_VALUES),
+      ...(await scenarioProblems(wiring.echo, "echo", echoProblems)),
+    ]),
+  );
   checks.push(await judged(AgentContractCheck.ClosedEnv, async () => envProblems(await wiring.poisoned(), subject.options)));
   checks.push(await judged(AgentContractCheck.DescribeNamesOnly, async () => planProblems(subject, await wiring.base())));
   checks.push(await judged(AgentContractCheck.DenyRefused, () => scenarioProblems(wiring.deny, "deny", (observed) => denyProblems(observed, subject.deny?.tool ?? ""))));
