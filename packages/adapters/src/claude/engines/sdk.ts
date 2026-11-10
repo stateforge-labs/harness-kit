@@ -272,9 +272,7 @@ async function execute(seam: ClaudeSdkSeam, input: AgentRunInput, abort: AbortCo
     }
   }
   for (const event of decoder.flush()) {
-    if (!abort.signal.aborted) {
-      channel.push(event);
-    }
+    channel.push(event);
   }
   grace.stop();
   await bounded(closeStream(stream), input.clock, SdkProcess.GiveUpMs);

@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { agentOf, collect, failureOf, finishedOf, options, rig, startOf } from "./support.ts";
+import type { AgentEvent } from "../../../src/agent/types.ts";
+import { claudeSdkEngine, type ClaudeQueryOptions } from "../../../src/claude/engines/sdk.ts";
+import { ASSISTANT, INIT, SESSION, collect as collectRun, fakeQuery, memoryStore, runInput, withUuid } from "../../claude/sdk/support.ts";
+import { agentOf, collect, endOf, failureOf, finishedOf, options, rig, startOf } from "./support.ts";
 
 const tick = () => new Promise<void>((resolve) => setTimeout(resolve, 5));
 
@@ -149,5 +152,82 @@ describe("timeouts and signals", () => {
     await tick();
     await r.runtime.close();
     expect(failureOf(await run.settled).kind).toBe("aborted");
+  });
+});
+
+const gate = (options: ClaudeQueryOptions): Promise<void> =>
+  new Promise<void>((resolve) => {
+    if (options.abortController.signal.aborted) {
+      resolve();
+      return;
+    }
+    options.abortController.signal.addEventListener("abort", () => resolve(), { once: true });
+  });
+
+const usageTurns = (events: readonly AgentEvent[]): number[] => events.flatMap((e) => (e.kind === "usage" ? [e.turn] : []));
+
+describe("usage on an early end", () => {
+  test("a cancel mid second stream flushes the first message usage and none for the second", async () => {
+    const second = withUuid(ASSISTANT, "u-second", "msg-second");
+    const fake = fakeQuery(async function* (options: ClaudeQueryOptions) {
+      yield INIT;
+      yield ASSISTANT;
+      await gate(options);
+      yield second;
+      throw new Error("aborted");
+    } as never);
+    const run = claudeSdkEngine({ query: fake.query }).start(runInput());
+    const seen: AgentEvent[] = [];
+    const reading = (async () => {
+      for await (const event of run.events) {
+        seen.push(event);
+        if (event.kind === "text") {
+          run.cancel();
+        }
+      }
+    })();
+    const end = await run.done;
+    await reading;
+    expect(end.ok ? null : end.failure.kind).toBe("cancelled");
+    expect(usageTurns(seen)).toEqual([1]);
+    expect(seen.map((e) => e.kind).indexOf("usage")).toBeGreaterThan(seen.map((e) => e.kind).indexOf("text"));
+  });
+
+  test("a store failure after one completed message flushes its usage before store-failed", async () => {
+    const mirror = { type: "system", subtype: "mirror_error", error: "append rejected", key: { projectKey: "p", sessionId: SESSION }, uuid: "m", session_id: SESSION };
+    const fake = fakeQuery(async function* (options: ClaudeQueryOptions) {
+      yield INIT;
+      yield ASSISTANT;
+      yield mirror;
+      await gate(options);
+      throw new Error("aborted");
+    } as never);
+    const { events, end } = await collectRun(claudeSdkEngine({ query: fake.query }).start(runInput({ start: { store: memoryStore() } })));
+    expect(usageTurns(events)).toEqual([1]);
+    expect(end.ok ? null : end.failure.kind).toBe("store-failed");
+  });
+});
+
+describe("result precedence", () => {
+  test("an ok result produced before a late cancel wins", async () => {
+    const r = rig([{ hold: true, result: { ok: true, value: endOf({ text: "kept" }) } }]);
+    const engine = r.engine;
+    const start = engine.start.bind(engine);
+    engine.start = (input) => ({ ...start(input), cancel: () => undefined });
+    const run = agentOf(r).start(startOf());
+    await tick();
+    const cancelled = run.cancel();
+    r.engine.releaseDone();
+    await cancelled;
+    const settled = await run.settled;
+    expect(settled.ok && settled.value.text).toBe("kept");
+  });
+
+  test("a cancel mid-run with no result is still cancelled", async () => {
+    const r = rig([{ hang: true }]);
+    const run = agentOf(r).start(startOf());
+    await tick();
+    await run.cancel();
+    expect(failureOf(await run.settled).kind).toBe("cancelled");
   });
 });

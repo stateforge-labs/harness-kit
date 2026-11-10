@@ -168,7 +168,7 @@ function launch<I extends string>(ctx: RuntimeContext, prepared: AgentPrepared<I
 
   const finish = (result: Outcome): void => {
     const why = reason;
-    const final: Outcome = scrub(why === null ? result : fail(abortFailure(why, options)), prepared.redact);
+    const final: Outcome = scrub(why === null || result.ok ? result : fail(abortFailure(why, options)), prepared.redact);
     finished = true;
     stopIdle();
     stopTimeout();
