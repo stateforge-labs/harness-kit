@@ -9,7 +9,7 @@ import {
   OPENCODE_MCP_NONE,
   OPENCODE_SETTINGS_SKIP,
 } from "../src/opencode/capabilities.ts";
-import { AGENT_CELLS, type Capabilities, cell, SDK_NOT_BUILT, supported, unsupported, UnsupportedReason } from "../src/core/capability.ts";
+import { AGENT_CELLS, type Capabilities, cell, isUsable, SDK_NOT_BUILT, supported, unsupported, UnsupportedReason } from "../src/core/capability.ts";
 
 const TABLES: Readonly<Record<string, Capabilities>> = {
   claude: CLAUDE_CAPABILITIES,
@@ -45,12 +45,13 @@ describe("capability tables", () => {
     });
 
     test(`${harness} mcp-allowlist is an engine limit on the cli`, () => {
-      expect(table["mcp-allowlist"]).toEqual(cell(ENGINE_LIMIT));
+      expect(harness === "claude" ? table["mcp-allowlist"] : table["mcp-allowlist"].cli).toEqual(harness === "claude" ? cell(ENGINE_LIMIT) : ENGINE_LIMIT);
     });
 
-    test(`${harness} has no sdk engine built yet`, () => {
+    test(`${harness} has no usable sdk cell yet`, () => {
       for (const name of CAPABILITY_NAMES) {
-        expect(table[name as keyof Capabilities].sdk).toEqual(SDK_NOT_BUILT);
+        const sdk = table[name as keyof Capabilities].sdk;
+        expect(harness === "claude" ? sdk : isUsable(sdk)).toEqual(harness === "claude" ? SDK_NOT_BUILT : false);
       }
     });
   }

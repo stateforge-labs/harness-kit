@@ -111,7 +111,7 @@ function refusedHandle<I extends string>(id: I): HeadlessHandle<I> {
 
 function refusedRuntime<H extends string>(): Runtime<H> {
   const base = buildRuntime<H>(Object.freeze({}) as Drivers<H>, {});
-  return Object.assign(Object.create(base) as Runtime<H>, { headless: <I extends H>(id: I) => refusedHandle<I>(id) });
+  return Object.assign(Object.create(base) as Runtime<H>, { headless: <I extends H>(id: I) => refusedHandle<I>(id), agent: () => fail(driversFailure()) });
 }
 
 /** Creates a runtime over the three built-in harnesses. */

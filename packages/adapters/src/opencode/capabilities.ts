@@ -12,22 +12,24 @@ export const OPENCODE_EPHEMERAL = emulated(OPENCODE_EPHEMERAL_HOW);
 export const OPENCODE_CLOSED_ENV = unmeasuredSupport("does a closed environment keep an OpenCode headless run working?");
 export const OPENCODE_BASE_URL = unmeasuredSupport("which config key points an OpenCode run at another base url?");
 export const AGENT_UNMEASURED = "has this harness been measured for the agent facet?";
+export const OPENCODE_SDK_UNMEASURED = unmeasuredSupport(AGENT_UNMEASURED);
+export const OPENCODE_SDK_NO_STORE = unsupported(UnsupportedReason.HarnessLimit);
 
 export const OPENCODE_CAPABILITIES: Capabilities = {
   [CapabilityName.Effort]: cell(unmeasuredSupport("2.2.6 documents provider/model#variant in --model; is there an effort flag?")),
-  [CapabilityName.StructuredOutput]: cell(unmeasuredSupport("does OpenCode 2.2.6 run have a structured output flag?")),
+  [CapabilityName.StructuredOutput]: cell(unmeasuredSupport("does OpenCode 2.2.6 run have a structured output flag?"), OPENCODE_SDK_UNMEASURED),
   [CapabilityName.SessionsDelete]: cell(unsupported(UnsupportedReason.NotImplemented)),
-  [CapabilityName.Ephemeral]: cell(OPENCODE_EPHEMERAL),
+  [CapabilityName.Ephemeral]: cell(OPENCODE_EPHEMERAL, OPENCODE_SDK_UNMEASURED),
   [CapabilityName.Cost]: cell(supported),
-  [CapabilityName.SettingsSources]: cell(OPENCODE_SETTINGS_SKIP),
-  [CapabilityName.BuiltinToolsOff]: cell(OPENCODE_BUILTINS_OFF),
+  [CapabilityName.SettingsSources]: cell(OPENCODE_SETTINGS_SKIP, OPENCODE_SDK_UNMEASURED),
+  [CapabilityName.BuiltinToolsOff]: cell(OPENCODE_BUILTINS_OFF, OPENCODE_SDK_UNMEASURED),
   [CapabilityName.McpNone]: cell(OPENCODE_MCP_NONE),
-  [CapabilityName.McpAllowlist]: cell(unsupported(UnsupportedReason.EngineLimit)),
-  [CapabilityName.ClosedEnv]: cell(OPENCODE_CLOSED_ENV),
+  [CapabilityName.McpAllowlist]: cell(unsupported(UnsupportedReason.EngineLimit), OPENCODE_SDK_UNMEASURED),
+  [CapabilityName.ClosedEnv]: cell(OPENCODE_CLOSED_ENV, OPENCODE_SDK_UNMEASURED),
   [CapabilityName.BaseUrl]: cell(OPENCODE_BASE_URL),
-  [CapabilityName.Resume]: cell(unmeasuredSupport(AGENT_UNMEASURED)),
-  [CapabilityName.ResumeCheckpoint]: cell(unmeasuredSupport(AGENT_UNMEASURED)),
-  [CapabilityName.PerTurnUsage]: cell(unmeasuredSupport(AGENT_UNMEASURED)),
-  [CapabilityName.UnknownToolDetection]: cell(unmeasuredSupport(AGENT_UNMEASURED)),
-  [CapabilityName.SessionStore]: cell(unmeasuredSupport(AGENT_UNMEASURED)),
+  [CapabilityName.Resume]: cell(unmeasuredSupport(AGENT_UNMEASURED), OPENCODE_SDK_UNMEASURED),
+  [CapabilityName.ResumeCheckpoint]: cell(unmeasuredSupport(AGENT_UNMEASURED), OPENCODE_SDK_UNMEASURED),
+  [CapabilityName.PerTurnUsage]: cell(unmeasuredSupport(AGENT_UNMEASURED), OPENCODE_SDK_UNMEASURED),
+  [CapabilityName.UnknownToolDetection]: cell(unmeasuredSupport(AGENT_UNMEASURED), OPENCODE_SDK_UNMEASURED),
+  [CapabilityName.SessionStore]: cell(unmeasuredSupport(AGENT_UNMEASURED), OPENCODE_SDK_NO_STORE),
 };

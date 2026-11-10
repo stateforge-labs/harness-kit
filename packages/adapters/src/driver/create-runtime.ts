@@ -75,7 +75,7 @@ export function buildRuntime<H extends string>(drivers: Drivers<H>, config: Runt
     driver: (id: string) => lookupDriver(drivers, id),
     available: (order: readonly H[], io: ProbeIo) => available(ctx, drivers, order, io),
     headless: <I extends H>(id: I, options: HeadlessOptions<I>): HeadlessHandle<I> => makeHandle<I>(ctx, lookupDriver(drivers, id) as HarnessDriver<I> | null, id, options),
-    agent: <I extends H>(id: I, options: AgentOptions): Result<Agent, RunFailure> => agentOf(id, options),
+    agent: <I extends H>(id: I, options: AgentOptions): Result<Agent, RunFailure> => agentOf(ctx, drivers, config.agentEngines, id, options),
     credentialFrom: <I extends H>(id: I, spec: CredentialSpec) => credentialFrom(drivers, id, spec) as Result<CredentialOf<I>, RunFailure>,
     policyNotice: (id: H, mode: string) => policyNotice(drivers, id, mode),
     inspectCredentials: (id: H) => inspectCredentials(ctx, drivers, id),
