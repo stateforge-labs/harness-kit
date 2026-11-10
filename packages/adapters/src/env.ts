@@ -28,6 +28,7 @@ export const EnvVar = {
   OpenCodeApiKey: "OPENCODE_API_KEY",
   AwsBearerTokenBedrock: "AWS_BEARER_TOKEN_BEDROCK",
   OpenCodeConfigContent: "OPENCODE_CONFIG_CONTENT",
+  MaxMcpOutputTokens: "MAX_MCP_OUTPUT_TOKENS",
 } as const;
 
 export interface AdapterEnv {

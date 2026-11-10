@@ -260,7 +260,12 @@ function startShape(start: unknown): RunFailure | null {
     return invalid(AgentMessage.BadMaxTurns, AgentField.MaxTurns);
   }
   const schema = start["outputSchema"];
-  return schema !== undefined && (!isObject(schema) || Array.isArray(schema)) ? invalid(AgentMessage.BadSchema, AgentField.OutputSchema) : null;
+  if (schema !== undefined && (!isObject(schema) || Array.isArray(schema))) {
+    return invalid(AgentMessage.BadSchema, AgentField.OutputSchema);
+  }
+  const limits = start["limits"];
+  const mcpLimit = isObject(limits) ? limits["mcpOutputTokens"] : undefined;
+  return mcpLimit !== undefined && !isPositiveInteger(mcpLimit) ? invalid(AgentMessage.BadMcpLimit, AgentField.McpOutputTokens) : null;
 }
 
 function resumeShape(start: AgentStart): RunFailure | null {

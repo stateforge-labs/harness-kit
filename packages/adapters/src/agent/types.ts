@@ -82,6 +82,7 @@ export interface AgentStart {
   readonly resume?: AgentResume;
   readonly hooks?: HookTarget;
   readonly store?: TranscriptStore;
+  readonly limits?: { readonly mcpOutputTokens?: number };
 }
 
 /** Raw token counts of one model message. */

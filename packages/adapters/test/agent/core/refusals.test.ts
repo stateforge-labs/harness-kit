@@ -116,6 +116,9 @@ describe("refusals at start are finished events, never throws", () => {
     ["an output schema that is an array", { outputSchema: [] as never }, "outputSchema"],
     ["an empty recovery prompt", { resume: { sessionId: "s" as never, recoveryPrompt: "" } }, "resume.recoveryPrompt"],
     ["an empty resume session", { resume: { sessionId: "" as never } }, "resume.sessionId"],
+    ["a bad mcp limit", { limits: { mcpOutputTokens: -1 } }, "limits.mcpOutputTokens"],
+    ["a zero mcp limit", { limits: { mcpOutputTokens: 0 } }, "limits.mcpOutputTokens"],
+    ["a fractional mcp limit", { limits: { mcpOutputTokens: 1.5 } }, "limits.mcpOutputTokens"],
   ];
   for (const [label, extra, field] of cases) {
     test(label, async () => {

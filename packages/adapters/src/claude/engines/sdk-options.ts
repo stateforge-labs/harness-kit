@@ -53,6 +53,7 @@ export interface ClaudeQueryOptions {
     load(key: unknown): Promise<unknown[] | null>;
     listSubkeys?(key: unknown): Promise<unknown[]>;
   };
+  readonly sessionStoreFlush?: "eager";
   readonly permissionMode?: string;
   readonly allowedTools?: readonly string[];
   readonly spawnClaudeCodeProcess?: (request: ClaudeSpawnRequest) => ChildProcess;
@@ -88,6 +89,7 @@ function childEnv(input: AgentRunInput, endpoints: readonly McpEndpoint[]): Resu
   }
   return ok({
     ...base,
+    ...(input.start.limits?.mcpOutputTokens !== undefined ? { [EnvVar.MaxMcpOutputTokens]: String(input.start.limits.mcpOutputTokens) } : {}),
     [EnvVar.Home]: dirs.home,
     [EnvVar.ClaudeConfigDir]: dirs.configDir,
     [EnvVar.Tmpdir]: dirs.tmpDir,
@@ -151,8 +153,8 @@ export function buildQueryOptions(input: AgentRunInput, ctx: BuildContext): Resu
     persistSession: ctx.store !== null,
     includePartialMessages: false,
     ...(ctx.hooks !== null ? { hooks: ctx.hooks } : {}),
-    ...(ctx.store !== null ? { sessionStore: ctx.store } : {}),
-    ...(restricted ? { permissionMode: SdkPermissionMode.DontAsk, allowedTools: allowedTools(endpoints.value) } : {}),
+    ...(ctx.store !== null ? { sessionStore: ctx.store, sessionStoreFlush: SdkStore.FlushEager } : {}),
+    ...(restricted ? { permissionMode: SdkPermissionMode.DontAsk, allowedTools: [...allowedTools(endpoints.value), ...(start.outputSchema !== undefined ? [SdkOutput.StructuredTool] : [])] } : {}),
     ...(ctx.spawn !== null ? { spawnClaudeCodeProcess: ctx.spawn } : {}),
   };
   return ok(built);

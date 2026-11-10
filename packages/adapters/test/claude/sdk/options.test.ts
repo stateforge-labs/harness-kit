@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { claudeSdkEngine } from "../../../src/claude/engines/sdk.ts";
-import { bearerEnvName, buildQueryOptions } from "../../../src/claude/engines/sdk-options.ts";
+import { bearerEnvName, buildQueryOptions, sessionStoreAdapter } from "../../../src/claude/engines/sdk-options.ts";
 import { TOOLS_OFF } from "../../../src/core/policy.ts";
 import { BASE_URL, BEARER, DIRS, KEY, SESSION, collect, endpoint, fakeQuery, memoryStore, runInput } from "./support.ts";
 
@@ -153,6 +153,27 @@ describe("sdk describe", () => {
     const tools = { ...TOOLS_OFF, mcp: [endpoint("alpha")] };
     const plan = claudeSdkEngine({ query: fakeQuery().query }).describe(runInput({ options: { tools } }));
     expect(plan.ok).toBe(false);
+  });
+});
+
+describe("sdk flush, structured output and mcp limit", () => {
+  test("a store makes the flush eager and no store leaves the key absent", () => {
+    const withStore = buildQueryOptions(runInput(), { ...ctx, store: sessionStoreAdapter(memoryStore(), () => {}) });
+    expect(withStore.ok && withStore.value.sessionStoreFlush).toBe("eager");
+    expect(built().sessionStoreFlush).toBeUndefined();
+    expect(built()).not.toHaveProperty("sessionStoreFlush");
+  });
+
+  test("structured output is allowed with a schema when built-ins are off and an endpoint exists", () => {
+    const tools = { ...TOOLS_OFF, mcp: [endpoint("alpha")] };
+    const env = { ANTHROPIC_API_KEY: KEY, [bearerEnvName(0)]: BEARER };
+    expect(built({ options: { tools }, env, start: { outputSchema: { type: "object" } } }).allowedTools?.at(-1)).toBe("StructuredOutput");
+    expect(built({ options: { tools }, env }).allowedTools).not.toContain("StructuredOutput");
+  });
+
+  test("the mcp output limit reaches the child env as a string and is absent otherwise", () => {
+    expect(built({ start: { limits: { mcpOutputTokens: 10000 } } }).env["MAX_MCP_OUTPUT_TOKENS"]).toBe("10000");
+    expect(built().env).not.toHaveProperty("MAX_MCP_OUTPUT_TOKENS");
   });
 });
 

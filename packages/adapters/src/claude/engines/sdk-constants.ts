@@ -47,9 +47,9 @@ export const SdkMcp = {
   ExpandClose: "}",
 } as const;
 
-export const SdkOutput = { JsonSchema: "json_schema" } as const;
+export const SdkOutput = { JsonSchema: "json_schema", StructuredTool: "StructuredOutput" } as const;
 
-export const SdkStore = { KeySeparator: "/", NoUuid: "" } as const;
+export const SdkStore = { KeySeparator: "/", NoUuid: "", FlushEager: "eager" } as const;
 
 export const SdkType = {
   System: "system",
