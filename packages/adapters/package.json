@@ -1,6 +1,6 @@
 {
   "name": "@stateforge-labs/harness-adapters",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "type": "module",
   "sideEffects": false,
   "description": "Harness knowledge beyond hooks: transcript and store readers, in-flight detection, CLI invocation, usage and context windows, tool facts and TUI chrome for Claude Code, Codex and OpenCode.",

@@ -13,7 +13,7 @@
     },
     "packages/adapters": {
       "name": "@stateforge-labs/harness-adapters",
-      "version": "0.2.0",
+      "version": "0.4.0",
       "dependencies": {
         "@anthropic-ai/claude-agent-sdk": "0.3.316",
         "@stateforge-labs/harness-hooks": "^0.3.0",
