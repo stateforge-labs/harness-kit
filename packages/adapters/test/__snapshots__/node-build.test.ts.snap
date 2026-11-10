@@ -1178,6 +1178,12 @@ export { driverContract, type ContractCheck, type ContractFixtures } from "../dr
 export { fakeProcessRunner, type FakeProcessRunner, type FakeProcessScript } from "./fake-runner.ts";
 export { fakeFs, type FakeDir, type FakeFs, type FakeFsInit } from "./fake-fs.ts";
 export { fakeClock } from "./fake-clock.ts";
+export { fakeAgentEngine, type FakeAgentEngine, type FakeAgentScript } from "./fake-agent-engine.ts";
+export { claudeMessages, fakeClaudeQuery, type FakeClaudeMessages, type FakeClaudeQuery, type FakeClaudeQueryBehaviour, type FakeClaudeQueryCall, type FakeClaudeQueryFn, type FakeClaudeQueryOptions, type FakeClaudeQueryStream, } from "./fake-claude-query.ts";
+export { fakeTranscriptStore, type FakeTranscriptStore } from "./fake-transcript-store.ts";
+export { messagesTextStream, messagesToolUseStream, scriptedMessagesApi, type ScriptedMessagesApi, type ScriptedRequest, type ScriptedUsage } from "./scripted-messages-api.ts";
+export { agentContract, type AgentContractDeny, type AgentContractScenario, type AgentContractSubject, type AgentRuntime } from "./agent-contract.ts";
+export { AgentContractCheck } from "./agent-constants.ts";
 
 // testing/fake-runtime.d.ts
 import { type HarnessId } from "@stateforge-labs/harness-hooks";
@@ -1285,5 +1291,398 @@ import type { Clock } from "../core/io.ts";
 export declare function fakeClock(start?: number): Clock & {
     advance(ms: number): void;
 };
+
+// testing/fake-agent-engine.d.ts
+import type { AgentEngineImpl, AgentRunInput } from "../agent/engine.ts";
+import type { AgentEvent, AgentOutput } from "../agent/types.ts";
+import { type RunFailure } from "../core/failure.ts";
+import { type Result } from "../core/result.ts";
+/** One scripted engine run: the events to replay, how it ends and an optional pause before each event. */
+export interface FakeAgentScript {
+    readonly events: readonly AgentEvent[];
+    readonly result?: Result<AgentOutput, RunFailure>;
+    readonly delayMs?: number;
+}
+/** An agent engine that replays scripts and records every run input it was given. */
+export type FakeAgentEngine<I extends string> = AgentEngineImpl<I> & {
+    readonly starts: readonly AgentRunInput[];
+};
+/** Waits for \`ms\`, or until \`signal\` aborts; resolves true when the wait ran to its end. */
+export declare function abortablePause(ms: number, signal: AbortSignal): Promise<boolean>;
+/** An agent engine for tests with no model and no binary. Each \`start\` replays the next script; a run past the last script ends with a FAKE-marked unavailable failure. It never emits \`finished\`. */
+export declare function fakeAgentEngine<I extends string>(harness: I, scripts: readonly FakeAgentScript[]): FakeAgentEngine<I>;
+
+// testing/fake-claude-query.d.ts
+import type { JsonObject } from "../core/json.ts";
+/** The options the Claude SDK engine hands to its query function. Structural copy of the engine's own type. */
+export interface FakeClaudeQueryOptions {
+    readonly tools: readonly string[];
+    readonly strictMcpConfig: boolean;
+    readonly mcpServers: Readonly<Record<string, {
+        readonly type: "http";
+        readonly url: string;
+        readonly headers: Readonly<Record<string, string>>;
+    }>>;
+    readonly settingSources: readonly string[];
+    readonly env: Readonly<Record<string, string>>;
+    readonly cwd: string;
+    readonly executable: "node" | "bun";
+    readonly pathToClaudeCodeExecutable?: string;
+    readonly abortController: AbortController;
+    readonly systemPrompt: string;
+    readonly model?: string;
+    readonly effort?: string;
+    readonly maxTurns: number;
+    readonly outputFormat?: {
+        readonly type: "json_schema";
+        readonly schema: JsonObject;
+    };
+    readonly resume?: string;
+    readonly resumeSessionAt?: string;
+    readonly persistSession: boolean;
+    readonly includePartialMessages: boolean;
+    readonly hooks?: {
+        readonly [event: string]: readonly {
+            readonly matcher?: string;
+            readonly timeout?: number;
+            readonly hooks: readonly ((input: Record<string, unknown>, toolUseId: string | undefined, ctx: {
+                readonly signal: AbortSignal;
+            }) => Promise<Record<string, unknown>>)[];
+        }[];
+    };
+    readonly sessionStore?: {
+        append(key: unknown, entries: unknown[]): Promise<void>;
+        load(key: unknown): Promise<unknown[] | null>;
+        listSubkeys?(key: unknown): Promise<unknown[]>;
+    };
+}
+/** A stream of SDK messages; \`close\` ends it early. */
+export interface FakeClaudeQueryStream extends AsyncIterable<unknown> {
+    close?(): void;
+}
+/** One call of the query function: the prompt and the options it received. */
+export interface FakeClaudeQueryCall {
+    readonly index: number;
+    readonly prompt: string;
+    readonly options: FakeClaudeQueryOptions;
+}
+export type FakeClaudeQueryFn = (params: {
+    readonly prompt: string;
+    readonly options: FakeClaudeQueryOptions;
+}) => FakeClaudeQueryStream;
+/** A fake query function that records the options of every call and the replies of every hook it invoked. */
+export type FakeClaudeQuery = FakeClaudeQueryFn & {
+    readonly calls: readonly FakeClaudeQueryOptions[];
+    readonly prompts: readonly string[];
+    readonly hookReplies: readonly Record<string, unknown>[];
+};
+/** How a fake query stream behaves between and after its messages. */
+export interface FakeClaudeQueryBehaviour {
+    readonly delayMs?: number;
+    readonly holdOpen?: boolean;
+}
+/** The messages to replay, or a function that picks them for each call. */
+export type FakeClaudeMessages = readonly unknown[] | ((call: FakeClaudeQueryCall) => readonly unknown[]);
+type Over = Readonly<Record<string, unknown>>;
+interface Usage {
+    readonly input?: number;
+    readonly cacheWrite?: number;
+    readonly cacheRead?: number;
+    readonly output?: number;
+}
+/** SDK-shaped messages, copied in shape from masked captures, plus two directives only the fake understands. */
+export declare const claudeMessages: {
+    readonly init: (over?: Over) => Record<string, unknown>;
+    readonly assistantText: (text?: string, usage?: Usage, over?: Over) => Record<string, unknown>;
+    readonly assistantToolUse: (name?: string, input?: Over, usage?: Usage, over?: Over) => Record<string, unknown>;
+    readonly toolResult: (toolUseId?: string, content?: string, over?: Over) => Record<string, unknown>;
+    readonly resultSuccess: (text?: string, over?: Over) => Record<string, unknown>;
+    readonly resultMaxTurns: (over?: Over) => Record<string, unknown>;
+    readonly rateLimit: (over?: Over) => Record<string, unknown>;
+    readonly hookCall: (event: string, input: Over, toolUseId?: string) => Record<string, unknown>;
+    readonly throwError: (message: string, name?: string) => Record<string, unknown>;
+};
+/** A query function for the Claude SDK engine that yields the given SDK-shaped messages and records the options of every call. After the abort controller aborts, the next pull throws an error named like the SDK's abort error; \`close()\` ends the stream. */
+export declare function fakeClaudeQuery(messages: FakeClaudeMessages, behaviour?: FakeClaudeQueryBehaviour): FakeClaudeQuery;
+export {};
+
+// testing/fake-transcript-store.d.ts
+import type { StoreEntry, TranscriptStore } from "../agent/types.ts";
+/** An in-memory transcript store. It applies no dedupe, because dedupe belongs to the consumer. */
+export type FakeTranscriptStore = TranscriptStore & {
+    readonly entries: ReadonlyMap<string, readonly StoreEntry[]>;
+    failNext(): void;
+};
+/** A transcript store for tests: appends accumulate per key, and \`failNext()\` makes the next append reject once. */
+export declare function fakeTranscriptStore(): FakeTranscriptStore;
+
+// testing/scripted-messages-api.d.ts
+/** One request the scripted server saw. The key headers are replaced by a fixed marker. */
+export interface ScriptedRequest {
+    readonly path: string;
+    readonly headers: Readonly<Record<string, string>>;
+}
+/** A running scripted Messages API on 127.0.0.1. */
+export interface ScriptedMessagesApi {
+    readonly baseUrl: string;
+    readonly requests: readonly ScriptedRequest[];
+    close(): Promise<void>;
+}
+/** Token counts for the stream builders below. */
+export interface ScriptedUsage {
+    readonly input?: number;
+    readonly cacheWrite?: number;
+    readonly cacheRead?: number;
+    readonly output?: number;
+}
+/** The Messages API stream events of one assistant message that says \`text\` and ends the turn. */
+export declare function messagesTextStream(text: string, usage?: ScriptedUsage, model?: string): readonly unknown[];
+/** The Messages API stream events of one assistant message that calls a tool and stops for its result. */
+export declare function messagesToolUseStream(name: string, input: unknown, usage?: ScriptedUsage, model?: string): readonly unknown[];
+/** A local server on 127.0.0.1 that answers POST /v1/messages with the scripted stream as server-sent events. It records the path and headers of every request, with the key headers masked. Node \`http\` only. */
+export declare function scriptedMessagesApi(script: readonly unknown[]): Promise<ScriptedMessagesApi>;
+
+// testing/agent-contract.d.ts
+import type { AgentEngineImpl, AgentRunInput } from "../agent/engine.ts";
+import type { Agent, AgentOptions } from "../agent/types.ts";
+import type { RunFailure } from "../core/failure.ts";
+import type { Result } from "../core/result.ts";
+import type { ContractCheck } from "../driver/contract.ts";
+import type { EnvSource } from "../env.ts";
+/** The one runtime method the suite needs; any Runtime has it. */
+export interface AgentRuntime {
+    agent(id: string, options: AgentOptions): Result<Agent, RunFailure>;
+}
+/** A scenario the suite cannot make up for itself: a runtime wired so the engine behaves as the check needs. */
+export interface AgentContractScenario {
+    readonly runtime: () => AgentRuntime;
+    readonly inputs?: () => readonly AgentRunInput[];
+}
+/** A scenario in which a hook denies the tool \`tool\`, given as its bare name. */
+export interface AgentContractDeny extends AgentContractScenario {
+    readonly tool: string;
+}
+/** What the agent contract runs against. \`runtime\`, \`options\` and \`id\` are enough for the plain checks; the rest wires the checks that must see the engine or make it behave in one specific way. A check whose wiring is missing fails and says what to supply. */
+export interface AgentContractSubject {
+    readonly runtime: (source?: EnvSource) => AgentRuntime;
+    readonly options: AgentOptions;
+    readonly id: string;
+    readonly inputs?: () => readonly AgentRunInput[];
+    readonly engine?: AgentEngineImpl<string>;
+    readonly cancel?: AgentContractScenario;
+    readonly deny?: AgentContractDeny;
+    readonly resumeMiss?: AgentContractScenario;
+    readonly deadlineMs?: number;
+}
+/** The checks every agent engine must pass, run through \`subject.runtime()\`: exactly one terminal event and it is last; \`settled\` never rejects and equals the terminal result; cancel ends as cancelled; \`maxTurns\` is required; a cli agent run is refused before anything starts; no secret reaches events, failures or a description; the child env is closed; a deny becomes a refused event with the bare tool name; usage is raw per message and priceless; session events carry id and checkpoint; a resume miss recovers only with a recovery prompt. The same suite runs against the fake engine and against a real one. */
+export declare function agentContract(subject: AgentContractSubject): Promise<readonly ContractCheck[]>;
+
+// testing/agent-constants.d.ts
+export declare const FAKE_MARK = "FAKE";
+export declare const FakeAgentText: {
+    readonly Exhausted: "FAKE: agent engine script exhausted";
+    readonly Cancelled: "FAKE: agent engine run cancelled";
+    readonly PlanEntry: "fake-agent-engine";
+};
+export declare const FAKE_STORE_APPEND_FAILURE = "FAKE: transcript store append failed";
+export declare const FAKE_STORE_SEPARATOR = "/";
+export declare const FakeSdkMessage: {
+    readonly System: "system";
+    readonly Init: "init";
+    readonly Assistant: "assistant";
+    readonly User: "user";
+    readonly Result: "result";
+    readonly RateLimit: "rate_limit_event";
+    readonly Text: "text";
+    readonly ToolUse: "tool_use";
+    readonly ToolResult: "tool_result";
+    readonly Success: "success";
+    readonly ErrorMaxTurns: "error_max_turns";
+    readonly MaxTurnsTerminal: "max_turns";
+    readonly Completed: "completed";
+    readonly EndTurn: "end_turn";
+    readonly ToolUseStop: "tool_use";
+    readonly Message: "message";
+};
+export declare const FakeSdkDefaults: {
+    readonly SessionId: "00000000-0000-4000-8000-000000000001";
+    readonly MessageId: "msg_000000000000000000000001";
+    readonly ToolUseId: "toolu_000000000000000000000001";
+    readonly Uuid: "00000000-0000-4000-8000-000000000002";
+    readonly RequestId: "req_000000000000000000000001";
+    readonly Model: "claude-fable-5-2";
+    readonly Cwd: "/tmp/work";
+    readonly PermissionMode: "default";
+    readonly ApiKeySource: "none";
+    readonly ClaudeCodeVersion: "2.1.319";
+    readonly OutputStyle: "default";
+    readonly Text: "ok";
+    readonly Timestamp: "2026-11-09T00:00:00.000Z";
+    readonly InputTokens: 2;
+    readonly CacheWriteTokens: 51626;
+    readonly CacheReadTokens: 0;
+    readonly OutputTokens: 4;
+    readonly ServiceTier: "standard";
+    readonly InferenceGeo: "global";
+    readonly Speed: "standard";
+    readonly DurationMs: 1408;
+    readonly DurationApiMs: 1346;
+    readonly Turns: 1;
+    readonly MaxTurns: 4;
+    readonly RateLimitStatus: "allowed_warning";
+    readonly RateLimitType: "seven_day";
+    readonly RateLimitResetsAt: 1794369600;
+    readonly RateLimitUtilization: 0.77;
+    readonly RateLimitThreshold: 0.75;
+    readonly ToolName: "Bash";
+    readonly ToolCommand: "pwd";
+    readonly ToolOutput: "/tmp/work";
+    readonly MaxTurnsMessage: "Reached maximum number of turns";
+};
+export declare const FakeQueryText: {
+    readonly Aborted: "Claude Code process aborted by user";
+    readonly AbortName: "AbortError";
+    readonly ThrownName: "Error";
+    readonly HookCall: "fake-hook-call";
+    readonly Throw: "fake-throw";
+};
+export declare const MessagesApi: {
+    readonly Host: "127.0.0.1";
+    readonly Port: 0;
+    readonly Method: "POST";
+    readonly Path: "/v1/messages";
+    readonly Scheme: "http://";
+    readonly ContentType: "text/event-stream";
+    readonly JsonType: "application/json";
+    readonly CacheControl: "no-cache";
+    readonly Masked: "[masked]";
+    readonly NotFound: '{"type":"error","error":{"type":"not_found_error","message":"not found"}}';
+    readonly EventPrefix: "event: ";
+    readonly DataPrefix: "data: ";
+    readonly Terminator: "\\n\\n";
+    readonly Newline: "\\n";
+    readonly Ping: "ping";
+    readonly DefaultModel: "claude-fable-5-2";
+    readonly MessageStart: "message_start";
+    readonly BlockStart: "content_block_start";
+    readonly BlockDelta: "content_block_delta";
+    readonly BlockStop: "content_block_stop";
+    readonly MessageDelta: "message_delta";
+    readonly MessageStop: "message_stop";
+    readonly TextDelta: "text_delta";
+    readonly InputJsonDelta: "input_json_delta";
+    readonly EndTurn: "end_turn";
+    readonly ToolUse: "tool_use";
+    readonly MessageId: "msg_000000000000000000000001";
+    readonly ToolUseId: "toolu_000000000000000000000001";
+    readonly InputTokens: 2;
+    readonly OutputTokens: 4;
+    readonly CacheWriteTokens: 0;
+    readonly CacheReadTokens: 0;
+    readonly Joiner: ", ";
+    readonly MessageType: "message";
+    readonly Role: "assistant";
+    readonly TextBlock: "text";
+};
+export declare const AgentContractCheck: {
+    readonly OneTerminalEvent: "one-terminal-event";
+    readonly EventsOrder: "events-order";
+    readonly SettledNeverRejects: "settled-never-rejects";
+    readonly CancelCancelled: "cancel-cancelled";
+    readonly MaxTurnsRequired: "max-turns-required";
+    readonly CliEngineUnsupported: "cli-engine-unsupported";
+    readonly NoSecretLeak: "no-secret-leak";
+    readonly ClosedEnv: "closed-env-no-inherited-name";
+    readonly DescribeNamesOnly: "describe-names-only";
+    readonly DenyRefused: "deny-refused-bare-tool-name";
+    readonly UsagePerMessage: "usage-per-message";
+    readonly UsageNoPrice: "usage-carries-no-price";
+    readonly SessionEvent: "session-event-id-and-checkpoint";
+    readonly ResumeMissRecovered: "resume-miss-with-recovery-prompt";
+    readonly ResumeMissRefused: "resume-miss-without-recovery-prompt";
+};
+export type AgentContractCheck = (typeof AgentContractCheck)[keyof typeof AgentContractCheck];
+export declare const AgentContractText: {
+    readonly Pass: "ok";
+    readonly Separator: "; ";
+    readonly Threw: "threw ";
+    readonly MissingScenario: "the subject supplies no scenario for this check: ";
+    readonly MissingInputs: "the subject supplies no engine input recorder: ";
+    readonly MissingEngine: "the subject supplies no engine to describe: ";
+    readonly Refused: "the run was refused before it started: ";
+    readonly Timeout: "did not finish within the deadline";
+    readonly SettledRejected: "settled rejected";
+    readonly SettledTimeout: "settled did not resolve after the terminal event";
+    readonly SettledMismatch: "settled does not equal the terminal event result";
+    readonly EventsRejected: "the event stream threw";
+    readonly TerminalCount: "terminal events seen: ";
+    readonly TerminalNotLast: "an event follows the terminal event";
+    readonly NoTerminal: "no terminal event";
+    readonly StartedNotFirst: "the first event is not started";
+    readonly CancelEnded: "the run ended before cancel was called";
+    readonly CancelNotResolved: "cancel did not resolve";
+    readonly CancelBeforeTerminal: "cancel resolved before the terminal event was delivered";
+    readonly CancelWrongKind: "cancel did not end the run as cancelled, got ";
+    readonly NotRefused: "the run was not refused";
+    readonly WrongRefusalKind: "refusal kind is ";
+    readonly WrongField: "refusal field is ";
+    readonly EngineStarted: "the engine was started for a refused run";
+    readonly WrongCapability: "unsupported capability is ";
+    readonly WrongWhy: "unsupported why is ";
+    readonly StartedEvent: "a started event was emitted for a refused run";
+    readonly SecretFound: "a secret value appears in ";
+    readonly PoisonInEnv: "the child env carries an ambient name or value: ";
+    readonly PoisonInEvents: "an ambient value appears in the output";
+    readonly SetNameMissing: "a name the consumer set is missing from the child env: ";
+    readonly DescribeFailed: "describe returned a failure for a valid run";
+    readonly DescribeValue: "the description carries an env value for ";
+    readonly DescribeEngine: "the description names engine ";
+    readonly NoRefusedEvent: "no refused event for the denied tool";
+    readonly RefusedSource: "refused source is not hook";
+    readonly RefusedTool: "refused tool is not the bare name ";
+    readonly RefusedBlank: "refused event has an empty id or reason";
+    readonly RefusedDuplicate: "two refused events share an id";
+    readonly NoUsage: "no usage event";
+    readonly UsageCount: "usage events and output usage differ in count: ";
+    readonly UsageTurn: "usage turn is not a positive integer or does not rise: ";
+    readonly UsageTokens: "a usage count is not a non-negative integer: ";
+    readonly PriceField: "a price or cost field is present: ";
+    readonly NoSession: "no session event";
+    readonly SessionId: "session event id is empty";
+    readonly SessionCheckpoint: "session event has no checkpoint field of string or null";
+    readonly SessionMismatch: "output session id differs from the session event id";
+    readonly RecoveredCount: "recovered events seen: ";
+    readonly RecoveredReason: "recovered reason is not session-not-found";
+    readonly RecoveredNotBeforeText: "recovered does not come before the fresh run's events";
+    readonly FreshRuns: "engine runs seen: ";
+    readonly FreshPrompt: "the fresh run did not use the recovery prompt";
+    readonly FreshResume: "the fresh run still carries the resume";
+    readonly RecoveryFailed: "the recovered run did not end ok";
+    readonly WrongSessionId: "session-not-found names another session";
+};
+export declare const ContractSubject: {
+    readonly Instructions: "contract instructions";
+    readonly Prompt: "contract prompt";
+    readonly MaxTurns: 3;
+    readonly RecoveryPrompt: "contract recovery prompt";
+    readonly ResumeId: "contract-resume-session";
+    readonly DeadlineMs: 5000;
+    readonly SettleTickMs: 0;
+    readonly SecretKey: "sk-CONTRACT-AGENT-KEY-7c1d";
+    readonly SecretEnvName: "CONTRACT_AGENT_SECRET";
+    readonly SecretEnvValue: "sk-CONTRACT-ENV-SECRET-93ab";
+    readonly PoisonName: "CONTRACT_AMBIENT_NAME";
+    readonly PoisonValue: "contract-ambient-value-5d2e";
+    readonly MinDescribeValueLength: 6;
+};
+export declare const BAD_MAX_TURNS: readonly (number | undefined)[];
+export declare const PRICE_FIELD_PATTERN: RegExp;
+export declare const CliEngineValue = "cli";
+export declare const MaxTurnsField = "maxTurns";
+export declare const TerminalKind = "finished";
+export declare const StartedKind = "started";
+export declare const RefusedHookSource = "hook";
+export declare const PREFIXED_NAME_PATTERN: RegExp;
+export declare const MASKED_HEADERS: readonly string[];
 "
 `;
