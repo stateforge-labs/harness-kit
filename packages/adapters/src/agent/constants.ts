@@ -71,7 +71,7 @@ export const AbortReason = {
 } as const;
 export type AbortReason = (typeof AbortReason)[keyof typeof AbortReason];
 
-export const BEARER_SLOT = "agent-bearer-slot-";
+export const BEARER_SLOT = "AGENT_MCP_BEARER_";
 export const AGENT_MODE = "api-key";
 export const RECOVERY_RUN_SUFFIX = "-recovery";
 export const SCRUB_DEPTH = 64;

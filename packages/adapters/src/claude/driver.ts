@@ -1,3 +1,4 @@
+import { claudeHookCallbacks } from "../agent/hooks/index.ts";
 import { Harness } from "@stateforge-labs/harness-hooks";
 import { CredentialMode } from "../core/credential-plan.ts";
 import { Engine } from "../core/capability.ts";
@@ -22,5 +23,5 @@ export const CLAUDE_DRIVER: HarnessDriver<"claude"> = deepFreeze({
     policyNotice: claudePolicyNotice,
     inspect: inspectClaude,
   },
-  run: { engines: [Engine.Cli], cli: claudeCli, agent: claudeSdkEngine() },
+  run: { engines: [Engine.Cli], cli: claudeCli, agent: claudeSdkEngine({ hooks: claudeHookCallbacks }) },
 });

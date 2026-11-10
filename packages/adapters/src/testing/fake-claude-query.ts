@@ -1,40 +1,9 @@
-import type { JsonObject } from "../core/json.ts";
+import type { ClaudeQueryOptions } from "../claude/engines/sdk-options.ts";
 import { FakeQueryText, FakeSdkDefaults, FakeSdkMessage } from "./agent-constants.ts";
 import { abortablePause } from "./fake-agent-engine.ts";
 
-/** The options the Claude SDK engine hands to its query function. Structural copy of the engine's own type. */
-export interface FakeClaudeQueryOptions {
-  readonly tools: readonly string[];
-  readonly strictMcpConfig: boolean;
-  readonly mcpServers: Readonly<Record<string, { readonly type: "http"; readonly url: string; readonly headers: Readonly<Record<string, string>> }>>;
-  readonly settingSources: readonly string[];
-  readonly env: Readonly<Record<string, string>>;
-  readonly cwd: string;
-  readonly executable: "node" | "bun";
-  readonly pathToClaudeCodeExecutable?: string;
-  readonly abortController: AbortController;
-  readonly systemPrompt: string;
-  readonly model?: string;
-  readonly effort?: string;
-  readonly maxTurns: number;
-  readonly outputFormat?: { readonly type: "json_schema"; readonly schema: JsonObject };
-  readonly resume?: string;
-  readonly resumeSessionAt?: string;
-  readonly persistSession: boolean;
-  readonly includePartialMessages: boolean;
-  readonly hooks?: {
-    readonly [event: string]: readonly {
-      readonly matcher?: string;
-      readonly timeout?: number;
-      readonly hooks: readonly ((input: Record<string, unknown>, toolUseId: string | undefined, ctx: { readonly signal: AbortSignal }) => Promise<Record<string, unknown>>)[];
-    }[];
-  };
-  readonly sessionStore?: {
-    append(key: unknown, entries: unknown[]): Promise<void>;
-    load(key: unknown): Promise<unknown[] | null>;
-    listSubkeys?(key: unknown): Promise<unknown[]>;
-  };
-}
+/** The options the Claude SDK engine hands to its query function. */
+export type FakeClaudeQueryOptions = ClaudeQueryOptions;
 
 /** A stream of SDK messages; `close` ends it early. */
 export interface FakeClaudeQueryStream extends AsyncIterable<unknown> {

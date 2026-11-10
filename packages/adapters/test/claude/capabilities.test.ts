@@ -30,8 +30,8 @@ describe("claude capabilities", () => {
     });
   }
 
-  test("the sdk column is supported for the agent cells and not built for the rest", () => {
-    const agent: readonly string[] = AGENT_CELLS;
+  test("the sdk column is supported for the agent cells, base url and mcp none and not built for the rest", () => {
+    const agent: readonly string[] = [...AGENT_CELLS, CapabilityName.BaseUrl, CapabilityName.McpNone];
     for (const name of Object.values(CapabilityName)) {
       expect(CLAUDE_CAPABILITIES[name].sdk).toEqual(agent.includes(name) ? supported : SDK_NOT_BUILT);
     }

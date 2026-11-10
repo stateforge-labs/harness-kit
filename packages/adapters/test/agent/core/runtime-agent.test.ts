@@ -5,11 +5,11 @@ const options: AgentOptions = {
   credential: { mode: "api-key", key: secret("k-test"), baseUrl: "http://127.0.0.1:1" },
   dirs: { cwd: "/w", home: "/w/h", configDir: "/w/c", tmpDir: "/w/t" },
   tools: TOOLS_OFF,
-  env: { kind: "closed", set: {} },
+  env: { kind: "closed", set: { PATH: "/usr/bin" } },
 };
 
 describe("Runtime.agent before any engine is registered", () => {
-  for (const id of ["claude", "codex", "opencode"] as const) {
+  for (const id of ["codex", "opencode"] as const) {
     test(`${id} is refused as unsupported on the engine`, () => {
       const result = createRuntime().agent(id, options);
       expect(result.ok).toBe(false);
@@ -22,4 +22,9 @@ describe("Runtime.agent before any engine is registered", () => {
       }
     });
   }
+
+  test("claude has its engine built in and is not refused for lack of one", () => {
+    const result = createRuntime().agent("claude", options);
+    expect(result.ok).toBe(true);
+  });
 });

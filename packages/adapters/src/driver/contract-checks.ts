@@ -72,7 +72,7 @@ export function capabilityProblems(caps: Capabilities): string[] {
   return Object.values(CapabilityName).flatMap((name) => Object.values(Engine).flatMap((engine) => cellProblems(`${name}.${engine}`, cellOf(caps, name, engine))));
 }
 
-const AGENT_CELL_NAMES: readonly CapabilityName[] = AGENT_CELLS;
+const AGENT_CELL_NAMES: readonly CapabilityName[] = [...AGENT_CELLS, CapabilityName.BaseUrl, CapabilityName.McpNone];
 
 export function sdkColumnProblems(caps: Capabilities, agentEngine = false): string[] {
   return Object.values(CapabilityName).flatMap((name) => {

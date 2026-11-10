@@ -1,5 +1,6 @@
 import type { ChildProcess } from "node:child_process";
 import type { AgentRunInput } from "../../agent/engine.ts";
+import type { ClaudeHookOption, HookObserver } from "../../agent/hooks/index.ts";
 import type { StoreEntry, TranscriptStore } from "../../agent/types.ts";
 import type { RunFailure } from "../../core/failure.ts";
 import { measuredValue } from "../../core/evidence.ts";
@@ -17,16 +18,7 @@ export interface ClaudeMcpServer {
   readonly headers: Readonly<Record<string, string>>;
 }
 
-export interface HookObserver {
-  refused(r: { readonly id: string; readonly tool: string; readonly reason: string; readonly text: string | null }): void;
-  context(point: string, text: string): void;
-}
-
-export type HookCallbackBody = (input: Record<string, unknown>, toolUseId: string | undefined, ctx: { readonly signal: AbortSignal }) => Promise<Record<string, unknown>>;
-
-export interface ClaudeHookOption {
-  readonly [event: string]: readonly { readonly matcher?: string; readonly timeout?: number; readonly hooks: readonly HookCallbackBody[] }[];
-}
+export type { ClaudeHookOption, HookObserver };
 
 export interface ClaudeSpawnRequest {
   readonly command: string;

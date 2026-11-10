@@ -49,14 +49,14 @@ describe("capability tables", () => {
     });
 
     test(`${harness} has no sdk engine built outside the agent cells`, () => {
-      const agent: readonly string[] = AGENT_CELLS;
+      const agent: readonly string[] = [...AGENT_CELLS, "base-url", "mcp-none"];
       for (const name of CAPABILITY_NAMES.filter((candidate) => !agent.includes(candidate))) {
         expect(table[name as keyof Capabilities].sdk).toEqual(SDK_NOT_BUILT);
       }
     });
 
     test(`${harness} has a usable sdk cell only where an agent engine exists`, () => {
-      const agent: readonly string[] = AGENT_CELLS;
+      const agent: readonly string[] = [...AGENT_CELLS, "base-url", "mcp-none"];
       for (const name of CAPABILITY_NAMES) {
         const usable = isUsable(table[name as keyof Capabilities].sdk);
         expect(usable && (harness !== "claude" || !agent.includes(name))).toBe(false);

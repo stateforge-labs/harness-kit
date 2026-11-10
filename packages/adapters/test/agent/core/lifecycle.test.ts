@@ -27,7 +27,8 @@ describe("the fold to settled", () => {
     expect(input?.env["FAKE_KEY_INJECTED"]).toBe(KEY);
     expect(input?.env["HOME"]).toBe("/w/home");
     expect(input?.env["TMPDIR"]).toBe("/w/tmp");
-    expect(Object.keys(input?.env ?? {}).sort()).toEqual(["FAKE_KEY_INJECTED", "HOME", "PATH", "TMPDIR"]);
+    expect(input?.env["AGENT_MCP_BEARER_0"]).toBe(BEARER);
+    expect(Object.keys(input?.env ?? {}).sort()).toEqual(["AGENT_MCP_BEARER_0", "FAKE_KEY_INJECTED", "HOME", "PATH", "TMPDIR"]);
     expect(input?.secrets).toContain(KEY);
     expect(input?.secrets).toContain(BEARER);
     expect(input?.redact(`a ${BEARER} b ${KEY}`)).not.toContain("SENTINEL");

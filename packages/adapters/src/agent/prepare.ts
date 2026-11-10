@@ -183,11 +183,7 @@ function childEnvOf<I extends string>(driver: HarnessDriver<I>, options: AgentOp
   }
   const slots = bearerSlots(options);
   const child = buildChildEnv({ base: base.value, plan: { ...plan.value, inject: { ...plan.value.inject, ...slots } }, nestedEnv: [] });
-  const env = { ...child.env };
-  for (const name of Object.keys(slots)) {
-    delete env[name];
-  }
-  return ok({ env, secrets: child.secrets });
+  return ok({ env: { ...child.env }, secrets: child.secrets });
 }
 
 function prepareChecked<I extends string>(deps: PrepareDeps<I>, engine: AgentEngineImpl<I>): Result<AgentPrepared<I>, RunFailure> {
