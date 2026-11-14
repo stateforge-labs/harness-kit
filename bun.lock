@@ -15,14 +15,20 @@
       "name": "@stateforge-labs/harness-adapters",
       "version": "0.4.0",
       "dependencies": {
-        "@anthropic-ai/claude-agent-sdk": "0.3.316",
         "@stateforge-labs/harness-hooks": "0.3.1",
         "zod": "4.6.7",
       },
       "devDependencies": {
+        "@anthropic-ai/claude-agent-sdk": "0.3.316",
         "@types/node": "22.20.5",
         "typescript": "7.0.2",
       },
+      "peerDependencies": {
+        "@anthropic-ai/claude-agent-sdk": "0.3.316",
+      },
+      "optionalPeers": [
+        "@anthropic-ai/claude-agent-sdk",
+      ],
     },
     "packages/hooks": {
       "name": "@stateforge-labs/harness-hooks",

@@ -14,6 +14,14 @@ bun add @stateforge-labs/harness-adapters
 npm install @stateforge-labs/harness-adapters
 ```
 
+The Claude engine of the agent facet needs `@anthropic-ai/claude-agent-sdk`, an optional peer dependency that this package does not
+install. Add it, at exactly the version the engine is written against, only if you start agent runs:
+
+```sh
+bun add --exact @anthropic-ai/claude-agent-sdk@0.3.316
+npm install --save-exact @anthropic-ai/claude-agent-sdk@0.3.316
+```
+
 Node 22.13 or later, or Bun. The package uses no Bun API in its shipped code.
 
 ## Usage
@@ -89,8 +97,10 @@ returns `plan(...)`, to see the invocation without running it, and `stream(...)`
 ## Agent runs
 
 `runtime.agent(id, options)` returns an `Agent` whose `start(...)` runs the harness through its vendor SDK and returns a run: a stream of
-events and a `settled` result that never rejects. This release has the Claude Agent SDK engine (`@anthropic-ai/claude-agent-sdk`, pinned
-exactly at 0.3.316, loaded by a dynamic import at the first run, so importing the package never loads it). A CLI agent run is refused as
+events and a `settled` result that never rejects. This release has the Claude Agent SDK engine (`@anthropic-ai/claude-agent-sdk` at
+exactly 0.3.316, an optional peer dependency you add yourself, see Install). The SDK is loaded by a dynamic import at the first run, so
+importing the package never loads it; a run without it ends `unavailable` with a message that names the package and the version to add.
+A CLI agent run is refused as
 `unsupported` before anything starts. The program below reads `ANTHROPIC_API_KEY` (and optionally `ANTHROPIC_BASE_URL`) from its own environment
 and prints the answer; the library never reads a credential from the environment on its own.
 

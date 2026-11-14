@@ -54,6 +54,24 @@ describe("the SDK package name rule of check-boundaries", () => {
     expect(result.text).toContain("SDK package name in library src");
   }, 30_000);
 
+  test("a module-private SDK_PACKAGE constant is clean in the engine file", async () => {
+    const result = await check({ [ENTRY]: `${IMPORT_CALL}const SDK_PACKAGE = "${SPEC}";\nexport const hint = (): string => SDK_PACKAGE;\n` });
+    expect(result.text).toContain("boundaries clean");
+    expect(result.code).toBe(0);
+  }, 30_000);
+
+  test("an exported SDK_PACKAGE constant is a violation even in the engine file", async () => {
+    const result = await check({ [ENTRY]: `${IMPORT_CALL}export const SDK_PACKAGE = "${SPEC}";\n` });
+    expect(result.code).not.toBe(0);
+    expect(result.text).toContain("SDK package name in library src");
+  }, 30_000);
+
+  test("the SDK_PACKAGE constant in any other file is a violation", async () => {
+    const result = await check({ "src/claude/engines/other.ts": `const SDK_PACKAGE = "${SPEC}";\nexport const hint = (): string => SDK_PACKAGE;\n` });
+    expect(result.code).not.toBe(0);
+    expect(result.text).toContain("SDK package name in library src");
+  }, 30_000);
+
   test("a static import of the SDK is a violation even in the engine file", async () => {
     const result = await check({ [ENTRY]: `import { query } from "${SPEC}";\nexport { query };\n` });
     expect(result.code).not.toBe(0);

@@ -5,6 +5,11 @@ and the project uses [Semantic Versioning](https://semver.org).
 
 ## Unreleased
 
+### `@stateforge-labs/harness-adapters`
+
+- **Breaking:** `@anthropic-ai/claude-agent-sdk` is no longer a dependency. It is an optional peer dependency at exactly 0.3.316, so installing the package no longer installs the SDK or its native binary package (about 314 MB). A consumer that starts agent runs with the Claude engine adds it: `bun add --exact @anthropic-ai/claude-agent-sdk@0.3.316` or `npm install --save-exact @anthropic-ai/claude-agent-sdk@0.3.316`. Everyone else saves that install: one consumer that never starts an agent run goes from about 407 MB to about 40 MB of production install.
+- A start that cannot load the SDK still ends `unavailable` with reason `spawn-failed`; its message now names the package and the exact version to add.
+
 ## harness-hooks 0.3.1 - 2026-11-09
 
 ### `@stateforge-labs/harness-hooks`

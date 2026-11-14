@@ -18,6 +18,9 @@ import { CLAUDE_SDK_VERSION, SdkHooks, SdkMatch, SdkMcp, SdkMessage, SdkPlanFact
 export { CLAUDE_SDK_VERSION };
 export type { ClaudeHookOption, ClaudeQueryOptions, HookObserver } from "./sdk-options.ts";
 
+const SDK_PACKAGE = "@anthropic-ai/claude-agent-sdk";
+const SDK_LOAD_FAILED = `${SdkMessage.SdkLoadFailed}; add the optional peer dependency ${SDK_PACKAGE} at exactly ${CLAUDE_SDK_VERSION} (bun add --exact ${SDK_PACKAGE}@${CLAUDE_SDK_VERSION} or npm install --save-exact ${SDK_PACKAGE}@${CLAUDE_SDK_VERSION})`;
+
 /** The message stream of one query. Messages are decoded structurally. */
 export interface ClaudeQueryStream extends AsyncIterable<unknown> {
   close?(): void;
@@ -121,9 +124,9 @@ function loadQuery(): Promise<Result<ClaudeQueryFn, RunFailure>> {
     .then(
       (loaded): Result<ClaudeQueryFn, RunFailure> => {
         const query: unknown = Reflect.get(loaded, "query");
-        return typeof query === "function" ? ok(query as ClaudeQueryFn) : fail(unavailable(SdkMessage.SdkLoadFailed));
+        return typeof query === "function" ? ok(query as ClaudeQueryFn) : fail(unavailable(SDK_LOAD_FAILED));
       },
-      () => fail(unavailable(SdkMessage.SdkLoadFailed)),
+      () => fail(unavailable(SDK_LOAD_FAILED)),
     );
 }
 

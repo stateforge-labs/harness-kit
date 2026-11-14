@@ -4,8 +4,12 @@
 events and one settled result. An agent run goes through the vendor SDK engine of the harness. The CLI engine is never used for an agent run:
 an options object that asks for it (`engine: "cli"`, which the type does not allow) returns `unsupported` with `why: "agent-runs-use-the-sdk-engine"` before anything starts.
 
-This release has one SDK engine: Claude, through `@anthropic-ai/claude-agent-sdk`, pinned exactly at 0.3.316. The package loads it with a
-dynamic import inside the first `start`, so importing the package, or using the one-shot `headless` facet, never loads it. For any other
+This release has one SDK engine: Claude, through `@anthropic-ai/claude-agent-sdk` at exactly 0.3.316. The SDK is an optional peer
+dependency: the package does not install it, so a consumer that starts agent runs adds it with
+`bun add --exact @anthropic-ai/claude-agent-sdk@0.3.316` or `npm install --save-exact @anthropic-ai/claude-agent-sdk@0.3.316`. The package
+loads it with a dynamic import inside the first `start`, so importing the package, or using the one-shot `headless` facet, never loads it.
+When it cannot be loaded, the run ends `unavailable` with reason `spawn-failed` and a message that names the package and the version to
+add. For any other
 harness `runtime.agent` returns `unsupported` unless the consumer injects an engine with `createRuntime({ agentEngines })`.
 
 Runnable examples: [`examples/agent/`](../examples/agent) holds `quickstart.ts` (the README program), `ask.ts` (a hook pipeline), `bearer-and-cancel.ts` and `test-with-fakes.ts`. The shape of every type is in the declarations that the `runtime` subpath ships.

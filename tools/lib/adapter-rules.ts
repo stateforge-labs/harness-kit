@@ -26,6 +26,7 @@ const SDK_NAME = /@anthropic-ai\/|@openai\/codex|@opencode-ai\//;
 const SDK_ENTRY_FILE = "src/claude/engines/sdk.ts";
 const SDK_ENTRY_SPECIFIER = "@anthropic-ai/claude-agent-sdk";
 const SDK_ENTRY_CALL = `import("${SDK_ENTRY_SPECIFIER}")`;
+const SDK_ENTRY_NAME = new RegExp(`^const SDK_PACKAGE = "${SDK_ENTRY_SPECIFIER}";$`, "gm");
 
 function packageOf(spec: string): string {
   return spec.startsWith("@") ? spec.split("/").slice(0, 2).join("/") : (spec.split("/")[0] ?? spec);
@@ -43,7 +44,7 @@ export function sourceViolations(rel: string, pkgRel: string, src: string, bareS
   if (CONSOLE_USE.test(src)) out.push(`${rel}: console use in library src`);
   if (STDIO_WRITE.test(src)) out.push(`${rel}: direct stdout or stderr write in library src`);
   if (CONSUMER_NAME.test(src)) out.push(`${rel}: consumer name in library src`);
-  if (SDK_NAME.test(entry ? src.split(SDK_ENTRY_CALL).join("") : src)) out.push(`${rel}: SDK package name in library src`);
+  if (SDK_NAME.test(entry ? src.split(SDK_ENTRY_CALL).join("").replace(SDK_ENTRY_NAME, "") : src)) out.push(`${rel}: SDK package name in library src`);
   if (CATCH_USE.test(src) && !CATCH_ALLOWED.has(pkgRel)) out.push(`${rel}: try/catch outside the allowlist`);
   for (const v of stripNonComments(src).violations) out.push(`${rel}:${v.line}: comment not allowed: ${v.text}`);
   return out;
