@@ -4,6 +4,7 @@ import type { Effort } from "./run.ts";
 export interface ResolvedOptions {
   readonly model: string | null;
   readonly effort: Effort | null;
+  readonly maxTurns?: number;
   readonly persist: boolean;
   readonly maxArgvBytes: number | null;
   readonly cwd: string;

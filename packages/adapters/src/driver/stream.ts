@@ -99,7 +99,8 @@ async function* body<I extends string>(
     });
   }
   if (!done.ok) {
-    return fail(redactFailure(done.failure, redact));
+    const failure = done.failure.kind === "exit" && fold.failure?.kind === "max-turns" ? fold.failure : done.failure;
+    return fail(redactFailure(failure, redact));
   }
   const parsed = foldEnd(fold, done.value, prepared.resolved.model);
   if (!parsed.ok) {

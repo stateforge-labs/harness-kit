@@ -24,6 +24,7 @@ function claudeArgs(input: EngineInput<"claude">, policy: PolicyApplied, effort:
     ClaudeCli.Verbose,
     ...(instructions === ClaudeArg.Empty ? [] : [ClaudeCli.SystemPrompt, instructions]),
     ...(effort === null ? [] : [ClaudeCli.Effort, effort]),
+    ...(options.maxTurns === undefined ? [] : [ClaudeCli.MaxTurns, String(options.maxTurns)]),
   ];
 }
 

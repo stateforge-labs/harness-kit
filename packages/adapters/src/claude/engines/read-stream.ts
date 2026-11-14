@@ -1,9 +1,10 @@
 import { CostBasis, EngineReason, PromptText } from "../../core/engine-constants.ts";
 import { exitFailure, unparsable } from "../../core/kit.ts";
-import { arr, num, obj, parseRow, str, type Row } from "../../core/rows.ts";
+import { arr, count, num, obj, parseRow, str, type Row } from "../../core/rows.ts";
 import { asSessionId } from "../../core/session.ts";
 import type { EngineEvent, ProcessExit } from "../../driver/port.ts";
 import { ClaudeBlockType, ClaudeModelUsageField, ClaudeResultField, ClaudeRowField, ClaudeRowType, ClaudeUsageField } from "../constants.ts";
+import { SdkField, SdkMessage, SdkSubtype } from "./sdk-constants.ts";
 
 const NO_EXIT: ProcessExit = { code: null, signal: null };
 const IGNORED: ReadonlySet<string> = new Set([ClaudeRowType.System, ClaudeRowType.User, ClaudeRowType.RateLimit]);
@@ -26,6 +27,9 @@ function assistantEvents(row: Row): readonly EngineEvent[] {
 }
 
 function resultEvents(row: Row): readonly EngineEvent[] {
+  if (str(row[SdkField.Subtype]) === SdkSubtype.MaxTurns) {
+    return [{ kind: "failure", failure: { kind: "max-turns", message: SdkMessage.MaxTurns, turns: count(row[SdkField.NumTurns]) } }];
+  }
   if (row[ClaudeResultField.IsError] === true) {
     return [{ kind: "failure", failure: exitFailure(NO_EXIT, PromptText.Empty) }];
   }

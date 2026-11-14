@@ -184,6 +184,7 @@ export const ClaudeCli = {
   Verbose: "--verbose",
   SystemPrompt: "--system-prompt",
   Effort: "--effort",
+  MaxTurns: "--max-turns",
   Version: "--version",
 } as const;
 

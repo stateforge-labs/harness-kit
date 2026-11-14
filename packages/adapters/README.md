@@ -264,7 +264,7 @@ not recognise.
 | `unsupported` | the chosen engine cannot enforce a capability the call requires (see `capability`, `why`); change the policy or the engine | CLI engine, runtime |
 | `tool-server-failed` | a tool server the run asked for failed to start; check the server named in `server` and its command | CLI engine |
 | `cancelled` | the caller called `cancel()` on an agent run; not a failure to retry | agent facet |
-| `max-turns` | an agent run reached `maxTurns` without ending; raise the limit or narrow the task | agent facet |
+| `max-turns` | an agent run reached `maxTurns` without ending; raise the limit or narrow the task | agent facet, CLI engine |
 | `no-output` | an agent run ended without a result, or without the structured output that was asked for | agent facet |
 | `store-failed` | the transcript store rejected an append; `reason` is the store's redacted message | agent facet |
 | `session-not-found` | the session to resume does not exist and no `recoveryPrompt` was given | agent facet |

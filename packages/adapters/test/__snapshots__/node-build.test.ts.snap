@@ -653,6 +653,7 @@ export interface HeadlessOptions<I extends string = HarnessId> extends CommonOpt
 export interface RunRequest extends CommonOptions {
     readonly instructions: string;
     readonly input: string;
+    readonly maxTurns?: number;
 }
 /** A tool the harness called during a run; \`refused\` is set when a policy stopped it. */
 export interface ToolCall {

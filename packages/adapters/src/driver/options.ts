@@ -154,6 +154,7 @@ export function prepare<I extends string>(deps: PrepareDeps<I>): Result<Prepared
   const resolved: ResolvedOptions = {
     model: m.model,
     effort: m.effort,
+    ...(deps.request.maxTurns === undefined ? {} : { maxTurns: deps.request.maxTurns }),
     persist: m.persist,
     maxArgvBytes: m.maxArgvBytes,
     cwd: m.cwd,
