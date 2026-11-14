@@ -48,5 +48,9 @@ export function buildOutput<I extends string>(input: OutputInput<I>): RunOutput 
     cwd: dirs.cwd ?? resolved.cwd,
     credential: credentialEvidence(prepared.credentialPlan, child.scrubbed),
     confinement: prepared.confinement,
+    ...(parsed.tools !== undefined
+      ? { tools: parsed.tools.map((t) => ({ ...t, result: t.result === null ? null : redact(t.result), error: t.error === null ? null : redact(t.error) })) }
+      : {}),
+    ...(parsed.output !== undefined ? { output: parsed.output } : {}),
   };
 }

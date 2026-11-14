@@ -15,7 +15,7 @@ export { type ClaudeCredential, type CodexCredential, type CredentialByHarness, 
 export { isSecret, secret, type Secret } from "../core/secret.ts";
 export { type SessionId } from "../core/session.ts";
 export { CredentialReason, CredentialUnsupportedReason, RUN_FAILURE_KINDS, UnavailableReason, type RunFailure, } from "../core/failure.ts";
-export { SpawnPurpose, type Cost, type CliPlan, type CommonOptions, type CwdSpec, type Effort, type HeadlessOptions, type LibraryEvent, type Limits, type Plan, type RunEvent, type RunOutput, type RunRequest, type SdkPlan, type TokenUsage, } from "../core/run.ts";
+export { SpawnPurpose, type Cost, type CliPlan, type CommonOptions, type CwdSpec, type Effort, type HeadlessOptions, type LibraryEvent, type Limits, type Plan, type RunEvent, type RunOutput, type RunRequest, type SdkPlan, type TokenUsage, type ToolCall, } from "../core/run.ts";
 export type { HeadlessHandle } from "../driver/handle.ts";
 export type { Runtime } from "../driver/create-runtime.ts";
 export { AgentEventKind, AgentTree, AgentWhy, HookPoint } from "../agent/index.ts";
@@ -89,7 +89,8 @@ import type { CredentialInspection, InspectIo } from "../core/inspect.ts";
 import type { ResolvedTools } from "../core/policy.ts";
 import type { Profile } from "../core/profile.ts";
 import type { Result } from "../core/result.ts";
-import type { Cost, TokenUsage } from "../core/run.ts";
+import type { Cost, TokenUsage, ToolCall } from "../core/run.ts";
+import type { JsonValue } from "../core/json.ts";
 import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
@@ -128,6 +129,8 @@ export interface ParsedRun {
     readonly model: string | null;
     readonly sessionId: SessionId | null;
     readonly unrecognised: readonly unknown[];
+    readonly tools?: readonly ToolCall[];
+    readonly output?: JsonValue;
 }
 export type Drivers<H extends string> = {
     readonly [K in H]: HarnessDriver<K>;
@@ -589,8 +592,12 @@ export type RunFailure = {
     readonly kind: "session-not-found";
     readonly message: string;
     readonly sessionId: string;
+} | {
+    readonly kind: "tool-server-failed";
+    readonly message: string;
+    readonly server: string;
 };
-export declare const RUN_FAILURE_KINDS: readonly ["invalid-config", "unknown-harness", "credential", "credential-unsupported", "policy-not-acknowledged", "credential-mismatch", "auth-rejected", "timeout", "aborted", "exit", "unparsable", "unavailable", "too-large", "output-too-large", "unsupported", "cancelled", "max-turns", "no-output", "store-failed", "session-not-found"];
+export declare const RUN_FAILURE_KINDS: readonly ["invalid-config", "unknown-harness", "credential", "credential-unsupported", "policy-not-acknowledged", "credential-mismatch", "auth-rejected", "timeout", "aborted", "exit", "unparsable", "unavailable", "too-large", "output-too-large", "unsupported", "cancelled", "max-turns", "no-output", "store-failed", "session-not-found", "tool-server-failed"];
 type MissingKinds = Exclude<RunFailure["kind"], (typeof RUN_FAILURE_KINDS)[number]>;
 export declare const RUN_FAILURE_KINDS_COMPLETE: [MissingKinds] extends [never] ? true : never;
 export {};
@@ -647,6 +654,15 @@ export interface RunRequest extends CommonOptions {
     readonly instructions: string;
     readonly input: string;
 }
+/** A tool the harness called during a run; \`refused\` is set when a policy stopped it. */
+export interface ToolCall {
+    readonly id: string;
+    readonly name: string;
+    readonly args: JsonValue | null;
+    readonly result: string | null;
+    readonly error: string | null;
+    readonly refused: boolean;
+}
 /** The result of a successful headless run: text, usage, cost, session, engine, binary and the credential and confinement evidence. */
 export interface RunOutput {
     readonly text: string;
@@ -666,6 +682,8 @@ export interface RunOutput {
     readonly cwd: string;
     readonly credential: CredentialEvidence;
     readonly confinement: readonly ConfinementCell[];
+    readonly tools?: readonly ToolCall[];
+    readonly output?: JsonValue;
 }
 export type RunEvent = {
     readonly kind: "started";
@@ -700,7 +718,7 @@ export type RunEvent = {
     readonly kind: "refused";
     readonly id: string;
     readonly tool: string;
-    readonly source: "hook" | "unknown-tool";
+    readonly source: "hook" | "unknown-tool" | "permission";
     readonly reason: string;
     readonly text: string | null;
 } | {
@@ -891,7 +909,8 @@ import type { CredentialInspection, InspectIo } from "../core/inspect.ts";
 import type { ResolvedTools } from "../core/policy.ts";
 import type { Profile } from "../core/profile.ts";
 import type { Result } from "../core/result.ts";
-import type { Cost, TokenUsage } from "../core/run.ts";
+import type { Cost, TokenUsage, ToolCall } from "../core/run.ts";
+import type { JsonValue } from "../core/json.ts";
 import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
@@ -930,6 +949,8 @@ export interface ParsedRun {
     readonly model: string | null;
     readonly sessionId: SessionId | null;
     readonly unrecognised: readonly unknown[];
+    readonly tools?: readonly ToolCall[];
+    readonly output?: JsonValue;
 }
 export type Drivers<H extends string> = {
     readonly [K in H]: HarnessDriver<K>;
@@ -1105,7 +1126,8 @@ import type { CredentialInspection, InspectIo } from "../core/inspect.ts";
 import type { ResolvedTools } from "../core/policy.ts";
 import type { Profile } from "../core/profile.ts";
 import type { Result } from "../core/result.ts";
-import type { Cost, TokenUsage } from "../core/run.ts";
+import type { Cost, TokenUsage, ToolCall } from "../core/run.ts";
+import type { JsonValue } from "../core/json.ts";
 import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
@@ -1144,6 +1166,8 @@ export interface ParsedRun {
     readonly model: string | null;
     readonly sessionId: SessionId | null;
     readonly unrecognised: readonly unknown[];
+    readonly tools?: readonly ToolCall[];
+    readonly output?: JsonValue;
 }
 export type Drivers<H extends string> = {
     readonly [K in H]: HarnessDriver<K>;

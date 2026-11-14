@@ -7,7 +7,8 @@ import type { CredentialInspection, InspectIo } from "../core/inspect.ts";
 import type { ResolvedTools } from "../core/policy.ts";
 import type { Profile } from "../core/profile.ts";
 import type { Result } from "../core/result.ts";
-import type { Cost, TokenUsage } from "../core/run.ts";
+import type { Cost, TokenUsage, ToolCall } from "../core/run.ts";
+import type { JsonValue } from "../core/json.ts";
 import type { SessionId } from "../core/session.ts";
 import type { ArgvCarry } from "../core/engine-constants.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
@@ -69,6 +70,8 @@ export interface ParsedRun {
   readonly model: string | null;
   readonly sessionId: SessionId | null;
   readonly unrecognised: readonly unknown[];
+  readonly tools?: readonly ToolCall[];
+  readonly output?: JsonValue;
 }
 
 export type Drivers<H extends string> = { readonly [K in H]: HarnessDriver<K> };

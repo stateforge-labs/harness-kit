@@ -57,7 +57,7 @@ describe("constant objects", () => {
     });
   });
 
-  test("RUN_FAILURE_KINDS lists the twenty kinds in order", () => {
+  test("RUN_FAILURE_KINDS lists the twenty-one kinds in order", () => {
     expect([...RUN_FAILURE_KINDS]).toEqual([
       "invalid-config",
       "unknown-harness",
@@ -79,6 +79,7 @@ describe("constant objects", () => {
       "no-output",
       "store-failed",
       "session-not-found",
+      "tool-server-failed",
     ]);
   });
 });

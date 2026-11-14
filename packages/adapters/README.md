@@ -262,6 +262,7 @@ not recognise.
 | `too-large` | an input (`instructions`, `input` or `environment`) is over its limit; shorten it and compare `limitBytes` with `actualBytes` | CLI engine |
 | `output-too-large` | the output is over the stdout limit; ask for a shorter answer | CLI engine |
 | `unsupported` | the chosen engine cannot enforce a capability the call requires (see `capability`, `why`); change the policy or the engine | CLI engine, runtime |
+| `tool-server-failed` | a tool server the run asked for failed to start; check the server named in `server` and its command | CLI engine |
 | `cancelled` | the caller called `cancel()` on an agent run; not a failure to retry | agent facet |
 | `max-turns` | an agent run reached `maxTurns` without ending; raise the limit or narrow the task | agent facet |
 | `no-output` | an agent run ended without a result, or without the structured output that was asked for | agent facet |

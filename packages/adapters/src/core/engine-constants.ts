@@ -12,6 +12,7 @@ export const EngineMessage = {
   ConfinementUnsupported: "the requested confinement is not available on this engine",
   BaseUrlUnsupported: "a base url is not available on this engine",
   EngineUnsupported: "this engine is not available",
+  ToolServerFailed: "a tool server failed to start",
   ClosedEnvUnsupported: "a closed environment is not available on this engine",
   QuietUnmeasured: "the quiet environment of this harness is unmeasured",
   EffortUnmeasured: "effort.accepted is unmeasured for this harness",

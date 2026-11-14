@@ -3,7 +3,8 @@ import type { RunFailure } from "../core/failure.ts";
 import { exitFailure, NO_USAGE, unparsable } from "../core/kit.ts";
 import { tailBytes } from "../core/limits.ts";
 import { fail, ok, type Result } from "../core/result.ts";
-import type { Cost, TokenUsage } from "../core/run.ts";
+import type { Cost, TokenUsage, ToolCall } from "../core/run.ts";
+import type { JsonValue } from "../core/json.ts";
 import type { SessionId } from "../core/session.ts";
 import { ExitCode } from "./constants.ts";
 import type { EngineEnd, EngineEvent } from "./engine.ts";
@@ -20,6 +21,8 @@ export interface Fold {
   readonly sessionId: SessionId | null;
   readonly unrecognised: readonly unknown[];
   readonly failure: RunFailure | null;
+  readonly tools: readonly ToolCall[];
+  readonly output: JsonValue | null;
 }
 
 export function foldStart(): Fold {
@@ -34,6 +37,8 @@ export function foldStart(): Fold {
     sessionId: null,
     unrecognised: [],
     failure: null,
+    tools: [],
+    output: null,
   };
 }
 
@@ -59,6 +64,16 @@ export function foldStep(f: Fold, e: EngineEvent): Fold {
       return { ...f, model: e.model };
     case "session":
       return { ...f, sessionId: e.id };
+    case "tool-call":
+      return { ...f, tools: [...f.tools, { id: e.id, name: e.name, args: e.args, result: null, error: null, refused: false }] };
+    case "tool-result":
+      return { ...f, tools: f.tools.map((t) => (t.id === e.id ? { ...t, result: e.result, error: e.error } : t)) };
+    case "tool-refused":
+      return f.tools.some((t) => t.id === e.id)
+        ? { ...f, tools: f.tools.map((t) => (t.id === e.id ? { ...t, refused: true, error: e.reason } : t)) }
+        : { ...f, tools: [...f.tools, { id: e.id, name: e.name, args: null, result: null, error: e.reason, refused: true }] };
+    case "output":
+      return { ...f, output: e.value };
     case "failure":
       return f.failure === null ? { ...f, failure: e.failure } : f;
   }
@@ -90,5 +105,7 @@ export function foldEnd(f: Fold, end: EngineEnd, requestedModel: string | null):
     model: f.model ?? requestedModel,
     sessionId: f.sessionId,
     unrecognised: f.unrecognised,
+    ...(f.tools.length > 0 ? { tools: f.tools } : {}),
+    ...(f.output !== null ? { output: f.output } : {}),
   });
 }

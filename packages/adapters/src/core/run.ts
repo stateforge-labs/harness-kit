@@ -54,6 +54,16 @@ export interface RunRequest extends CommonOptions {
   readonly input: string;
 }
 
+/** A tool the harness called during a run; `refused` is set when a policy stopped it. */
+export interface ToolCall {
+  readonly id: string;
+  readonly name: string;
+  readonly args: JsonValue | null;
+  readonly result: string | null;
+  readonly error: string | null;
+  readonly refused: boolean;
+}
+
 /** The result of a successful headless run: text, usage, cost, session, engine, binary and the credential and confinement evidence. */
 export interface RunOutput {
   readonly text: string;
@@ -69,6 +79,8 @@ export interface RunOutput {
   readonly cwd: string;
   readonly credential: CredentialEvidence;
   readonly confinement: readonly ConfinementCell[];
+  readonly tools?: readonly ToolCall[];
+  readonly output?: JsonValue;
 }
 
 export type RunEvent =
@@ -79,7 +91,7 @@ export type RunEvent =
   | { readonly kind: "usage"; readonly turn: number; readonly model: string | null; readonly input: number; readonly cacheWrite: number; readonly cacheRead: number; readonly output: number }
   | { readonly kind: "session"; readonly id: SessionId; readonly checkpoint: string | null }
   | { readonly kind: "tool"; readonly id: string; readonly name: string; readonly class: ToolClass; readonly target: string | null }
-  | { readonly kind: "refused"; readonly id: string; readonly tool: string; readonly source: "hook" | "unknown-tool"; readonly reason: string; readonly text: string | null }
+  | { readonly kind: "refused"; readonly id: string; readonly tool: string; readonly source: "hook" | "unknown-tool" | "permission"; readonly reason: string; readonly text: string | null }
   | { readonly kind: "output"; readonly value: JsonValue }
   | { readonly kind: "unrecognised"; readonly payload: unknown }
   | { readonly kind: "finished"; readonly result: Result<RunOutput, RunFailure> };

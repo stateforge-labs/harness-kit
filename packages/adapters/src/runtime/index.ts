@@ -62,6 +62,7 @@ export {
   type RunRequest,
   type SdkPlan,
   type TokenUsage,
+  type ToolCall,
 } from "../core/run.ts";
 export type { HeadlessHandle } from "../driver/handle.ts";
 export type { Runtime } from "../driver/create-runtime.ts";

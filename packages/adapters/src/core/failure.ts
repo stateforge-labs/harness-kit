@@ -48,7 +48,8 @@ export type RunFailure =
   | { readonly kind: "max-turns"; readonly message: string; readonly turns: number }
   | { readonly kind: "no-output"; readonly message: string }
   | { readonly kind: "store-failed"; readonly message: string; readonly reason: string }
-  | { readonly kind: "session-not-found"; readonly message: string; readonly sessionId: string };
+  | { readonly kind: "session-not-found"; readonly message: string; readonly sessionId: string }
+  | { readonly kind: "tool-server-failed"; readonly message: string; readonly server: string };
 
 export const RUN_FAILURE_KINDS = [
   "invalid-config",
@@ -71,6 +72,7 @@ export const RUN_FAILURE_KINDS = [
   "no-output",
   "store-failed",
   "session-not-found",
+  "tool-server-failed",
 ] as const satisfies readonly RunFailure["kind"][];
 
 type MissingKinds = Exclude<RunFailure["kind"], (typeof RUN_FAILURE_KINDS)[number]>;

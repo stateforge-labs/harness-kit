@@ -1,6 +1,8 @@
 import type { CredentialOf } from "../core/credential.ts";
+import type { ToolClass } from "../constants.ts";
 import type { RunFailure } from "../core/failure.ts";
 import type { Clock, RuntimeFs } from "../core/io.ts";
+import type { JsonValue } from "../core/json.ts";
 import type { Profile } from "../core/profile.ts";
 import type { ResolvedOptions } from "../core/raw-run.ts";
 import type { Result } from "../core/result.ts";
@@ -18,7 +20,11 @@ export type EngineEvent =
   | { readonly kind: "cost"; readonly cost: Cost }
   | { readonly kind: "model"; readonly model: string }
   | { readonly kind: "session"; readonly id: SessionId }
-  | { readonly kind: "failure"; readonly failure: RunFailure };
+  | { readonly kind: "failure"; readonly failure: RunFailure }
+  | { readonly kind: "tool-call"; readonly id: string; readonly name: string; readonly class: ToolClass; readonly target: string | null; readonly args: JsonValue | null }
+  | { readonly kind: "tool-result"; readonly id: string; readonly result: string | null; readonly error: string | null }
+  | { readonly kind: "tool-refused"; readonly id: string; readonly name: string; readonly reason: string }
+  | { readonly kind: "output"; readonly value: JsonValue };
 
 export type Sleeper = (ms: number) => Promise<void>;
 
