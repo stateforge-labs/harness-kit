@@ -27,6 +27,7 @@ export const EngineMessage = {
 
 export const EngineCapability = {
   Standalone: "standalone",
+  MaxTurns: "max-turns",
 } as const;
 
 export const EffortName = {

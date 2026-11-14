@@ -3,7 +3,8 @@ import { measuredValue } from "../../core/evidence.ts";
 import type { RunFailure } from "../../core/failure.ts";
 import { asSessionId } from "../../core/session.ts";
 import { fail, ok, type Result } from "../../core/result.ts";
-import { CostBasis, EngineReason, PromptText } from "../../core/engine-constants.ts";
+import { Engine, UnsupportedReason } from "../../core/capability.ts";
+import { CostBasis, EngineCapability, EngineMessage, EngineReason, PromptText } from "../../core/engine-constants.ts";
 import { budgetOf, checkArgv, exitFailure, gatesFor, modelFlag, neutralOrNative, NO_USAGE, unparsable } from "../../core/kit.ts";
 import { parseRow, isJsonValue } from "../../core/rows.ts";
 import { cliEngine } from "../../engine/cli.ts";
@@ -67,6 +68,9 @@ export const codexCli = cliEngine<"codex">({
     const gate = gatesFor(CODEX_CAPABILITIES, input.options);
     if (gate !== null) {
       return fail(gate);
+    }
+    if (input.options.maxTurns !== undefined) {
+      return fail({ kind: "unsupported", message: EngineMessage.Unsupported, capability: EngineCapability.MaxTurns, engine: Engine.Cli, why: UnsupportedReason.HarnessLimit });
     }
     const effort = neutralOrNative(input.options.effort, measuredValue(CODEX_PROFILE.effort.accepted));
     if (!effort.ok) {

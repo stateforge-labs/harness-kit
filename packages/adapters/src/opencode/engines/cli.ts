@@ -1,4 +1,4 @@
-import { Engine } from "../../core/capability.ts";
+import { Engine, UnsupportedReason } from "../../core/capability.ts";
 import { ToolSetting } from "../../core/policy.ts";
 import { UnavailableReason, type RunFailure } from "../../core/failure.ts";
 import { fail, ok, type Result } from "../../core/result.ts";
@@ -52,6 +52,9 @@ function opencodeParts(configDir: string | null): CliEngineParts<"opencode"> {
       const gate = gatesFor(OPENCODE_CAPABILITIES, input.options);
       if (gate !== null) {
         return fail(gate);
+      }
+      if (input.options.maxTurns !== undefined) {
+        return fail({ kind: "unsupported", message: EngineMessage.Unsupported, capability: EngineCapability.MaxTurns, engine: Engine.Cli, why: UnsupportedReason.HarnessLimit });
       }
       const policy = opencodePolicy({ tools: input.options.tools, credentialMode: input.credential.mode });
       if (!policy.ok) {
