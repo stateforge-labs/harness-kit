@@ -6,7 +6,7 @@ const NOT_IMPLEMENTED = unsupported(UnsupportedReason.NotImplemented);
 
 const EXPECTED_CLI: Readonly<Record<keyof Capabilities, (typeof supported) | ReturnType<typeof unsupported>>> = {
   [CapabilityName.Effort]: supported,
-  [CapabilityName.StructuredOutput]: NOT_IMPLEMENTED,
+  [CapabilityName.StructuredOutput]: supported,
   [CapabilityName.SessionsDelete]: NOT_IMPLEMENTED,
   [CapabilityName.Ephemeral]: supported,
   [CapabilityName.Cost]: supported,

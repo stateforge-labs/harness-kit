@@ -155,6 +155,7 @@ export function prepare<I extends string>(deps: PrepareDeps<I>): Result<Prepared
     model: m.model,
     effort: m.effort,
     ...(deps.request.maxTurns === undefined ? {} : { maxTurns: deps.request.maxTurns }),
+    ...(deps.request.outputSchema === undefined ? {} : { outputSchema: deps.request.outputSchema }),
     persist: m.persist,
     maxArgvBytes: m.maxArgvBytes,
     cwd: m.cwd,

@@ -185,6 +185,7 @@ export const ClaudeCli = {
   SystemPrompt: "--system-prompt",
   Effort: "--effort",
   MaxTurns: "--max-turns",
+  JsonSchema: "--json-schema",
   Version: "--version",
 } as const;
 

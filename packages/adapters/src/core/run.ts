@@ -53,6 +53,7 @@ export interface RunRequest extends CommonOptions {
   readonly instructions: string;
   readonly input: string;
   readonly maxTurns?: number;
+  readonly outputSchema?: JsonValue;
 }
 
 /** A tool the harness called during a run; `refused` is set when a policy stopped it. */

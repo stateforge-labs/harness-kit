@@ -2,7 +2,7 @@ import { CapabilityName, cell, SDK_NOT_BUILT, supported, unsupported, Unsupporte
 
 export const CLAUDE_CAPABILITIES: Capabilities = {
   [CapabilityName.Effort]: cell(supported),
-  [CapabilityName.StructuredOutput]: cell(unsupported(UnsupportedReason.NotImplemented), supported),
+  [CapabilityName.StructuredOutput]: cell(supported, supported),
   [CapabilityName.SessionsDelete]: cell(unsupported(UnsupportedReason.NotImplemented)),
   [CapabilityName.Ephemeral]: cell(supported, supported),
   [CapabilityName.Cost]: cell(supported),

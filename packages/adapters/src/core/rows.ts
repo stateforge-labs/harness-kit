@@ -1,3 +1,5 @@
+import type { JsonValue } from "./json.ts";
+
 export type Row = Readonly<Record<string, unknown>>;
 
 const isRow = (value: unknown): value is Row => typeof value === "object" && value !== null && !Array.isArray(value);
@@ -29,6 +31,23 @@ export function str(value: unknown): string | null {
 
 export function num(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+/** Narrows an unknown value to JsonValue by checking its shape, without a cast. */
+export function isJsonValue(value: unknown): value is JsonValue {
+  if (value === null || typeof value === "string" || typeof value === "boolean") {
+    return true;
+  }
+  if (typeof value === "number") {
+    return Number.isFinite(value);
+  }
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
+  if (typeof value === "object") {
+    return Object.values(value).every(isJsonValue);
+  }
+  return false;
 }
 
 export function count(value: unknown): number {

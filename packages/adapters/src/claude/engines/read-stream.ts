@@ -1,10 +1,10 @@
 import { CostBasis, EngineReason, PromptText } from "../../core/engine-constants.ts";
 import { exitFailure, unparsable } from "../../core/kit.ts";
-import { arr, count, num, obj, parseRow, str, type Row } from "../../core/rows.ts";
+import { arr, count, isJsonValue, num, obj, parseRow, str, type Row } from "../../core/rows.ts";
 import { asSessionId } from "../../core/session.ts";
 import type { EngineEvent, ProcessExit } from "../../driver/port.ts";
 import { ClaudeBlockType, ClaudeModelUsageField, ClaudeResultField, ClaudeRowField, ClaudeRowType, ClaudeUsageField } from "../constants.ts";
-import { SdkField, SdkMessage, SdkSubtype } from "./sdk-constants.ts";
+import { SdkField, SdkMessage, SdkReason, SdkSubtype } from "./sdk-constants.ts";
 
 const NO_EXIT: ProcessExit = { code: null, signal: null };
 const IGNORED: ReadonlySet<string> = new Set([ClaudeRowType.System, ClaudeRowType.User, ClaudeRowType.RateLimit]);
@@ -30,11 +30,18 @@ function resultEvents(row: Row): readonly EngineEvent[] {
   if (str(row[SdkField.Subtype]) === SdkSubtype.MaxTurns) {
     return [{ kind: "failure", failure: { kind: "max-turns", message: SdkMessage.MaxTurns, turns: count(row[SdkField.NumTurns]) } }];
   }
+  if (str(row[SdkField.Subtype]) === SdkSubtype.StructuredRetries) {
+    return [{ kind: "failure", failure: { kind: "unparsable", message: SdkMessage.StructuredRetries, reason: SdkReason.StructuredRetries } }];
+  }
   if (row[ClaudeResultField.IsError] === true) {
     return [{ kind: "failure", failure: exitFailure(NO_EXIT, PromptText.Empty) }];
   }
+  const structured = row[SdkField.StructuredOutput];
+  const output = structured !== null && isJsonValue(structured) ? structured : null;
+  const structuredEvents: readonly EngineEvent[] = output === null ? [] : [{ kind: "output", value: output }];
   const text = str(row[ClaudeResultField.Result]);
-  if (text === null) {
+  const answer = output !== null && (text === null || text === PromptText.Empty) ? JSON.stringify(output) : text;
+  if (answer === null) {
     return [{ kind: "failure", failure: unparsable(EngineReason.NoResult) }];
   }
   const modelUsage = obj(row[ClaudeResultField.ModelUsage]);
@@ -43,7 +50,8 @@ function resultEvents(row: Row): readonly EngineEvent[] {
   const usage = obj(row[ClaudeResultField.Usage]);
   const details = obj(usage[ClaudeUsageField.Details]);
   return [
-    { kind: "final", text },
+    { kind: "final", text: answer },
+    ...structuredEvents,
     {
       kind: "usage",
       usage: {

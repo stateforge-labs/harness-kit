@@ -68,7 +68,7 @@ describe("capability tables", () => {
     for (const name of ["builtin-tools-off", "mcp-none", "settings-sources", "closed-env", "base-url", "ephemeral", "effort", "cost"] as const) {
       expect(CLAUDE_CAPABILITIES[name].cli).toEqual(supported);
     }
-    expect(CLAUDE_CAPABILITIES["structured-output"].cli).toEqual(NOT_IMPLEMENTED);
+    expect(CLAUDE_CAPABILITIES["structured-output"].cli).toEqual(supported);
     expect(CLAUDE_CAPABILITIES["sessions-delete"].cli).toEqual(NOT_IMPLEMENTED);
   });
 

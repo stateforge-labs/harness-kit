@@ -1,3 +1,4 @@
+import type { JsonValue } from "./json.ts";
 import type { ResolvedTools } from "./policy.ts";
 import type { Effort } from "./run.ts";
 
@@ -5,6 +6,7 @@ export interface ResolvedOptions {
   readonly model: string | null;
   readonly effort: Effort | null;
   readonly maxTurns?: number;
+  readonly outputSchema?: JsonValue;
   readonly persist: boolean;
   readonly maxArgvBytes: number | null;
   readonly cwd: string;

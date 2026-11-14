@@ -200,7 +200,7 @@ CLI engine:
 | Capability | Claude | Codex | OpenCode |
 | --- | --- | --- | --- |
 | `effort` | supported | supported | unmeasured: 2.2.6 documents provider/model#variant in --model; is there an effort flag? |
-| `structured-output` | unsupported: not-implemented | unsupported: not-implemented | unmeasured: does OpenCode 2.2.6 run have a structured output flag? |
+| `structured-output` | supported | unsupported: not-implemented | unmeasured: does OpenCode 2.2.6 run have a structured output flag? |
 | `sessions-delete` | unsupported: not-implemented | unsupported: not-implemented | unsupported: not-implemented |
 | `ephemeral` | supported | supported | emulated: every run leaves a session; session delete --standalone removes it in about 0.24 s after the run (opencode v2.2.6, 2026-11-09) |
 | `cost` | supported | unsupported: harness-limit | supported |
