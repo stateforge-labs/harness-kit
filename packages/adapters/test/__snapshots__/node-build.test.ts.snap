@@ -1307,6 +1307,7 @@ export interface FakeFsInit {
 export type FakeFs = RuntimeFs & {
     readonly dirs: ReadonlySet<string>;
     readonly removed: readonly string[];
+    readonly written: ReadonlyMap<string, string>;
 };
 /** An in-memory RuntimeFs for tests, seeded from \`initial\`. */
 export declare function fakeFs(initial?: FakeFsInit): FakeFs;

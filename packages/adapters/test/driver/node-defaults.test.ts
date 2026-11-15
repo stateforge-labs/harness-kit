@@ -215,6 +215,27 @@ describe.skipIf(!LINUX)("nodeFs", () => {
   test("listDir reports a missing directory as null", async () => {
     expect(await nodeFs.listDir("/definitely/missing/dir")).toBeNull();
   });
+
+  test("writeText writes a private file", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "adapters-write-"));
+    try {
+      const file = join(dir, "s.json");
+      expect(await nodeFs.writeText?.(file, '{"a":1}')).toBe(true);
+      expect(await nodeFs.readText(file, 100)).toBe('{"a":1}');
+      expect((await stat(file)).mode & 0o777).toBe(0o600);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("writeText reports a missing dir as false", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "adapters-write-"));
+    try {
+      expect(await nodeFs.writeText?.(join(dir, "missing", "s.json"), "x")).toBe(false);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("nodeClock", () => {

@@ -17,6 +17,7 @@ export interface FakeFsInit {
 export type FakeFs = RuntimeFs & {
   readonly dirs: ReadonlySet<string>;
   readonly removed: readonly string[];
+  readonly written: ReadonlyMap<string, string>;
 };
 
 const FAKE = {
@@ -36,6 +37,7 @@ export function fakeFs(initial: FakeFsInit = {}): FakeFs {
   const files = new Map(Object.entries(initial.files ?? {}));
   const executables = new Set(initial.executables ?? []);
   const removed: string[] = [];
+  const written = new Map<string, string>();
   let counter = FAKE.Counter;
 
   const addDir = (path: string, mtimeMs: number): void => {
@@ -54,6 +56,7 @@ export function fakeFs(initial: FakeFsInit = {}): FakeFs {
   return {
     dirs,
     removed,
+    written,
     async makeTempDir(prefix, parent) {
       const path = `${parent}${FAKE.Separator}${prefix}${counter}`;
       counter += 1;
@@ -104,6 +107,14 @@ export function fakeFs(initial: FakeFsInit = {}): FakeFs {
     async readText(path, maxBytes) {
       const text = files.get(path);
       return text === undefined ? null : text.slice(0, maxBytes);
+    },
+    async writeText(path, text) {
+      if (!dirs.has(dirname(path))) {
+        return false;
+      }
+      files.set(path, text);
+      written.set(path, text);
+      return true;
     },
   };
 }

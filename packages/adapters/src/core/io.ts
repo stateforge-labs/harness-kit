@@ -11,6 +11,7 @@ export interface RuntimeFs {
   exists(path: string): Promise<boolean>;
   isExecutable(path: string): Promise<boolean>;
   readText(path: string, maxBytes: number): Promise<string | null>;
+  writeText?(path: string, text: string): Promise<boolean>;
 }
 
 export interface Clock {

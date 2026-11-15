@@ -43,6 +43,12 @@ export function gatesFor(caps: Capabilities, options: ResolvedOptions): RunFailu
       return ephemeral;
     }
   }
+  if (options.outputSchema !== undefined) {
+    const structured = requireCapability(caps, CapabilityName.StructuredOutput);
+    if (structured !== null) {
+      return structured;
+    }
+  }
   return null;
 }
 

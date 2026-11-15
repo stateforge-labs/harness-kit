@@ -1,7 +1,7 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { Buffer } from "node:buffer";
 import { constants as fsConstants } from "node:fs";
-import { access, chmod, mkdtemp, open, readdir, rm, stat } from "node:fs/promises";
+import { access, chmod, mkdtemp, open, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Readable } from "node:stream";
 import { type Clock, type DirEntryInfo, type RuntimeFs } from "../core/io.ts";
@@ -9,6 +9,7 @@ import { fail, ok, type Result } from "../core/result.ts";
 import {
   DIR_MODE,
   Encoding,
+  FILE_MODE,
   OpenFlag,
   Platform,
   PROCESS_DRAIN_GRACE_MS,
@@ -191,6 +192,14 @@ export const nodeFs: RuntimeFs = {
   async removeTree(path) {
     try {
       await rm(path, { recursive: true, force: true });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  async writeText(path, text) {
+    try {
+      await writeFile(path, text, { encoding: Encoding.Utf8, mode: FILE_MODE });
       return true;
     } catch {
       return false;

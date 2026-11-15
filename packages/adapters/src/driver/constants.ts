@@ -15,6 +15,7 @@ export const PROMPT_PROBE_CWD = "/";
 export const RUN_ID_SEPARATOR = "-";
 export const TMP_FALLBACK = "/tmp";
 export const DIR_MODE = 0o700;
+export const FILE_MODE = 0o600;
 export const NEWLINE_BYTE = 0x0a;
 
 export const DEFAULT_LIMITS: Limits = {
