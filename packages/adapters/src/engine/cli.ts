@@ -54,6 +54,21 @@ async function readOutFile(input: CliRunInput, io: EngineIo): Promise<string | n
   return read.ok ? read.value : null;
 }
 
+async function writeFiles(files: Readonly<Record<string, string>>, io: EngineIo): Promise<boolean> {
+  const fs = io.fs;
+  const write = fs.writeText;
+  for (const [path, text] of Object.entries(files)) {
+    if (write === undefined) {
+      return false;
+    }
+    const wrote = await settle(() => write.call(fs, path, text));
+    if (!wrote.ok || !wrote.value) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function describeCli<I extends string>(parts: CliEngineParts<I>, input: EngineInput<I>): Result<EngineDescription, RunFailure> {
   const planned = parts.invocation(input);
   if (!planned.ok) {
@@ -86,7 +101,7 @@ async function checkedHelp<I extends string>(parts: CliEngineParts<I>, input: En
   return (parts.checkHelp ?? acceptAll)(help);
 }
 
-async function ready<I extends string>(parts: CliEngineParts<I>, input: EngineRunInput<I>): Promise<Result<CliRunInput<I>, RunFailure>> {
+async function ready<I extends string>(parts: CliEngineParts<I>, input: EngineRunInput<I>, io: EngineIo): Promise<Result<CliRunInput<I>, RunFailure>> {
   if (input.signal?.aborted === true) {
     return fail(abortedFailure());
   }
@@ -126,6 +141,9 @@ async function ready<I extends string>(parts: CliEngineParts<I>, input: EngineRu
   if (budget.total !== null && total > budget.total) {
     return fail({ kind: "too-large", message: EngineMessage.EnvTooLarge, limitBytes: budget.total, actualBytes: total, field: EnvField.Environment });
   }
+  if (!(await writeFiles(invocation.files ?? {}, io))) {
+    return fail(scratchFailure());
+  }
   input.host.emit({ kind: "spawn", harness: input.profile.id, engine: Engine.Cli, purpose: SpawnPurpose.Run, argc: invocation.args.length });
   return ok({ ...input, env, program: located, invocation, outFile, binary: { path: located, version: version.value } });
 }
@@ -148,7 +166,7 @@ function cliRun<I extends string>(parts: CliEngineParts<I>, original: EngineRunI
 
   async function* events(): AsyncGenerator<EngineEvent, void, undefined> {
     begun = true;
-    const prepared = await ready(parts, { ...original, signal });
+    const prepared = await ready(parts, { ...original, signal }, io);
     if (!prepared.ok) {
       finish(fail(prepared.failure));
       return;

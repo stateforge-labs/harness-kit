@@ -1,16 +1,22 @@
+import { dirname, join } from "node:path";
 import { measuredValue } from "../../core/evidence.ts";
 import type { RunFailure } from "../../core/failure.ts";
 import { asSessionId } from "../../core/session.ts";
 import { fail, ok, type Result } from "../../core/result.ts";
 import { CostBasis, EngineReason, PromptText } from "../../core/engine-constants.ts";
 import { budgetOf, checkArgv, exitFailure, gatesFor, modelFlag, neutralOrNative, NO_USAGE, unparsable } from "../../core/kit.ts";
+import { parseRow, isJsonValue } from "../../core/rows.ts";
 import { cliEngine } from "../../engine/cli.ts";
 import type { AfterContext, EngineEvent, EngineInput, Invocation } from "../../driver/port.ts";
 import { CODEX_CAPABILITIES } from "../capabilities.ts";
 import { CODEX_BINARY } from "../exec.ts";
 import { codexPolicy } from "../policy.ts";
-import { CodexCli, CodexStdout } from "../constants.ts";
+import { CodexCli, CodexFile, CodexStdout } from "../constants.ts";
 import { CODEX_PROFILE } from "../profile.ts";
+
+function schemaPath(outFile: string): string {
+  return join(dirname(outFile), CodexFile.Schema);
+}
 
 function codexArgs(input: EngineInput<"codex">, effort: string | null, policy: readonly string[]): string[] {
   const { options } = input;
@@ -22,6 +28,7 @@ function codexArgs(input: EngineInput<"codex">, effort: string | null, policy: r
     CodexCli.ColorNever,
     ...modelFlag(CodexCli.Model, options.model),
     ...(effort === null ? [] : [CodexCli.Config, `${CodexCli.ReasoningEffortKey}=${effort}`]),
+    ...(options.outputSchema === undefined ? [] : [CodexCli.OutputSchema, schemaPath(input.outFile)]),
     CodexCli.Output,
     input.outFile,
     CodexCli.Stdin,
@@ -36,11 +43,18 @@ function codexEvents(ctx: AfterContext): readonly EngineEvent[] {
   if (text === PromptText.Empty) {
     return [{ kind: "failure", failure: unparsable(EngineReason.EmptyLastMessage) }];
   }
+  const schema = ctx.input.options.outputSchema;
+  const row = schema === undefined ? null : parseRow(text);
+  if (schema !== undefined && (row === null || !isJsonValue(row))) {
+    return [{ kind: "failure", failure: unparsable(EngineReason.NotJson) }];
+  }
+  const structured = row !== null && isJsonValue(row) ? [{ kind: "output" as const, value: row }] : [];
   const session = asSessionId(ctx.stdoutTail.match(CodexStdout.Session)?.[1] ?? PromptText.Empty);
   const model = ctx.stdoutTail.match(CodexStdout.Model)?.[1];
   const tokens = ctx.stdoutTail.match(CodexStdout.Tokens)?.[1];
   return [
     { kind: "final", text },
+    ...structured,
     { kind: "usage", usage: { ...NO_USAGE, totalTokens: tokens === undefined ? null : Number(tokens.replace(CodexStdout.Grouping, PromptText.Empty)) } },
     { kind: "cost", cost: { usd: null, basis: CostBasis.Unavailable } },
     ...(model === undefined ? [] : [{ kind: "model" as const, model }]),
@@ -67,6 +81,7 @@ export const codexCli = cliEngine<"codex">({
     if (over !== null) {
       return fail(over);
     }
+    const schema = input.options.outputSchema;
     const invocation: Invocation = {
       program: CODEX_BINARY,
       args,
@@ -74,6 +89,7 @@ export const codexCli = cliEngine<"codex">({
       outFile: input.outFile,
       argvCarries: [],
       env: policy.value.env,
+      ...(schema === undefined ? {} : { files: { [schemaPath(input.outFile)]: JSON.stringify(schema) } }),
     };
     return ok(invocation);
   },

@@ -25,14 +25,6 @@ describe("fakeFs writeText", () => {
 });
 
 describe("outputSchema refused where structured output is not usable", () => {
-  test("codex refuses outputSchema up front", () => {
-    const { runtime, specs } = routedRig({ stdout: "" });
-    const planned = runtime.headless("codex", { credential: API_KEY } as never).plan({ ...REQUEST, outputSchema: SCHEMA });
-    expect(planned.ok).toBe(false);
-    expect(!planned.ok && planned.failure).toMatchObject({ kind: "unsupported", capability: "structured-output", engine: "cli", why: "not-implemented" });
-    expect(specs.length).toBe(0);
-  });
-
   test("opencode refuses outputSchema up front", () => {
     const { runtime, specs } = routedRig({ stdout: "" });
     const planned = runtime.headless("opencode", { credential: OPENCODE_KEY } as never).plan({ ...REQUEST, outputSchema: SCHEMA });

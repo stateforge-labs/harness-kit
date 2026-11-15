@@ -106,8 +106,13 @@ export const CodexCli = {
   ReasoningEffortKey: "model_reasoning_effort",
   Disable: "--disable",
   Output: "-o",
+  OutputSchema: "--output-schema",
   Stdin: "-",
   Version: "--version",
+} as const;
+
+export const CodexFile = {
+  Schema: "output-schema.json",
 } as const;
 
 export const CodexFeatureName = {

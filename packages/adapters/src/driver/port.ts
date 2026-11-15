@@ -51,6 +51,7 @@ export interface Invocation {
   readonly outFile: string | null;
   readonly argvCarries: readonly (typeof ArgvCarry)[keyof typeof ArgvCarry][];
   readonly env?: Readonly<Record<string, string>>;
+  readonly files?: Readonly<Record<string, string>>;
 }
 
 export interface PolicyInput {

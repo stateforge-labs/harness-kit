@@ -13,7 +13,7 @@ export const CODEX_SDK_NO_EPHEMERAL = unsupported(UnsupportedReason.HarnessLimit
 
 export const CODEX_CAPABILITIES: Capabilities = {
   [CapabilityName.Effort]: cell(supported),
-  [CapabilityName.StructuredOutput]: cell(unsupported(UnsupportedReason.NotImplemented), CODEX_SDK_UNMEASURED),
+  [CapabilityName.StructuredOutput]: cell(supported, CODEX_SDK_UNMEASURED),
   [CapabilityName.SessionsDelete]: cell(unsupported(UnsupportedReason.NotImplemented)),
   [CapabilityName.Ephemeral]: cell(supported, CODEX_SDK_NO_EPHEMERAL),
   [CapabilityName.Cost]: cell(unsupported(UnsupportedReason.HarnessLimit)),
