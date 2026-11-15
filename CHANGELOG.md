@@ -3,12 +3,17 @@
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## harness-adapters 0.5.0 - 2026-11-15
 
 ### `@stateforge-labs/harness-adapters`
 
 - **Breaking:** `@anthropic-ai/claude-agent-sdk` is no longer a dependency. It is an optional peer dependency at exactly 0.3.316, so installing the package no longer installs the SDK or its native binary package (about 314 MB). A consumer that starts agent runs with the Claude engine adds it: `bun add --exact @anthropic-ai/claude-agent-sdk@0.3.316` or `npm install --save-exact @anthropic-ai/claude-agent-sdk@0.3.316`. Everyone else saves that install: one consumer that never starts an agent run goes from about 407 MB to about 40 MB of production install.
 - A start that cannot load the SDK still ends `unavailable` with reason `spawn-failed`; its message now names the package and the exact version to add.
+- `RunOutput` gains optional `tools` (the tool calls a run made) and `output` (a structured answer). A failed tool server is the new run failure kind `tool-server-failed`, with the server name. The `refused` run event source gains `permission`. No harness fills `tools` yet, so existing outputs are unchanged.
+- `RunRequest.maxTurns` caps a Claude run's turns (`--max-turns`); a run that reaches the cap fails as `max-turns`, not as a generic exit. Codex and OpenCode runs with `maxTurns` fail as unsupported before spawning.
+- `RunRequest.outputSchema` asks for JSON matching a schema; the answer arrives in `RunOutput.output`. Claude gets `--json-schema`; Codex gets the schema as `output-schema.json` in the run's scratch dir with `--output-schema`. OpenCode refuses it before spawning. A run that runs out of structured-output retries is an `unparsable` failure; a failed schema write is `scratch-failed`.
+- `RuntimeFs` gains an optional `writeText(path, text)` that returns false on any error and never throws; `nodeFs` writes with mode 0600 and the fake records each write.
+- A request's own `timeoutMs` beating the `headless()` one is now covered by a test.
 
 ## harness-hooks 0.3.1 - 2026-11-09
 
