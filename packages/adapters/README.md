@@ -203,7 +203,7 @@ CLI engine:
 | Capability | Claude | Codex | OpenCode |
 | --- | --- | --- | --- |
 | `effort` | supported | supported | unmeasured: 2.2.6 documents provider/model#variant in --model; is there an effort flag? |
-| `structured-output` | supported | supported | unmeasured: does OpenCode 2.2.6 run have a structured output flag? |
+| `structured-output` | supported | supported | unsupported: not-implemented |
 | `sessions-delete` | unsupported: not-implemented | unsupported: not-implemented | unsupported: not-implemented |
 | `ephemeral` | supported | supported | emulated: every run leaves a session; session delete --standalone removes it in about 0.24 s after the run (opencode v2.2.6, 2026-11-09) |
 | `cost` | supported | unsupported: harness-limit | supported |
@@ -272,8 +272,8 @@ not recognise.
 | `store-failed` | the transcript store rejected an append; `reason` is the store's redacted message | agent facet |
 | `session-not-found` | the session to resume does not exist and no `recoveryPrompt` was given | agent facet |
 
-The CLI engine emits the first sixteen kinds. The last five are emitted by the agent facet; a consumer of the CLI engine should still handle
-them. The agent facet also emits `invalid-config`, `unsupported`, `credential`, `timeout`, `aborted` and `unavailable`; see
+The CLI engine emits 16 of the 21 kinds. The other five are emitted by the agent facet or the runtime; a consumer of the CLI engine should
+still handle them. The agent facet also emits `invalid-config`, `unsupported`, `credential`, `timeout`, `aborted` and `unavailable`; see
 [docs/agent.md](https://github.com/stateforge-labs/harness-kit/blob/main/packages/adapters/docs/agent.md#failures).
 
 ## Lifecycle

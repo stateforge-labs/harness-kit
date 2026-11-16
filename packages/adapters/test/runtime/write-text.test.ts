@@ -33,7 +33,7 @@ describe("outputSchema refused where structured output is not usable", () => {
       kind: "unsupported",
       capability: "structured-output",
       engine: "cli",
-      why: "does OpenCode 2.2.6 run have a structured output flag?",
+      why: "not-implemented",
     });
     expect(specs.length).toBe(0);
   });
@@ -42,7 +42,7 @@ describe("outputSchema refused where structured output is not usable", () => {
     const { runtime, specs } = routedRig({ stdout: "" });
     const result = await runtime.headless("opencode", { credential: OPENCODE_KEY } as never).run({ ...REQUEST, outputSchema: SCHEMA });
     expect(result.ok).toBe(false);
-    expect(!result.ok && result.failure).toMatchObject({ kind: "unsupported", capability: "structured-output" });
+    expect(!result.ok && result.failure).toMatchObject({ kind: "unsupported", capability: "structured-output", why: "not-implemented" });
     expect(specs.length).toBe(0);
   });
 

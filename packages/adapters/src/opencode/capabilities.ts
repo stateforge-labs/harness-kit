@@ -17,7 +17,7 @@ export const OPENCODE_SDK_NO_STORE = unsupported(UnsupportedReason.HarnessLimit)
 
 export const OPENCODE_CAPABILITIES: Capabilities = {
   [CapabilityName.Effort]: cell(unmeasuredSupport("2.2.6 documents provider/model#variant in --model; is there an effort flag?")),
-  [CapabilityName.StructuredOutput]: cell(unmeasuredSupport("does OpenCode 2.2.6 run have a structured output flag?"), OPENCODE_SDK_UNMEASURED),
+  [CapabilityName.StructuredOutput]: cell(unsupported(UnsupportedReason.NotImplemented), OPENCODE_SDK_UNMEASURED),
   [CapabilityName.SessionsDelete]: cell(unsupported(UnsupportedReason.NotImplemented)),
   [CapabilityName.Ephemeral]: cell(OPENCODE_EPHEMERAL, OPENCODE_SDK_UNMEASURED),
   [CapabilityName.Cost]: cell(supported),
