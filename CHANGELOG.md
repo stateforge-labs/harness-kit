@@ -3,7 +3,7 @@
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org).
 
-## harness-adapters 0.6.0 - unreleased
+## harness-adapters 0.6.0 - 2026-11-16
 
 ### `@stateforge-labs/harness-adapters`
 
@@ -12,7 +12,7 @@ and the project uses [Semantic Versioning](https://semver.org).
 - Added the experimental `./telemetry` subpath: `serializeJobAttribute`, `mergeResourceAttributes` and `withJobAttribute` add one job attribute to `OTEL_RESOURCE_ATTRIBUTES` in an environment object without mutating it.
 - Changed: OpenCode structured output is reported unsupported (not implemented), not unmeasured.
 
-## harness-hooks 0.4.0 - unreleased
+## harness-hooks 0.4.0 - 2026-11-16
 
 ### `@stateforge-labs/harness-hooks`
 
