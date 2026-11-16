@@ -7,6 +7,7 @@ import { commonFields, str, toolOf } from "../shared.ts";
 import { output } from "./output.ts";
 import { handlers } from "./handlers/index.ts";
 import { claudeRules } from "./rules.ts";
+import { SessionStartSource } from "./enums.ts";
 import { hasSchema, jsonSchemas, validate } from "./index.ts";
 import { kindOf } from "./neutral.ts";
 import { spawnOf } from "./spawn.ts";
@@ -31,6 +32,10 @@ export const claude: HarnessAdapter = {
     if (native === ClaudeHook.PreToolUse) {
       const spawn = spawnOf(raw);
       if (spawn) event.spawn = spawn;
+    }
+    if (kind === Kind.SessionStart) {
+      const source = SessionStartSource.safeParse(raw.source);
+      if (source.success) event.source = source.data;
     }
     if (kind === Kind.WorktreeCreate) event.worktree = { cwd: str(raw.cwd), name: str(raw.name) ?? undefined };
     if (kind === Kind.WorktreeRemove) event.worktree = { cwd: str(raw.cwd), path: str(raw.worktree_path) ?? undefined };

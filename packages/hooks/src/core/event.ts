@@ -45,4 +45,5 @@ export interface NeutralEvent {
   tool?: ToolRef;
   spawn?: Spawn;
   worktree?: WorktreeRef;
+  source?: "startup" | "resume" | "clear" | "compact" | "fork";
 }

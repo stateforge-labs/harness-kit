@@ -3,6 +3,12 @@
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org).
 
+## harness-hooks 0.4.0 - unreleased
+
+### `@stateforge-labs/harness-hooks`
+
+- `NeutralEvent.source` (`startup`, `resume`, `clear`, `compact` or `fork`) is set on a Claude Code or Codex `session-start` when the payload's `source` is one of those values.
+
 ## harness-adapters 0.5.0 - 2026-11-15
 
 ### `@stateforge-labs/harness-adapters`

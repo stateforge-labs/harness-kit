@@ -1,4 +1,4 @@
-import { Harness, type NeutralEvent } from "../../core/event.ts";
+import { Harness, Kind, type NeutralEvent } from "../../core/event.ts";
 import { CodexHook } from "./names.ts";
 import type { NeutralReply } from "../../core/reply.ts";
 import type { Decoded, HarnessAdapter } from "../../port.ts";
@@ -10,6 +10,7 @@ import { hasSchema, jsonSchemas, validate } from "./index.ts";
 import { kindOf } from "./neutral.ts";
 import { spawnOf } from "./spawn.ts";
 import { codexRules } from "./rules.ts";
+import { SessionStartSource } from "./enums.ts";
 
 const nameOf = (raw: Record<string, unknown>): string | undefined =>
   typeof raw.hook_event_name === "string" ? raw.hook_event_name : undefined;
@@ -30,6 +31,10 @@ export const codex: HarnessAdapter = {
     if (native === CodexHook.PreToolUse) {
       const spawn = spawnOf(raw);
       if (spawn) event.spawn = spawn;
+    }
+    if (kind === Kind.SessionStart) {
+      const source = SessionStartSource.safeParse(raw.source);
+      if (source.success) event.source = source.data;
     }
     return { event, known: true, missing: v.missing, wrong_type: v.wrong_type, meta: h.meta(raw) };
   },
