@@ -32,7 +32,7 @@ const SRC = join(pkg, "src");
 const CATCH = /\bcatch\b|\.catch\(/;
 const SDK = /@anthropic-ai\/|@openai\/codex|@opencode-ai\//;
 const HARNESSES = new Set(["claude", "codex", "opencode", "tui"]);
-const ENTRIES = ["index.ts", "claude/index.ts", "codex/index.ts", "opencode/index.ts", "tui/index.ts"];
+const ENTRIES = ["index.ts", "claude/index.ts", "codex/index.ts", "opencode/index.ts", "tui/index.ts", "jsonl/index.ts", "text/index.ts", "telemetry/index.ts"];
 const CATCH_FILES = [
   "claude/locate.ts",
   "claude/sessions.ts",

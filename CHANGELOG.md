@@ -3,6 +3,14 @@
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org).
 
+## harness-adapters 0.6.0 - unreleased
+
+### `@stateforge-labs/harness-adapters`
+
+- Added the `./jsonl` subpath: `readLines`, `tailOf`, `tailLines`, `readJsonl` and `growTail` read whole lines of a JSONL file within a byte budget, and `parseRow`, `rowOf`, `rowsOf` and `textOf` read rows without throwing.
+- Added the `./text` subpath: `unfenced` and `fitBytes`.
+- Added the experimental `./telemetry` subpath: `serializeJobAttribute`, `mergeResourceAttributes` and `withJobAttribute` add one job attribute to `OTEL_RESOURCE_ATTRIBUTES` in an environment object without mutating it.
+
 ## harness-hooks 0.4.0 - unreleased
 
 ### `@stateforge-labs/harness-hooks`

@@ -19,6 +19,21 @@ describe("public export keys", () => {
     expect(keys).toEqual(["cliEngine"]);
   });
 
+  test("the jsonl entry exports exactly the line and row readers", async () => {
+    const keys = Object.keys(await import(src("jsonl/index.ts"))).sort();
+    expect(keys).toEqual(["growTail", "parseRow", "readJsonl", "readLines", "rowOf", "rowsOf", "tailLines", "tailOf", "textOf"]);
+  });
+
+  test("the text entry exports exactly the two text helpers", async () => {
+    const keys = Object.keys(await import(src("text/index.ts"))).sort();
+    expect(keys).toEqual(["fitBytes", "unfenced"]);
+  });
+
+  test("the telemetry entry exports exactly the resource attribute helpers", async () => {
+    const keys = Object.keys(await import(src("telemetry/index.ts"))).sort();
+    expect(keys).toEqual(["RESOURCE_ATTRIBUTES_ENV", "mergeResourceAttributes", "serializeJobAttribute", "withJobAttribute"]);
+  });
+
   test("the testing entry exports exactly the fake helpers", async () => {
     const keys = Object.keys(await import(src("testing/index.ts"))).sort();
     expect(keys).toEqual([

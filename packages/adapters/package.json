@@ -71,6 +71,21 @@
       "stateforge-source": "./src/testing/index.ts",
       "types": "./dist/src/testing/index.d.ts",
       "default": "./dist/src/testing/index.js"
+    },
+    "./jsonl": {
+      "stateforge-source": "./src/jsonl/index.ts",
+      "types": "./dist/src/jsonl/index.d.ts",
+      "default": "./dist/src/jsonl/index.js"
+    },
+    "./text": {
+      "stateforge-source": "./src/text/index.ts",
+      "types": "./dist/src/text/index.d.ts",
+      "default": "./dist/src/text/index.js"
+    },
+    "./telemetry": {
+      "stateforge-source": "./src/telemetry/index.ts",
+      "types": "./dist/src/telemetry/index.d.ts",
+      "default": "./dist/src/telemetry/index.js"
     }
   },
   "main": "./dist/src/index.js",

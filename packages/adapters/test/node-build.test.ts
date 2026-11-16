@@ -6,7 +6,7 @@ import { bunImportScript, importProbeScript, processGroupScript, TRAPPED_MODULES
 
 const pkg = join(import.meta.dir, "..");
 const NAME = "@stateforge-labs/harness-adapters";
-const SUBPATHS = ["", "/claude", "/codex", "/opencode", "/opencode/store", "/tui", "/runtime", "/engine", "/testing"];
+const SUBPATHS = ["", "/claude", "/codex", "/opencode", "/opencode/store", "/tui", "/runtime", "/engine", "/testing", "/jsonl", "/text", "/telemetry"];
 const SDK_PACKAGES = ["@anthropic-ai", "@openai/codex", "@opencode-ai"];
 const SCRIPT = `
 const out = { resolved: {}, loaded: {}, env: null };

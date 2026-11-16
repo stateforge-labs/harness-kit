@@ -50,6 +50,9 @@ Pass an explicit object to test a module without touching the real environment.
 | `@stateforge-labs/harness-adapters/runtime` | `createRuntime`, `Harness`, credentials, policy, results, failures and the agent types | 0.x, stable within 0.x |
 | `@stateforge-labs/harness-adapters/engine` | the CLI engine contract for building a harness driver | experimental |
 | `@stateforge-labs/harness-adapters/testing` | `fakeRuntime`, `fakeProcessRunner`, `fakeFs`, `fakeClock`, the driver contract checks, and for the agent facet `fakeAgentEngine`, `fakeClaudeQuery`, `claudeMessages`, `fakeTranscriptStore`, `scriptedMessagesApi` and `agentContract` | 0.x, stable within 0.x |
+| `@stateforge-labs/harness-adapters/jsonl` | JSONL line readers: `readLines`, `tailOf`, `tailLines`, `readJsonl`, `growTail`, and the row helpers `parseRow`, `rowOf`, `rowsOf`, `textOf` | 0.x, stable within 0.x |
+| `@stateforge-labs/harness-adapters/text` | `unfenced` (strips one code fence around an answer) and `fitBytes` (keeps the newest lines that fit a byte budget) | 0.x, stable within 0.x |
+| `@stateforge-labs/harness-adapters/telemetry` | `RESOURCE_ATTRIBUTES_ENV`, `serializeJobAttribute`, `mergeResourceAttributes` and `withJobAttribute`, which add one job attribute to `OTEL_RESOURCE_ATTRIBUTES` in an environment object | experimental |
 
 ## Credentials and policy
 
@@ -285,9 +288,9 @@ older than the given age.
 
 ## Stability tiers
 
-- **Stable within 0.x**: the root, `claude`, `codex`, `opencode`, `opencode/store`, `tui`, `runtime` and `testing` subpaths. A minor release may
+- **Stable within 0.x**: the root, `claude`, `codex`, `opencode`, `opencode/store`, `tui`, `runtime`, `testing`, `jsonl` and `text` subpaths. A minor release may
   add exports and failure kinds; a consumer's `switch` on `kind` keeps a default branch for that reason.
-- **Experimental**: the `engine` subpath, and the driver-authoring and port types that `runtime` re-exports (`Drivers`, `HarnessDriver`, `CredentialFacet`,
+- **Experimental**: the `engine` and `telemetry` subpaths, and the driver-authoring and port types that `runtime` re-exports (`Drivers`, `HarnessDriver`, `CredentialFacet`,
   `RunFacet`, `Clock`, `ProcessRunner`, `ProcessSpec`, `RunningProcess`, `RuntimeFs`, `ProbeIo`, `Availability`, `Profile`). Their shapes may change in a minor release.
 - **Internal**: anything not exported from a subpath. The package ships only `dist/`.
 
